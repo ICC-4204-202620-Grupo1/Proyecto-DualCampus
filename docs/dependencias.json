@@ -1,0 +1,309 @@
+{
+  "H01": {
+    "titulo": "Iniciar sesión con Google",
+    "epica": "E1",
+    "predecesoras": [],
+    "decisiones": ""
+  },
+  "H02": {
+    "titulo": "Seleccionar la institución activa",
+    "epica": "E1",
+    "predecesoras": [
+      "H01"
+    ],
+    "decisiones": ""
+  },
+  "H03": {
+    "titulo": "Aplicar permisos por rol y sección",
+    "epica": "E1",
+    "predecesoras": [
+      "H02"
+    ],
+    "decisiones": ""
+  },
+  "H04": {
+    "titulo": "Vincular acceso para el egreso",
+    "epica": "E1",
+    "predecesoras": [
+      "H03"
+    ],
+    "decisiones": "D3"
+  },
+  "H05": {
+    "titulo": "Crear el período académico",
+    "epica": "E2",
+    "predecesoras": [
+      "H03"
+    ],
+    "decisiones": ""
+  },
+  "H06": {
+    "titulo": "Registrar cursos y secciones",
+    "epica": "E2",
+    "predecesoras": [
+      "H05"
+    ],
+    "decisiones": ""
+  },
+  "H07": {
+    "titulo": "Asignar profesores y ayudantes",
+    "epica": "E2",
+    "predecesoras": [
+      "H06"
+    ],
+    "decisiones": ""
+  },
+  "H08": {
+    "titulo": "Cargar y consultar la nómina oficial",
+    "epica": "E2",
+    "predecesoras": [
+      "H07"
+    ],
+    "decisiones": "D5"
+  },
+  "H09": {
+    "titulo": "Registrar un retiro informado",
+    "epica": "E2",
+    "predecesoras": [
+      "H08"
+    ],
+    "decisiones": ""
+  },
+  "H10": {
+    "titulo": "Consultar el calendario académico",
+    "epica": "E2",
+    "predecesoras": [
+      "H05"
+    ],
+    "decisiones": ""
+  },
+  "H11": {
+    "titulo": "Crear una evaluación presencial",
+    "epica": "E3",
+    "predecesoras": [
+      "H08"
+    ],
+    "decisiones": "D1"
+  },
+  "H12": {
+    "titulo": "Guardar notas en borrador",
+    "epica": "E3",
+    "predecesoras": [
+      "H11"
+    ],
+    "decisiones": ""
+  },
+  "H13": {
+    "titulo": "Enviar notas a revisión",
+    "epica": "E3",
+    "predecesoras": [
+      "H12"
+    ],
+    "decisiones": ""
+  },
+  "H14": {
+    "titulo": "Aprobar y publicar calificaciones",
+    "epica": "E3",
+    "predecesoras": [
+      "H13"
+    ],
+    "decisiones": ""
+  },
+  "H15": {
+    "titulo": "Devolver y reenviar calificaciones",
+    "epica": "E3",
+    "predecesoras": [
+      "H13"
+    ],
+    "decisiones": ""
+  },
+  "H16": {
+    "titulo": "Consultar mis notas publicadas",
+    "epica": "E3",
+    "predecesoras": [
+      "H14"
+    ],
+    "decisiones": ""
+  },
+  "H17": {
+    "titulo": "Corregir una nota de cierre",
+    "epica": "E3",
+    "predecesoras": [
+      "H14"
+    ],
+    "decisiones": "D7"
+  },
+  "H18": {
+    "titulo": "Consultar la trazabilidad de cambios",
+    "epica": "E3",
+    "predecesoras": [
+      "H14"
+    ],
+    "decisiones": "D6"
+  },
+  "H19": {
+    "titulo": "Publicar material y syllabus",
+    "epica": "E4",
+    "predecesoras": [
+      "H07"
+    ],
+    "decisiones": "D4"
+  },
+  "H20": {
+    "titulo": "Consultar y descargar material",
+    "epica": "E4",
+    "predecesoras": [
+      "H19",
+      "H08"
+    ],
+    "decisiones": ""
+  },
+  "H21": {
+    "titulo": "Reutilizar material entre períodos",
+    "epica": "E4",
+    "predecesoras": [
+      "H19"
+    ],
+    "decisiones": "D6"
+  },
+  "H22": {
+    "titulo": "Habilitar la recepción de un informe",
+    "epica": "E4",
+    "predecesoras": [
+      "H11"
+    ],
+    "decisiones": "D4"
+  },
+  "H23": {
+    "titulo": "Enviar un archivo y obtener comprobante",
+    "epica": "E4",
+    "predecesoras": [
+      "H22"
+    ],
+    "decisiones": ""
+  },
+  "H24": {
+    "titulo": "Consultar y descargar entregas",
+    "epica": "E4",
+    "predecesoras": [
+      "H23"
+    ],
+    "decisiones": ""
+  },
+  "H25": {
+    "titulo": "Recuperar una carga fallida",
+    "epica": "E4",
+    "predecesoras": [
+      "H23"
+    ],
+    "decisiones": "D4 D6"
+  },
+  "H26": {
+    "titulo": "Registrar asistencia por clase",
+    "epica": "E5",
+    "predecesoras": [
+      "H08"
+    ],
+    "decisiones": "D2"
+  },
+  "H27": {
+    "titulo": "Consultar asistencia propia",
+    "epica": "E5",
+    "predecesoras": [
+      "H26"
+    ],
+    "decisiones": "D2"
+  },
+  "H28": {
+    "titulo": "Corregir un registro de asistencia",
+    "epica": "E5",
+    "predecesoras": [
+      "H26"
+    ],
+    "decisiones": "D2"
+  },
+  "H29": {
+    "titulo": "Importar historial validado",
+    "epica": "E6",
+    "predecesoras": [
+      "H08"
+    ],
+    "decisiones": "D5"
+  },
+  "H30": {
+    "titulo": "Consultar historial por período",
+    "epica": "E6",
+    "predecesoras": [
+      "H16"
+    ],
+    "decisiones": ""
+  },
+  "H31": {
+    "titulo": "Consultar historial tras el egreso",
+    "epica": "E6",
+    "predecesoras": [
+      "H04",
+      "H30"
+    ],
+    "decisiones": "D3"
+  },
+  "H32": {
+    "titulo": "Consultar métricas de mi curso",
+    "epica": "E7",
+    "predecesoras": [
+      "H16",
+      "H26"
+    ],
+    "decisiones": "D2"
+  },
+  "H33": {
+    "titulo": "Consultar reportes institucionales agregados",
+    "epica": "E7",
+    "predecesoras": [
+      "H32"
+    ],
+    "decisiones": ""
+  },
+  "H34": {
+    "titulo": "Exportar un reporte agregado",
+    "epica": "E7",
+    "predecesoras": [
+      "H33"
+    ],
+    "decisiones": ""
+  },
+  "H35": {
+    "titulo": "Programar un reporte periódico",
+    "epica": "E7",
+    "predecesoras": [
+      "H34"
+    ],
+    "decisiones": "D8"
+  },
+  "H36": {
+    "titulo": "Publicar un anuncio del curso",
+    "epica": "E8",
+    "predecesoras": [
+      "H07"
+    ],
+    "decisiones": "D2"
+  },
+  "H37": {
+    "titulo": "Consultar anuncios de mis cursos",
+    "epica": "E8",
+    "predecesoras": [
+      "H36",
+      "H08"
+    ],
+    "decisiones": "D2"
+  },
+  "H38": {
+    "titulo": "Recibir avisos de notas por correo",
+    "epica": "E8",
+    "predecesoras": [
+      "H14",
+      "H17"
+    ],
+    "decisiones": ""
+  }
+}

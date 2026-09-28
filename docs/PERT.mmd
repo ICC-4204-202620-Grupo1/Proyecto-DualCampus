@@ -1,0 +1,97 @@
+flowchart TD
+  subgraph E1["E1 Acceso institucional"]
+    H01["H01 Iniciar sesión con Google"]
+    H02["H02 Seleccionar la institución activa"]
+    H03["H03 Aplicar permisos por rol y sección"]
+    H04["H04 Vincular acceso para el egreso"]
+  end
+  subgraph E2["E2 Configuración académica"]
+    H05["H05 Crear el período académico"]
+    H06["H06 Registrar cursos y secciones"]
+    H07["H07 Asignar profesores y ayudantes"]
+    H08["H08 Cargar y consultar la nómina oficial"]
+    H09["H09 Registrar un retiro informado"]
+    H10["H10 Consultar el calendario académico"]
+  end
+  subgraph E3["E3 Calificaciones con trazabilidad"]
+    H11["H11 Crear una evaluación presencial"]
+    H12["H12 Guardar notas en borrador"]
+    H13["H13 Enviar notas a revisión"]
+    H14["H14 Aprobar y publicar calificaciones"]
+    H15["H15 Devolver y reenviar calificaciones"]
+    H16["H16 Consultar mis notas publicadas"]
+    H17["H17 Corregir una nota de cierre"]
+    H18["H18 Consultar la trazabilidad de cambios"]
+  end
+  subgraph E4["E4 Materiales y entregas"]
+    H19["H19 Publicar material y syllabus"]
+    H20["H20 Consultar y descargar material"]
+    H21["H21 Reutilizar material entre períodos"]
+    H22["H22 Habilitar la recepción de un informe"]
+    H23["H23 Enviar un archivo y obtener comprobante"]
+    H24["H24 Consultar y descargar entregas"]
+    H25["H25 Recuperar una carga fallida"]
+  end
+  subgraph E5["E5 Registro de asistencia"]
+    H26["H26 Registrar asistencia por clase"]
+    H27["H27 Consultar asistencia propia"]
+    H28["H28 Corregir un registro de asistencia"]
+  end
+  subgraph E6["E6 Historial académico"]
+    H29["H29 Importar historial validado"]
+    H30["H30 Consultar historial por período"]
+    H31["H31 Consultar historial tras el egreso"]
+  end
+  subgraph E7["E7 Reportería institucional"]
+    H32["H32 Consultar métricas de mi curso"]
+    H33["H33 Consultar reportes institucionales agregados"]
+    H34["H34 Exportar un reporte agregado"]
+    H35["H35 Programar un reporte periódico"]
+  end
+  subgraph E8["E8 Comunicación académica"]
+    H36["H36 Publicar un anuncio del curso"]
+    H37["H37 Consultar anuncios de mis cursos"]
+    H38["H38 Recibir avisos de notas por correo"]
+  end
+  H01 --> H02
+  H02 --> H03
+  H03 --> H04
+  H03 --> H05
+  H05 --> H06
+  H06 --> H07
+  H07 --> H08
+  H08 --> H09
+  H05 --> H10
+  H08 --> H11
+  H11 --> H12
+  H12 --> H13
+  H13 --> H14
+  H13 --> H15
+  H14 --> H16
+  H14 --> H17
+  H14 --> H18
+  H07 --> H19
+  H19 --> H20
+  H08 --> H20
+  H19 --> H21
+  H11 --> H22
+  H22 --> H23
+  H23 --> H24
+  H23 --> H25
+  H08 --> H26
+  H26 --> H27
+  H26 --> H28
+  H08 --> H29
+  H16 --> H30
+  H04 --> H31
+  H30 --> H31
+  H16 --> H32
+  H26 --> H32
+  H32 --> H33
+  H33 --> H34
+  H34 --> H35
+  H07 --> H36
+  H36 --> H37
+  H08 --> H37
+  H14 --> H38
+  H17 --> H38
