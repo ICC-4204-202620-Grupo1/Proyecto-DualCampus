@@ -1,0 +1,6 @@
+# Normaliza finales de línea para que Windows y Linux no generen diffs falsos
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.svg text
+*.pdf binary

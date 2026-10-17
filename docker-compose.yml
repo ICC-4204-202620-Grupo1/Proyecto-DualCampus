@@ -1,0 +1,16 @@
+# Base de datos local para desarrollo (PostgreSQL 16, igual que en el diseño técnico)
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: dualcampus
+      POSTGRES_PASSWORD: dualcampus
+      POSTGRES_DB: dualcampus
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./apps/api/db/migrations:/docker-entrypoint-initdb.d:ro
+
+volumes:
+  db-data:

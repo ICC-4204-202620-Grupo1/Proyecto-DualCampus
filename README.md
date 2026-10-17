@@ -11,6 +11,41 @@ Trello fue verificado con 38 historias en Refinamiento, 8 épicas de referencia,
 114 criterios de aceptación sin marcar y 42 dependencias enlazadas. Hay seis
 estados de trabajo y una lista de referencia que no cuenta en WIP.
 
+## Estructura del repositorio
+
+Monorepo con npm workspaces (Node 22):
+
+```
+apps/
+  web/   React + TypeScript + Vite (interfaz)
+         src/features/   una carpeta por épica
+         src/components/ componentes compartidos
+         src/lib/        cliente de la API
+  api/   NestJS + TypeScript (API)
+         src/modules/    un módulo por componente C4: autenticacion, autorizacion,
+                         gestion-academica, calificaciones, material-entregas,
+                         reporteria, auditoria
+         src/common/     guards, decoradores e interceptores transversales
+         db/migrations/  SQL de PostgreSQL 16 (tablas y Row-Level Security)
+docs/    proceso, tarjetas y PERT
+```
+
+## Desarrollo local
+
+```
+npm install          # instala web y api
+npm run dev:web      # http://localhost:5173
+npm run dev:api      # http://localhost:3000/api/health
+npm run db:up        # PostgreSQL 16 en Docker (opcional por ahora)
+```
+
+Copiar `apps/api/.env.example` a `apps/api/.env` y `apps/web/.env.example` a `apps/web/.env` cuando se necesiten variables.
+
+## Despliegue en Vercel
+
+- **Web:** `vercel.json` en la raíz construye `apps/web` y publica `apps/web/dist`. Funciona con el proyecto de Vercel ya conectado (Root Directory = raíz del repo).
+- **API:** crear un segundo proyecto de Vercel desde el mismo repositorio con Root Directory `apps/api`. Vercel detecta NestJS automáticamente (`src/main.ts`).
+
 ## Archivos
 
 - CONTRIBUTING.md: ramas, PR, Conventional Commits, DoR y DoD propuestos.
