@@ -1,7 +1,7 @@
 # Flujo propuesto del equipo
 
 Propuesta pendiente de ratificación. La entrega 3 mantiene React y TypeScript,
-NestJS y PostgreSQL. Este paquete contiene documentos de proceso, no la aplicación.
+NestJS y PostgreSQL. El código vive en apps/web (React) y apps/api (NestJS); ver README.
 
 ## Ramas
 
