@@ -15,6 +15,9 @@
     "build:web": "npm run build --workspace=apps/web",
     "build:api": "npm run build --workspace=apps/api",
     "db:up": "docker compose up -d db",
-    "db:down": "docker compose down"
+    "db:down": "docker compose down",
+    "test:api": "npm run test --workspace=apps/api",
+    "db:migrar": "npm run db:migrar --workspace=apps/api --",
+    "usuario:habilitar": "npm run usuario:habilitar --workspace=apps/api --"
   }
 }
