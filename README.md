@@ -33,18 +33,34 @@ docs/    proceso, tarjetas y PERT
 ## Desarrollo local
 
 ```
-npm install          # instala web y api
-npm run dev:web      # http://localhost:5173
-npm run dev:api      # http://localhost:3000/api/health
-npm run db:up        # PostgreSQL 16 en Docker (opcional por ahora)
+npm install
+npm run db:up                     # PostgreSQL 16 en Docker
+npm run db:migrar -- --seed       # crea tablas e instituciones de prueba
+npm run usuario:habilitar -- tu.correo@gmail.com PROFESOR "Universidad grande" "Tu Nombre"
+npm run dev:api                   # http://localhost:3000/api/health
+npm run dev:web                   # http://localhost:5173
+npm run test:api                  # pruebas de la API (Vitest)
 ```
 
-Copiar `apps/api/.env.example` a `apps/api/.env` y `apps/web/.env.example` a `apps/web/.env` cuando se necesiten variables.
+Antes, copiar `apps/api/.env.example` a `apps/api/.env` y completar:
+
+- `SESSION_SECRET`: `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`
+- `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`: en Google Cloud Console → APIs y servicios →
+  Credenciales → ID de cliente OAuth → *Aplicación web*. URI de redirección autorizada:
+  `http://localhost:5173/api/auth/google/callback` (y la de producción, `https://<web>/api/auth/google/callback`).
+- `DOMINIOS_PERMITIDOS`: vacío en desarrollo; en producción, los dominios de Google Workspace de las instituciones.
+
+Solo inician sesión las cuentas habilitadas: usuario activo con al menos un rol en una institución activa.
 
 ## Despliegue en Vercel
 
-- **Web:** `vercel.json` en la raíz construye `apps/web` y publica `apps/web/dist`. Funciona con el proyecto de Vercel ya conectado (Root Directory = raíz del repo).
-- **API:** crear un segundo proyecto de Vercel desde el mismo repositorio con Root Directory `apps/api`. Vercel detecta NestJS automáticamente (`src/main.ts`).
+- **Web:** `vercel.json` en la raíz construye `apps/web` y publica `apps/web/dist`. Las rutas `/api/*`
+  se reenvían a la API, así web y API comparten origen y la cookie de sesión es de primera parte.
+- **API:** segundo proyecto de Vercel desde este repositorio, Root Directory `apps/api` (NestJS se detecta
+  solo). Variables: `NODE_ENV=production`, `APP_URL` (URL de la web), `DATABASE_URL` (Postgres hosteado,
+  p. ej. Neon desde el Marketplace de Vercel), `SESSION_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`,
+  `DOMINIOS_PERMITIDOS`. Luego ajustar en `vercel.json` el destino del rewrite `/api` con la URL de la API
+  y correr `npm run db:migrar` apuntando a esa base.
 
 ## Archivos
 
