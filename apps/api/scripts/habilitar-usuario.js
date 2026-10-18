@@ -5,6 +5,10 @@ const { Client } = require('pg');
 
 try { process.loadEnvFile(path.join(__dirname, '..', '.env')); } catch {}
 
+// Sin .env se usa la base local de docker-compose (igual que la API)
+const DATABASE_URL = process.env.DATABASE_URL || 'postgres://dualcampus:dualcampus@localhost:5433/dualcampus';
+console.log(`Base de datos: ${DATABASE_URL.replace(/\/\/([^:]+):[^@]*@/, '//$1:***@')}`);
+
 const ROLES = ['ADMINISTRADOR', 'PROFESOR', 'AYUDANTE', 'ALUMNO', 'DIRECTOR'];
 
 async function main() {
@@ -13,7 +17,7 @@ async function main() {
     console.error(`Uso: npm run usuario:habilitar -- <email> <${ROLES.join('|')}> ["Institución"] ["Nombre"]`);
     process.exit(1);
   }
-  const db = new Client({ connectionString: process.env.DATABASE_URL });
+  const db = new Client({ connectionString: DATABASE_URL });
   await db.connect();
   const inst = await db.query('SELECT id FROM institucion WHERE nombre = $1', [institucion]);
   if (inst.rows.length === 0) throw new Error(`No existe la institución "${institucion}". Corre npm run db:migrar -- --seed`);

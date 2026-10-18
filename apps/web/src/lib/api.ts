@@ -64,3 +64,43 @@ export async function seleccionarInstitucion(institucionId: string): Promise<Usu
 export async function obtenerContexto(): Promise<ContextoInstitucion> {
   return json<ContextoInstitucion>(await fetch(`${API_URL}/sesion/contexto`, { credentials: 'include' }));
 }
+
+export interface Periodo {
+  id: string;
+  institucionId: string;
+  nombre: string;
+  fechaInicio: string;
+  fechaFin: string;
+  creadoPor: { id: string; nombre: string | null; email: string };
+  creadoEn: string;
+}
+
+/** Error de la API con sus mensajes (Nest entrega string o lista). */
+export class ErrorApi extends Error {
+  constructor(public status: number, public mensajes: string[]) {
+    super(mensajes.join('. '));
+  }
+}
+
+async function cuerpoOError<T>(res: Response): Promise<T> {
+  const cuerpo = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const m = cuerpo.message ?? `Error ${res.status}`;
+    throw new ErrorApi(res.status, Array.isArray(m) ? m : [m]);
+  }
+  return cuerpo as T;
+}
+
+export async function listarPeriodos(): Promise<Periodo[]> {
+  return cuerpoOError(await fetch(`${API_URL}/periodos`, { credentials: 'include' }));
+}
+
+export async function crearPeriodo(datos: { nombre: string; fechaInicio: string; fechaFin: string }): Promise<Periodo> {
+  const res = await fetch(`${API_URL}/periodos`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(datos),
+  });
+  return cuerpoOError(res);
+}

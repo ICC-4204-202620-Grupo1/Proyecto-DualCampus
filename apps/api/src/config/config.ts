@@ -24,7 +24,7 @@ export function cargarConfig(env: NodeJS.ProcessEnv = process.env): Config {
   return {
     produccion,
     appUrl: (env.APP_URL ?? 'http://localhost:5173').replace(/\/$/, ''),
-    databaseUrl: env.DATABASE_URL ?? 'postgres://dualcampus:dualcampus@localhost:5432/dualcampus',
+    databaseUrl: env.DATABASE_URL ?? 'postgres://dualcampus:dualcampus@localhost:5433/dualcampus',
     sessionSecret,
     sesionDuracionHoras: Number(env.SESION_DURACION_HORAS ?? 12),
     googleClientId: env.GOOGLE_CLIENT_ID ?? '',

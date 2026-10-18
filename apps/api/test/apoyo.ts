@@ -16,6 +16,12 @@ import {
   UsuarioRegistrado,
   UsuariosRepositorio,
 } from '../src/modules/autenticacion/usuarios.repositorio';
+import {
+  NuevoPeriodo,
+  Periodo,
+  PeriodoDuplicadoError,
+  PeriodosRepositorio,
+} from '../src/modules/gestion-academica/periodos/periodos.repositorio';
 
 export const SECRETO = 'secreto-de-prueba-con-mas-de-32-caracteres';
 export const ID_UG = '11111111-1111-1111-1111-111111111111';
@@ -32,6 +38,7 @@ const identidad = (sub: string, email: string, nombre: string, extra: Partial<Id
 export const identidades: Record<string, IdentidadGoogle> = {
   benjamin: identidad('g-benjamin', 'benjamin@ug.cl', 'Benjamin Alonso'),
   diego: identidad('g-diego', 'diego@ug.cl', 'Diego Riquelme'),
+  rodolfo: identidad('g-rodolfo', 'rodolfo@ug.cl', 'Rodolfo Ávila'),
   desconocido: identidad('g-x', 'nadie@ug.cl', 'Nadie'),
   inactivo: identidad('g-inactivo', 'inactivo@ug.cl', 'Inactivo'),
   sinrol: identidad('g-sinrol', 'sinrol@ug.cl', 'Sin Rol'),
@@ -63,6 +70,9 @@ export class UsuariosEnMemoria extends UsuariosRepositorio {
       { id: 'u-benjamin', email: 'benjamin@ug.cl', nombre: 'Benjamin Alonso', activo: true, googleSub: null, roles: [UG, ICS] },
       // Ayudante en una sola institución (Diego Riquelme)
       { id: 'u-diego', email: 'diego@ug.cl', nombre: 'Diego Riquelme', activo: true, googleSub: null, roles: [{ ...UG, rol: 'AYUDANTE' }] },
+      // Administrador en ambas instituciones (Rodolfo Ávila)
+      { id: 'u-rodolfo', email: 'rodolfo@ug.cl', nombre: 'Rodolfo Ávila', activo: true, googleSub: null,
+        roles: [{ ...UG, rol: 'ADMINISTRADOR' }, { ...ICS, rol: 'ADMINISTRADOR' }] },
       { id: 'u-inactivo', email: 'inactivo@ug.cl', nombre: null, activo: false, googleSub: null, roles: [UG] },
       { id: 'u-sinrol', email: 'sinrol@ug.cl', nombre: null, activo: true, googleSub: null, roles: [] },
     ];
@@ -85,7 +95,45 @@ export class UsuariosEnMemoria extends UsuariosRepositorio {
   }
 }
 
-export async function crearApp(repo: UsuariosRepositorio): Promise<INestApplication> {
+/** Simula la tabla periodo: unicidad por institución y aislamiento por institución activa. */
+export class PeriodosEnMemoria extends PeriodosRepositorio {
+  periodos: Periodo[] = [];
+  constructor(private readonly usuarios: UsuariosEnMemoria) {
+    super();
+  }
+  reiniciar() {
+    this.periodos = [];
+  }
+  async crear(institucionId: string, d: NuevoPeriodo) {
+    const clave = d.nombre.trim().toLowerCase();
+    if (this.periodos.some((p) => p.institucionId === institucionId && p.nombre.trim().toLowerCase() === clave)) {
+      throw new PeriodoDuplicadoError();
+    }
+    const u = (await this.usuarios.buscarPorId(d.creadoPor))!;
+    const p: Periodo = {
+      id: `0000000${this.periodos.length + 1}-0000-0000-0000-000000000000`.slice(-36),
+      institucionId,
+      nombre: d.nombre,
+      fechaInicio: d.fechaInicio,
+      fechaFin: d.fechaFin,
+      creadoPor: { id: u.id, nombre: u.nombre, email: u.email },
+      creadoEn: new Date().toISOString(),
+    };
+    this.periodos.push(p);
+    return p;
+  }
+  async listar(institucionId: string) {
+    return this.periodos.filter((p) => p.institucionId === institucionId);
+  }
+  async obtener(institucionId: string, id: string) {
+    return this.periodos.find((p) => p.institucionId === institucionId && p.id === id) ?? null;
+  }
+}
+
+export async function crearApp(
+  repo: UsuariosRepositorio,
+  periodos: PeriodosRepositorio = new PeriodosEnMemoria(repo as UsuariosEnMemoria),
+): Promise<INestApplication> {
   const config = cargarConfig({
     SESSION_SECRET: SECRETO,
     APP_URL: 'http://localhost:5173',
@@ -96,6 +144,7 @@ export async function crearApp(repo: UsuariosRepositorio): Promise<INestApplicat
     .overrideProvider(CONFIG).useValue(config)
     .overrideProvider(GoogleOidcAdapter).useClass(GoogleFalso)
     .overrideProvider(UsuariosRepositorio).useValue(repo)
+    .overrideProvider(PeriodosRepositorio).useValue(periodos)
     .compile();
   const app = configurarApp(modulo.createNestApplication<NestExpressApplication>());
   await app.init();
@@ -125,4 +174,15 @@ export async function iniciarSesion(app: INestApplication, codigo: string) {
 /** Inicia sesión y devuelve solo "dc_sesion=<token>" para enviarlo en peticiones. */
 export async function sesionDe(app: INestApplication, codigo: string): Promise<string> {
   return cookieSesion(await iniciarSesion(app, codigo))!.split(';')[0];
+}
+
+/** Inicia sesión y deja activa la institución indicada. */
+export async function sesionEn(app: INestApplication, codigo: string, institucionId: string): Promise<string> {
+  const cookie = await sesionDe(app, codigo);
+  const res = await request(app.getHttpServer())
+    .put('/api/sesion/institucion')
+    .set('Cookie', cookie)
+    .send({ institucionId })
+    .expect(200);
+  return cookieSesion(res)!.split(';')[0];
 }

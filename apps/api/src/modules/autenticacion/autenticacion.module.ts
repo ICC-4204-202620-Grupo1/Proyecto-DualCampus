@@ -20,6 +20,6 @@ import { PostgresUsuariosRepositorio, UsuariosRepositorio } from './usuarios.rep
     { provide: UsuariosRepositorio, useClass: PostgresUsuariosRepositorio },
     { provide: APP_GUARD, useClass: AutenticacionGuard },
   ],
-  exports: [SesionService],
+  exports: [SesionService, UsuariosRepositorio],
 })
 export class AutenticacionModule {}

@@ -6,10 +6,14 @@ const { Client } = require('pg');
 
 try { process.loadEnvFile(path.join(__dirname, '..', '.env')); } catch {}
 
+// Sin .env se usa la base local de docker-compose (igual que la API)
+const DATABASE_URL = process.env.DATABASE_URL || 'postgres://dualcampus:dualcampus@localhost:5433/dualcampus';
+console.log(`Base de datos: ${DATABASE_URL.replace(/\/\/([^:]+):[^@]*@/, '//$1:***@')}`);
+
 async function main() {
   const dir = path.join(__dirname, '..', 'db', 'migrations');
   const archivos = fs.readdirSync(dir).filter((f) => f.endsWith('.sql')).sort();
-  const db = new Client({ connectionString: process.env.DATABASE_URL });
+  const db = new Client({ connectionString: DATABASE_URL });
   await db.connect();
   await db.query(`CREATE TABLE IF NOT EXISTS schema_migraciones (
     archivo text PRIMARY KEY, aplicada_en timestamptz NOT NULL DEFAULT now())`);

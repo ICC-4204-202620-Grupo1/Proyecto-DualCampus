@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { obtenerContexto, type ContextoInstitucion, type UsuarioSesion } from '../../lib/api';
+import { Periodos } from '../configuracion-academica/Periodos';
 import { SelectorInstitucion } from './SelectorInstitucion';
 
 /** Vista provisoria tras iniciar sesión: identidad, institución activa y su contexto. */
@@ -38,6 +39,11 @@ export function Inicio({
           <p>
             <small>Contexto de las consultas (app.institucion_id): {contexto.institucionContexto}</small>
           </p>
+          <hr />
+          <Periodos
+            institucionId={contexto.institucionActivaId}
+            esAdministrador={contexto.roles.includes('ADMINISTRADOR')}
+          />
         </div>
       )}
     </div>

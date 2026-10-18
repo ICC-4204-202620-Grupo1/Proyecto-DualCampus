@@ -52,6 +52,11 @@ Antes, copiar `apps/api/.env.example` a `apps/api/.env` y completar:
 
 Solo inician sesión las cuentas habilitadas: usuario activo con al menos un rol en una institución activa.
 
+La API debe conectarse a PostgreSQL con un rol **no superusuario**: un superusuario se salta el
+Row-Level Security que aísla los datos por institución. El `docker-compose` local ya crea el rol
+`dualcampus` así; si levantaste la base antes de este cambio, recréala con `npm run db:reset`
+(borra los datos locales) y vuelve a correr `db:migrar` y `usuario:habilitar`.
+
 ## Despliegue en Vercel
 
 - **Web:** `vercel.json` en la raíz construye `apps/web` y publica `apps/web/dist`. Las rutas `/api/*`

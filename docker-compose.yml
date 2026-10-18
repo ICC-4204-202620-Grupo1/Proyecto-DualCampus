@@ -3,13 +3,15 @@ services:
   db:
     image: postgres:16
     environment:
-      POSTGRES_USER: dualcampus
-      POSTGRES_PASSWORD: dualcampus
-      POSTGRES_DB: dualcampus
+      # Superusuario solo para administrar el contenedor; la API usa el rol "dualcampus"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    # Puerto 5433 en tu PC para no chocar con un PostgreSQL ya instalado
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
+      - ./apps/api/db/docker-init.sql:/docker-entrypoint-initdb.d/00-roles.sql:ro
 
 volumes:
   db-data:
