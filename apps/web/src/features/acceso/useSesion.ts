@@ -22,5 +22,7 @@ export function useSesion() {
     setEstado({ tipo: 'anonimo' });
   }, []);
 
-  return { estado, salir };
+  const actualizar = useCallback((usuario: UsuarioSesion) => setEstado({ tipo: 'autenticado', usuario }), []);
+
+  return { estado, salir, actualizar };
 }

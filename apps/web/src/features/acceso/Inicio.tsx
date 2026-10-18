@@ -1,40 +1,45 @@
-import type { UsuarioSesion } from '../../lib/api';
+import { useEffect, useState } from 'react';
+import { obtenerContexto, type ContextoInstitucion, type UsuarioSesion } from '../../lib/api';
+import { SelectorInstitucion } from './SelectorInstitucion';
 
-const NOMBRE_ROL: Record<string, string> = {
-  ADMINISTRADOR: 'Administrador',
-  PROFESOR: 'Profesor',
-  AYUDANTE: 'Ayudante',
-  ALUMNO: 'Alumno',
-  DIRECTOR: 'Director',
-};
+/** Vista provisoria tras iniciar sesión: identidad, institución activa y su contexto. */
+export function Inicio({
+  usuario,
+  onSalir,
+  onCambio,
+}: {
+  usuario: UsuarioSesion;
+  onSalir: () => void;
+  onCambio: (u: UsuarioSesion) => void;
+}) {
+  const [contexto, setContexto] = useState<ContextoInstitucion | null>(null);
 
-/** Vista provisoria tras iniciar sesión: confirma la identidad y los roles. */
-export function Inicio({ usuario, onSalir }: { usuario: UsuarioSesion; onSalir: () => void }) {
+  // Cada cambio de institución vuelve a consultar con el nuevo contexto
+  useEffect(() => {
+    setContexto(null);
+    if (usuario.institucionActivaId) obtenerContexto().then(setContexto).catch(() => setContexto(null));
+  }, [usuario.institucionActivaId]);
+
   return (
-    <>
-      <header className="barra">
-        <div className="marca">
-          <span className="marca-logo">D</span> DualCampus
+    <div style={{ padding: '1rem', fontFamily: 'system-ui, sans-serif' }}>
+      <p>
+        <strong>DualCampus</strong> · {usuario.nombre} ({usuario.email}) ·{' '}
+        <button onClick={onSalir}>Cerrar sesión</button>
+      </p>
+      <p>
+        <SelectorInstitucion usuario={usuario} onCambio={onCambio} />
+      </p>
+      <hr />
+      {!usuario.institucionActivaId && <p>Elige una institución para continuar.</p>}
+      {contexto && (
+        <div>
+          <h2>Trabajando en: {contexto.institucion}</h2>
+          <p>Tus roles aquí: {contexto.roles.join(', ')}</p>
+          <p>
+            <small>Contexto de las consultas (app.institucion_id): {contexto.institucionContexto}</small>
+          </p>
         </div>
-        <div className="barra-usuario">
-          <span>{usuario.nombre}</span>
-          <button className="boton-secundario" onClick={onSalir}>
-            Cerrar sesión
-          </button>
-        </div>
-      </header>
-      <main className="contenido">
-        <h1>Hola, {usuario.nombre}</h1>
-        <p className="texto-suave">{usuario.email}</p>
-        <h2>Tus roles</h2>
-        <ul className="roles">
-          {usuario.roles.map((r) => (
-            <li key={r.institucionId + r.rol}>
-              <strong>{NOMBRE_ROL[r.rol]}</strong> · {r.institucion}
-            </li>
-          ))}
-        </ul>
-      </main>
-    </>
+      )}
+    </div>
   );
 }
