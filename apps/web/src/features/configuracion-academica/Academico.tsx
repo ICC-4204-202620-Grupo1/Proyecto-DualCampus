@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { api, type Rol } from '../../lib/api';
+import { Materiales } from '../materiales/Materiales';
 import { MisNotas } from '../calificaciones/MisNotas';
 import { Evaluaciones } from '../calificaciones/Evaluaciones';
 type Curso = {id:string;codigo:string;nombre:string};
@@ -66,7 +67,7 @@ export function Academico({periodoId,roles}:{periodoId:string;roles:Rol[]}) {
         <span className="etiqueta">{s.cursoCodigo} · Sección {s.codigo}</span><strong>{s.curso}</strong><span>{s.totalAlumnos} alumnos · {s.periodo}</span>
       </button>)}</div>}
     {seleccion && !roles.every(r=>r==='ALUMNO') && <GestionSeccion key={seleccion} id={seleccion} nombre={secciones.find(s=>s.id===seleccion)?.curso+' · Sección '+secciones.find(s=>s.id===seleccion)?.codigo} admin={admin} docentes={docentes} roles={roles} actualizar={()=>setVersion(v=>v+1)}/>}
-    {seleccion && roles.every(r=>r==='ALUMNO') && <div className="detalle-seccion"><p className="exito">Estás en la nómina de esta sección.</p><MisNotas key={seleccion} seccionId={seleccion} /></div>}
+    {seleccion && roles.every(r=>r==='ALUMNO') && <div className="detalle-seccion"><p className="exito">Estás en la nómina de esta sección.</p><MisNotas key={seleccion} seccionId={seleccion} /><Materiales key={seleccion} seccionId={seleccion} /></div>}
   </section>;
 }
 
@@ -132,6 +133,7 @@ function GestionSeccion({id,nombre,admin,docentes,roles,actualizar}:{id:string;n
         {detalle.nomina.map(a=><tr key={a.id}><td>{a.nombre || 'Sin nombre'}</td><td>{a.email}</td></tr>)}
       </tbody></table></div>}
       <Evaluaciones seccionId={id} roles={roles} />
+      <Materiales key={id} seccionId={id} />
       <details style={{ marginTop: '1.5rem' }}><summary>Actividad de la sección</summary><ul>{detalle.eventos.map(a=><li key={a.id}>{new Date(a.fecha).toLocaleString('es-CL')} · {a.autor} · {a.accion.replaceAll('_',' ').toLowerCase()}</li>)}</ul></details>
     </>}
   </div>;
