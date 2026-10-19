@@ -45,7 +45,7 @@ export class NotasService {
 
     return this.ejecutar(institucion, async (db) => {
       const evRes = await db.query(
-        `SELECT e.id, e.seccion_id AS "seccionId", e.nombre, e.estado, e.reenviado_en AS "reenviadoEn", e.observacion, e.devuelto_por AS "devueltoPor", e.devuelto_en AS "devueltoEn",
+        `SELECT e.id, e.seccion_id AS "seccionId", e.nombre, e.estado, e.publicado_por AS "publicadoPor", e.publicado_en AS "publicadoEn", e.reenviado_en AS "reenviadoEn", e.observacion, e.devuelto_por AS "devueltoPor", e.devuelto_en AS "devueltoEn",
                 e.escala_minima AS "escalaMinima", e.escala_maxima AS "escalaMaxima"
          FROM evaluacion e
          WHERE e.id = $1`,
@@ -104,6 +104,9 @@ export class NotasService {
           id: evaluacion.id,
           nombre: evaluacion.nombre,
           estado: evaluacion.estado,
+          publicadoPor: esAdmin || esDocente ? evaluacion.publicadoPor : null,
+          publicadoEn: evaluacion.publicadoEn,
+          puedePublicar: rolesUsuario.includes('PROFESOR') && equipoRes.rows.some((r: { rol: string }) => r.rol === 'PROFESOR'),
           reenviadoEn: esAdmin || esDocente ? evaluacion.reenviadoEn : null,
           observacion: esAdmin || esDocente ? evaluacion.observacion : null,
           devueltoPor: esAdmin || esDocente ? evaluacion.devueltoPor : null,
