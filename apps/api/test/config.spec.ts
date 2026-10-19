@@ -1,5 +1,5 @@
 import { describe,expect,it } from 'vitest';
-import { cargarConfig } from '../src/config/config';
+import { cargarConfig } from '../src/config/config.js';
 const base={SESSION_SECRET:'secreto-exclusivo-de-pruebas-1234567890'};
 describe('Configuración de despliegue',()=>{
  it('rechaza producción sin OAuth, base o dominios',()=>{

@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Pool, PoolClient } from 'pg';
-import { PG_POOL } from './pg-pool.token';
+import { PG_POOL } from './pg-pool.token.js';
 
 /**
  * Ejecuta consultas dentro de una transacción con app.institucion_id fijado a la

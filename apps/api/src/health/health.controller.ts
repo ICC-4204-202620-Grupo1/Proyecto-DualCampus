@@ -1,7 +1,7 @@
 import { Controller, Get, Inject, ServiceUnavailableException } from '@nestjs/common';
 import { Pool } from 'pg';
-import { Publico } from '../common/decorators/publico.decorator';
-import { PG_POOL } from '../database/pg-pool.token';
+import { Publico } from '../common/decorators/publico.decorator.js';
+import { PG_POOL } from '../database/pg-pool.token.js';
 
 @Controller('health')
 export class HealthController {

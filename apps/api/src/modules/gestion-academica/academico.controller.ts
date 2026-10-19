@@ -1,8 +1,8 @@
 import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
-import { UsuarioActual } from '../../common/decorators/usuario-actual.decorator';
-import { InstitucionActiva } from '../../common/decorators/institucion-activa.decorator';
-import type { UsuarioSesion } from '../autenticacion/usuario-sesion';
-import { AcademicoService } from './academico.service';
+import { UsuarioActual } from '../../common/decorators/usuario-actual.decorator.js';
+import { InstitucionActiva } from '../../common/decorators/institucion-activa.decorator.js';
+import type { UsuarioSesion } from '../autenticacion/usuario-sesion.js';
+import { AcademicoService } from './academico.service.js';
 
 @Controller('academico')
 export class AcademicoController {

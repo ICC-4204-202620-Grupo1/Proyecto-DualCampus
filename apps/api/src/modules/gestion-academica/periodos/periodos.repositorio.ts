@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ContextoInstitucion } from '../../../database/contexto-institucion';
+import { ContextoInstitucion } from '../../../database/contexto-institucion.js';
 
 export interface Periodo {
   id: string;
