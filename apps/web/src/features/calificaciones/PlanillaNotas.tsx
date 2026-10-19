@@ -16,6 +16,9 @@ interface RespuestaNotas {
     id: string;
     nombre: string;
     estado: string;
+    observacion: string | null;
+    devueltoEn: string | null;
+    puedeDevolver: boolean;
     escalaMinima: number;
     escalaMaxima: number;
   };
@@ -47,6 +50,10 @@ export function PlanillaNotas({
   const [aviso, setAviso] = useState('');
   const [estado, setEstado] = useState('');
   const [pendiente, setPendiente] = useState(false);
+  const [observacion, setObservacion] = useState('');
+  const [comentario, setComentario] = useState('');
+  const [devueltoEn, setDevueltoEn] = useState<string | null>(null);
+  const [puedeDevolver, setPuedeDevolver] = useState(false);
 
   const esAlumno = roles.every((r) => r === 'ALUMNO');
 
@@ -59,6 +66,9 @@ export function PlanillaNotas({
         if (!vigente) return;
         setFilas(data.filas);
         setEstado(data.evaluacion.estado);
+        setObservacion(data.evaluacion.observacion ?? '');
+        setDevueltoEn(data.evaluacion.devueltoEn);
+        setPuedeDevolver(data.evaluacion.puedeDevolver);
         setPendiente(false);
         const inicialValores: Record<string, string> = {};
         const inicialAusentes: Record<string, boolean> = {};
@@ -157,7 +167,7 @@ export function PlanillaNotas({
       const partes = [];
       if (totalNotas > 0) partes.push(`${totalNotas} nota${totalNotas !== 1 ? 's' : ''}`);
       if (totalAusentes > 0) partes.push(`${totalAusentes} ausencia${totalAusentes !== 1 ? 's' : ''}`);
-      setAviso(`Guardado en borrador: ${partes.join(' y ')}.`);
+      setAviso(`Cambios guardados: ${partes.join(' y ')}.`);
     } catch (err) {
       setError(mensaje(err));
     } finally {
@@ -165,7 +175,7 @@ export function PlanillaNotas({
     }
   }
 
-  const editable = estado === 'BORRADOR' && !esAlumno;
+  const editable = ['BORRADOR', 'DEVUELTA'].includes(estado) && !esAlumno;
   const completa = filas.length > 0 && filas.every((f) => ausentes[f.alumnoId] || valores[f.alumnoId]?.trim());
 
   async function enviarARevision() {
@@ -175,6 +185,27 @@ export function PlanillaNotas({
       await api(`/calificaciones/evaluaciones/${evaluacionId}/enviar-revision`, 'POST', {});
       setEstado('EN_REVISION');
       setAviso('Evaluación enviada a revisión. Las notas y ausencias quedaron bloqueadas.');
+      onEnviada();
+    } catch (err) {
+      setError(mensaje(err));
+    } finally {
+      setGuardando(false);
+    }
+  }
+
+  async function devolver() {
+    setGuardando(true);
+    setError('');
+    setAviso('');
+    try {
+      const data = await api<{ observacion: string; devueltoEn: string }>(
+        `/calificaciones/evaluaciones/${evaluacionId}/devolver`, 'POST', { observacion: comentario },
+      );
+      setEstado('DEVUELTA');
+      setObservacion(data.observacion);
+      setDevueltoEn(data.devueltoEn);
+      setComentario('');
+      setAviso('Evaluación devuelta. El equipo asignado puede corregir las notas y ausencias.');
       onEnviada();
     } catch (err) {
       setError(mensaje(err));
@@ -216,6 +247,19 @@ export function PlanillaNotas({
 
       {error && <p role="alert" className="alerta" style={{ marginBottom: '1rem' }}>{error}</p>}
       {estado && <p>Estado: <strong>{estado === 'EN_REVISION' ? 'En revisión' : estado}</strong>{!editable && !esAlumno && ' · Solo lectura'}</p>}
+      {observacion && <section className="panel" aria-label="Observación del profesor">
+        <h4>Observación del profesor</h4>
+        <p style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{observacion}</p>
+        {devueltoEn && <small>Devuelta el {new Date(devueltoEn).toLocaleString()}</small>}
+      </section>}
+      {!cargando && estado === 'EN_REVISION' && puedeDevolver && <form onSubmit={(e) => { e.preventDefault(); void devolver(); }}>
+        <label htmlFor="observacion-devolucion">Comentario de devolución (obligatorio)</label>
+        <textarea id="observacion-devolucion" required maxLength={2000} value={comentario}
+          disabled={guardando} onChange={(e) => setComentario(e.target.value)} />
+        <button className="boton" type="submit" disabled={guardando || !comentario.trim()}>
+          {guardando ? 'Devolviendo…' : 'Devolver evaluación'}
+        </button>
+      </form>}
       {aviso && <p role="status" className="exito" style={{ marginBottom: '1rem' }}>{aviso}</p>}
 
       {cargando ? (
@@ -328,7 +372,7 @@ export function PlanillaNotas({
             >
               {guardando ? 'Guardando borrador…' : 'Guardar notas y ausencias'}
             </button>
-            {editable && <button type="button" className="boton" onClick={enviarARevision}
+            {editable && estado === 'BORRADOR' && <button type="button" className="boton" onClick={enviarARevision}
               disabled={guardando || pendiente || !completa || tieneErroresEscala}>
               Enviar a revisión
             </button>}

@@ -214,7 +214,7 @@ export function Evaluaciones({ seccionId, roles }: { seccionId: string; roles: R
                         backgroundColor: evaluacionSeleccionada?.id === ev.id ? 'var(--azul)' : 'var(--azul-boton)',
                       }}
                     >
-                      {evaluacionSeleccionada?.id === ev.id ? 'Viendo planilla' : ev.estado === 'BORRADOR' ? 'Calificar' : 'Ver planilla'}
+                      {evaluacionSeleccionada?.id === ev.id ? 'Viendo planilla' : ['BORRADOR', 'DEVUELTA'].includes(ev.estado) ? 'Calificar' : 'Ver planilla'}
                     </button>
                   </td>
                 </tr>

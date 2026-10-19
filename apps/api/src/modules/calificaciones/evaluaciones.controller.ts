@@ -40,6 +40,16 @@ export class EvaluacionesController {
     return this.servicio.enviarARevision(u.usuarioId, i, evaluacionId);
   }
 
+  @Post('evaluaciones/:id/devolver')
+  devolver(
+    @UsuarioActual() u: UsuarioSesion,
+    @InstitucionActiva() i: string,
+    @Param('id') evaluacionId: string,
+    @Body() datos: Record<string, unknown>,
+  ) {
+    return this.servicio.devolver(u.usuarioId, i, evaluacionId, datos ?? {});
+  }
+
   @Get('evaluaciones/:id/notas')
   listarNotas(
     @UsuarioActual() u: UsuarioSesion,
