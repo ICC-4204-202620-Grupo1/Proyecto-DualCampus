@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { api, type Rol } from '../../lib/api';
+import { PlanillaNotas } from './PlanillaNotas';
 
 export interface Evaluacion {
   id: string;
@@ -18,6 +19,7 @@ const mensaje = (e: unknown) => (e instanceof Error ? e.message : 'No se pudo co
 
 export function Evaluaciones({ seccionId, roles }: { seccionId: string; roles: Rol[] }) {
   const [evaluaciones, setEvaluaciones] = useState<Evaluacion[]>([]);
+  const [evaluacionSeleccionada, setEvaluacionSeleccionada] = useState<Evaluacion | null>(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [aviso, setAviso] = useState('');
@@ -176,6 +178,7 @@ export function Evaluaciones({ seccionId, roles }: { seccionId: string; roles: R
                 <th>Ponderación</th>
                 <th>Escala</th>
                 <th>Estado</th>
+                <th style={{ textAlign: 'right' }}>Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -195,11 +198,37 @@ export function Evaluaciones({ seccionId, roles }: { seccionId: string; roles: R
                       {ev.estado}
                     </span>
                   </td>
+                  <td style={{ textAlign: 'right' }}>
+                    <button
+                      type="button"
+                      onClick={() => setEvaluacionSeleccionada(ev)}
+                      className="boton"
+                      style={{
+                        padding: '0.35rem 0.8rem',
+                        fontSize: '0.8rem',
+                        display: 'inline-block',
+                        cursor: 'pointer',
+                        backgroundColor: evaluacionSeleccionada?.id === ev.id ? 'var(--azul)' : 'var(--azul-boton)',
+                      }}
+                    >
+                      {evaluacionSeleccionada?.id === ev.id ? 'Viendo planilla' : '✏️ Calificar'}
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      )}
+
+      {evaluacionSeleccionada && (
+        <PlanillaNotas
+          key={evaluacionSeleccionada.id}
+          evaluacionId={evaluacionSeleccionada.id}
+          evaluacionNombre={evaluacionSeleccionada.nombre}
+          roles={roles}
+          onCerrar={() => setEvaluacionSeleccionada(null)}
+        />
       )}
     </div>
   );
