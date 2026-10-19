@@ -30,6 +30,29 @@ export class AutenticacionController {
     res.redirect(this.google.urlAutorizacion(state, nonce));
   }
 
+  /** Acceso rápido para desarrollo local sin depender de credenciales de Google */
+  @Publico()
+  @Get('dev-login')
+  async devLogin(
+    @Query('email') email: string | undefined,
+    @Res() res: Response,
+  ) {
+    if (this.config.produccion) return res.status(404).send('No disponible en producción');
+    const correo = (email || 'benjamin@dualcampus.test').toLowerCase();
+    const usuario = await this.autenticacion.autorizar({
+      sub: 'dev-' + correo,
+      email: correo,
+      emailVerificado: true,
+      nombre: correo.split('@')[0],
+      dominio: null,
+    });
+    if (!usuario) {
+      return res.status(403).send(`Usuario ${correo} no habilitado en la base de datos.`);
+    }
+    res.cookie(COOKIE_SESION, this.sesion.emitir(usuario), this.sesion.opcionesCookieSesion());
+    res.redirect(`${this.config.appUrl}/`);
+  }
+
   /** Google vuelve aquí. Solo una cuenta habilitada recibe la cookie de sesión. */
   @Publico()
   @Get('google/callback')
