@@ -1,12 +1,16 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
 import { InstitucionActiva } from '../../common/decorators/institucion-activa.decorator';
 import { UsuarioActual } from '../../common/decorators/usuario-actual.decorator';
 import type { UsuarioSesion } from '../autenticacion/usuario-sesion';
 import { EvaluacionesService } from './evaluaciones.service';
+import { NotasService } from './notas.service';
 
 @Controller('calificaciones')
 export class EvaluacionesController {
-  constructor(private readonly servicio: EvaluacionesService) {}
+  constructor(
+    private readonly servicio: EvaluacionesService,
+    private readonly notasServicio: NotasService,
+  ) {}
 
   @Get('secciones/:id/evaluaciones')
   listar(
@@ -25,5 +29,24 @@ export class EvaluacionesController {
     @Body() datos: Record<string, unknown>,
   ) {
     return this.servicio.crear(u.usuarioId, i, seccionId, datos ?? {});
+  }
+
+  @Get('evaluaciones/:id/notas')
+  listarNotas(
+    @UsuarioActual() u: UsuarioSesion,
+    @InstitucionActiva() i: string,
+    @Param('id') evaluacionId: string,
+  ) {
+    return this.notasServicio.listarNotas(u.usuarioId, i, evaluacionId);
+  }
+
+  @Put('evaluaciones/:id/notas')
+  guardarNotas(
+    @UsuarioActual() u: UsuarioSesion,
+    @InstitucionActiva() i: string,
+    @Param('id') evaluacionId: string,
+    @Body() datos: { notas?: unknown },
+  ) {
+    return this.notasServicio.guardarNotas(u.usuarioId, i, evaluacionId, datos ?? {});
   }
 }
