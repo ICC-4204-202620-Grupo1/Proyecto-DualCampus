@@ -1,54 +1,64 @@
-# Índice de Trello
-
-Configuración verificada: 38 historias, 8 épicas, 114 criterios de aceptación y 42 dependencias.
+# Índice vigente de Trello
 
 Tablero: https://trello.com/b/V2a6wZ1z/dualcampus
 
-| ID | Tarjeta | Enlace |
-|---|---|---|
-| E1 | E1 · Acceso institucional | https://trello.com/c/sZHT993W |
-| E2 | E2 · Configuración académica | https://trello.com/c/tHIJq28m |
-| E3 | E3 · Calificaciones con trazabilidad | https://trello.com/c/pGJlgnsN |
-| E4 | E4 · Materiales y entregas | https://trello.com/c/XafvMM6D |
-| E5 | E5 · Registro de asistencia | https://trello.com/c/wEjOUaAd |
-| E6 | E6 · Historial académico | https://trello.com/c/b1YgpvOY |
-| E7 | E7 · Reportería institucional | https://trello.com/c/1ngXX3Lt |
-| E8 | E8 · Comunicación académica | https://trello.com/c/nMs0IRH1 |
-| H01 | H01 · E1 · Iniciar sesión con Google [MVP] | https://trello.com/c/70m8H9f3 |
-| H02 | H02 · E1 · Seleccionar la institución activa [MVP] | https://trello.com/c/KKtmqZ85 |
-| H03 | H03 · E1 · Aplicar permisos por rol y sección [MVP] | https://trello.com/c/fZ9QnpKb |
-| H04 | H04 · E1 · Vincular acceso para el egreso | https://trello.com/c/7uz5662H |
-| H05 | H05 · E2 · Crear el período académico [MVP] | https://trello.com/c/r1Zu7qnK |
-| H06 | H06 · E2 · Registrar cursos y secciones [MVP] | https://trello.com/c/xV11gEIJ |
-| H07 | H07 · E2 · Asignar profesores y ayudantes [MVP] | https://trello.com/c/3dIpOKsb |
-| H08 | H08 · E2 · Cargar y consultar la nómina oficial [MVP] | https://trello.com/c/qBGgS5QX |
-| H09 | H09 · E2 · Registrar un retiro informado | https://trello.com/c/01CyUeEK |
-| H10 | H10 · E2 · Consultar el calendario académico | https://trello.com/c/xpVYMeBs |
-| H11 | H11 · E3 · Crear una evaluación presencial [MVP] | https://trello.com/c/LCHj0R4W |
-| H12 | H12 · E3 · Guardar notas en borrador [MVP] | https://trello.com/c/meg8mhMd |
-| H13 | H13 · E3 · Enviar notas a revisión [MVP] | https://trello.com/c/bFU18P2B |
-| H14 | H14 · E3 · Aprobar y publicar calificaciones [MVP] | https://trello.com/c/bl0X5pRu |
-| H15 | H15 · E3 · Devolver y reenviar calificaciones [MVP] | https://trello.com/c/o1qae3Cl |
-| H16 | H16 · E3 · Consultar mis notas publicadas [MVP] | https://trello.com/c/iJcqjPTQ |
-| H17 | H17 · E3 · Corregir una nota de cierre | https://trello.com/c/kkR2ZJNe |
-| H18 | H18 · E3 · Consultar la trazabilidad de cambios [MVP] | https://trello.com/c/uBzYZwR8 |
-| H19 | H19 · E4 · Publicar material y syllabus [MVP] | https://trello.com/c/WOtz0YEL |
-| H20 | H20 · E4 · Consultar y descargar material [MVP] | https://trello.com/c/dcbSemsI |
-| H21 | H21 · E4 · Reutilizar material entre períodos | https://trello.com/c/mAqdWi5O |
-| H22 | H22 · E4 · Habilitar la recepción de un informe [MVP] | https://trello.com/c/4ncpj4oy |
-| H23 | H23 · E4 · Enviar un archivo y obtener comprobante [MVP] | https://trello.com/c/P8R0ugQO |
-| H24 | H24 · E4 · Consultar y descargar entregas [MVP] | https://trello.com/c/jLY5Mn1F |
-| H25 | H25 · E4 · Recuperar una carga fallida | https://trello.com/c/1hgotzsx |
-| H26 | H26 · E5 · Registrar asistencia por clase | https://trello.com/c/ROLiYyXf |
-| H27 | H27 · E5 · Consultar asistencia propia | https://trello.com/c/sS3mhYnX |
-| H28 | H28 · E5 · Corregir un registro de asistencia | https://trello.com/c/Ovz1HRhc |
-| H29 | H29 · E6 · Importar historial validado | https://trello.com/c/KJ3Gi93R |
-| H30 | H30 · E6 · Consultar historial por período [MVP] | https://trello.com/c/cjdDrK0Y |
-| H31 | H31 · E6 · Consultar historial tras el egreso | https://trello.com/c/DeJld3db |
-| H32 | H32 · E7 · Consultar métricas de mi curso | https://trello.com/c/39JDhp7A |
-| H33 | H33 · E7 · Consultar reportes institucionales agregados | https://trello.com/c/TUWgDkPi |
-| H34 | H34 · E7 · Exportar un reporte agregado | https://trello.com/c/RXICpr7N |
-| H35 | H35 · E7 · Programar un reporte periódico | https://trello.com/c/MXRd1Ft7 |
-| H36 | H36 · E8 · Publicar un anuncio del curso | https://trello.com/c/3WC9JySN |
-| H37 | H37 · E8 · Consultar anuncios de mis cursos | https://trello.com/c/y4FoRq31 |
-| H38 | H38 · E8 · Recibir avisos de notas por correo | https://trello.com/c/4GJ2dQOB |
+Fuente: catálogo suministrado el 18-10-2026; conexión en vivo no disponible en esta sesión.
+
+| ID | Épica | Historia | Prioridad | Tarjeta |
+|---|---|---|---|---|
+| H01 | E1 | Ingresar con cuenta institucional | MVP | [Abrir](https://trello.com/c/5na2rMNR) |
+| H02 | E1 | Seleccionar institución activa | MVP | [Abrir](https://trello.com/c/slt9retL) |
+| H03 | E1 | Restringir acciones según el rol | MVP | [Abrir](https://trello.com/c/tz5CwUMi) |
+| H04 | E1 | Aislar datos por institución y sección | MVP | [Abrir](https://trello.com/c/Ti1basLl) |
+| H05 | E2 | Crear un período académico | MVP | [Abrir](https://trello.com/c/zOdvgBcH) |
+| H06 | E2 | Registrar un curso | MVP | [Abrir](https://trello.com/c/9ib0lftY) |
+| H07 | E2 | Crear una sección de curso | MVP | [Abrir](https://trello.com/c/vOot6mky) |
+| H08 | E2 | Asignar profesor a una sección | MVP | [Abrir](https://trello.com/c/45vqPEPZ) |
+| H09 | E2 | Asignar ayudantes a una sección | MVP | [Abrir](https://trello.com/c/Gm2OO42q) |
+| H10 | E2 | Validar una nómina antes de cargarla | MVP | [Abrir](https://trello.com/c/K5Z8BJ63) |
+| H11 | E2 | Confirmar inscripción de alumnos | MVP | [Abrir](https://trello.com/c/qPP83Rtd) |
+| H12 | E2 | Registrar un retiro oficial | Posterior | [Abrir](https://trello.com/c/v4RbzD3n) |
+| H13 | E2 | Consultar calendario del período | Posterior | [Abrir](https://trello.com/c/BwGUry5T) |
+| H14 | E3 | Crear una evaluación presencial | MVP | [Abrir](https://trello.com/c/Q2DPoorX) |
+| H15 | E3 | Ingresar notas en borrador | MVP | [Abrir](https://trello.com/c/pkndAe3f) |
+| H16 | E3 | Registrar ausencias en borrador | MVP | [Abrir](https://trello.com/c/iM5a6Z87) |
+| H17 | E3 | Enviar evaluación a revisión | MVP | [Abrir](https://trello.com/c/FLz2acBM) |
+| H18 | E3 | Devolver evaluación observada | MVP | [Abrir](https://trello.com/c/mm4Hxtdu) |
+| H19 | E3 | Reenviar evaluación corregida | MVP | [Abrir](https://trello.com/c/2n2jOSHg) |
+| H20 | E3 | Publicar notas aprobadas | MVP | [Abrir](https://trello.com/c/C4WdFt31) |
+| H21 | E3 | Consultar notas propias publicadas | MVP | [Abrir](https://trello.com/c/YVSAOw4X) |
+| H22 | E3 | Corregir una nota publicada | Posterior | [Abrir](https://trello.com/c/BLfsG4iJ) |
+| H23 | E3 | Consultar auditoría de calificaciones | MVP | [Abrir](https://trello.com/c/GDqQSw6C) |
+| H24 | E4 | Publicar un material de curso | MVP | [Abrir](https://trello.com/c/pcuW5Kai) |
+| H25 | E4 | Descargar materiales autorizados | MVP | [Abrir](https://trello.com/c/eux5cgqp) |
+| H26 | E4 | Reutilizar material entre períodos | Posterior | [Abrir](https://trello.com/c/2NNtgPZa) |
+| H27 | E4 | Crear una actividad de entrega | MVP | [Abrir](https://trello.com/c/UaCYtNSb) |
+| H28 | E4 | Configurar plazo y formatos de entrega | MVP | [Abrir](https://trello.com/c/6aN3JxDF) |
+| H29 | E4 | Enviar un archivo de actividad | MVP | [Abrir](https://trello.com/c/clwfvU65) |
+| H30 | E4 | Obtener comprobante de entrega | MVP | [Abrir](https://trello.com/c/PzQjRAq0) |
+| H31 | E4 | Consultar informes recibidos | MVP | [Abrir](https://trello.com/c/CzzqL8z6) |
+| H32 | E4 | Descargar un informe recibido | MVP | [Abrir](https://trello.com/c/DINnm5ys) |
+| H33 | E4 | Reintentar una carga interrumpida | Posterior | [Abrir](https://trello.com/c/0X0Yudh6) |
+| H34 | E5 | Crear un registro de clase | Posterior | [Abrir](https://trello.com/c/Vk7is5RK) |
+| H35 | E5 | Marcar asistencia del alumnado | Posterior | [Abrir](https://trello.com/c/eWBLagb7) |
+| H36 | E5 | Consultar asistencia propia | Posterior | [Abrir](https://trello.com/c/VRwExBfG) |
+| H37 | E5 | Corregir una marca de asistencia | Posterior | [Abrir](https://trello.com/c/2Nc1JCm6) |
+| H38 | E5 | Calcular proporción de asistencia | Posterior | [Abrir](https://trello.com/c/lPRTop5Z) |
+| H39 | E6 | Consolidar calificaciones por período | MVP | [Abrir](https://trello.com/c/ypTzZ9bx) |
+| H40 | E6 | Validar lote de notas históricas | Posterior | [Abrir](https://trello.com/c/9LAiTa48) |
+| H41 | E6 | Confirmar importación histórica | Posterior | [Abrir](https://trello.com/c/EJSCFMlW) |
+| H42 | E6 | Mostrar notas históricas importadas | Posterior | [Abrir](https://trello.com/c/uwy1SOg2) |
+| H43 | E6 | Vincular una cuenta personal verificada | Posterior | [Abrir](https://trello.com/c/qNHaCbo2) |
+| H44 | E6 | Acceder al historial tras el egreso | Posterior | [Abrir](https://trello.com/c/JTmZ1q1w) |
+| H45 | E6 | Revertir un lote histórico | Posterior | [Abrir](https://trello.com/c/CbFx5HM4) |
+| H46 | E7 | Consultar distribución de notas por sección | Posterior | [Abrir](https://trello.com/c/yRubVn9V) |
+| H47 | E7 | Consultar asistencia agregada por sección | Posterior | [Abrir](https://trello.com/c/TLbKWEiP) |
+| H48 | E7 | Consultar indicadores institucionales | Posterior | [Abrir](https://trello.com/c/lOuYn6mj) |
+| H49 | E7 | Filtrar reportes por facultad y período | Posterior | [Abrir](https://trello.com/c/fslbrEdB) |
+| H50 | E7 | Exportar un reporte agregado | Posterior | [Abrir](https://trello.com/c/FF9zQExV) |
+| H51 | E7 | Programar un reporte periódico | Posterior | [Abrir](https://trello.com/c/R1Ke1H6y) |
+| H52 | E8 | Publicar anuncio de sección | Posterior | [Abrir](https://trello.com/c/bzAsy7fz) |
+| H53 | E8 | Consultar anuncios del curso | Posterior | [Abrir](https://trello.com/c/VFodS422) |
+| H54 | E8 | Avisar por correo la publicación de notas | Posterior | [Abrir](https://trello.com/c/y7sWAzfF) |
+| H55 | E8 | Avisar por correo una corrección de nota | Posterior | [Abrir](https://trello.com/c/aILyotnh) |
+| H56 | E8 | Consultar estado de avisos enviados | Posterior | [Abrir](https://trello.com/c/apaomCYU) |

@@ -1,309 +1,572 @@
 {
   "H01": {
-    "titulo": "Iniciar sesión con Google",
+    "titulo": "Ingresar con cuenta institucional",
     "epica": "E1",
     "predecesoras": [],
+    "prioridad": "MVP",
+    "enlace": "https://trello.com/c/5na2rMNR",
     "decisiones": ""
   },
   "H02": {
-    "titulo": "Seleccionar la institución activa",
+    "titulo": "Seleccionar institución activa",
     "epica": "E1",
     "predecesoras": [
       "H01"
     ],
+    "prioridad": "MVP",
+    "enlace": "https://trello.com/c/slt9retL",
     "decisiones": ""
   },
   "H03": {
-    "titulo": "Aplicar permisos por rol y sección",
+    "titulo": "Restringir acciones según el rol",
     "epica": "E1",
     "predecesoras": [
       "H02"
     ],
+    "prioridad": "MVP",
+    "enlace": "https://trello.com/c/tz5CwUMi",
     "decisiones": ""
   },
   "H04": {
-    "titulo": "Vincular acceso para el egreso",
+    "titulo": "Aislar datos por institución y sección",
     "epica": "E1",
     "predecesoras": [
       "H03"
     ],
-    "decisiones": "D3"
+    "prioridad": "MVP",
+    "enlace": "https://trello.com/c/Ti1basLl",
+    "decisiones": ""
   },
   "H05": {
-    "titulo": "Crear el período académico",
+    "titulo": "Crear un período académico",
     "epica": "E2",
     "predecesoras": [
-      "H03"
+      "H04"
     ],
+    "prioridad": "MVP",
+    "enlace": "https://trello.com/c/zOdvgBcH",
     "decisiones": ""
   },
   "H06": {
-    "titulo": "Registrar cursos y secciones",
+    "titulo": "Registrar un curso",
     "epica": "E2",
     "predecesoras": [
       "H05"
     ],
+    "prioridad": "MVP",
+    "enlace": "https://trello.com/c/9ib0lftY",
     "decisiones": ""
   },
   "H07": {
-    "titulo": "Asignar profesores y ayudantes",
+    "titulo": "Crear una sección de curso",
     "epica": "E2",
     "predecesoras": [
       "H06"
     ],
+    "prioridad": "MVP",
+    "enlace": "https://trello.com/c/vOot6mky",
     "decisiones": ""
   },
   "H08": {
-    "titulo": "Cargar y consultar la nómina oficial",
+    "titulo": "Asignar profesor a una sección",
     "epica": "E2",
     "predecesoras": [
       "H07"
     ],
-    "decisiones": "D5"
+    "prioridad": "MVP",
+    "enlace": "https://trello.com/c/45vqPEPZ",
+    "decisiones": ""
   },
   "H09": {
-    "titulo": "Registrar un retiro informado",
+    "titulo": "Asignar ayudantes a una sección",
     "epica": "E2",
     "predecesoras": [
       "H08"
     ],
+    "prioridad": "MVP",
+    "enlace": "https://trello.com/c/Gm2OO42q",
     "decisiones": ""
   },
   "H10": {
-    "titulo": "Consultar el calendario académico",
+    "titulo": "Validar una nómina antes de cargarla",
+    "epica": "E2",
+    "predecesoras": [
+      "H07"
+    ],
+    "prioridad": "MVP",
+    "enlace": "https://trello.com/c/K5Z8BJ63",
+    "decisiones": "D5"
+  },
+  "H11": {
+    "titulo": "Confirmar inscripción de alumnos",
+    "epica": "E2",
+    "predecesoras": [
+      "H10"
+    ],
+    "prioridad": "MVP",
+    "enlace": "https://trello.com/c/qPP83Rtd",
+    "decisiones": "D5"
+  },
+  "H12": {
+    "titulo": "Registrar un retiro oficial",
+    "epica": "E2",
+    "predecesoras": [
+      "H11"
+    ],
+    "prioridad": "Posterior",
+    "enlace": "https://trello.com/c/v4RbzD3n",
+    "decisiones": ""
+  },
+  "H13": {
+    "titulo": "Consultar calendario del período",
     "epica": "E2",
     "predecesoras": [
       "H05"
     ],
-    "decisiones": ""
-  },
-  "H11": {
-    "titulo": "Crear una evaluación presencial",
-    "epica": "E3",
-    "predecesoras": [
-      "H08"
-    ],
-    "decisiones": "D1"
-  },
-  "H12": {
-    "titulo": "Guardar notas en borrador",
-    "epica": "E3",
-    "predecesoras": [
-      "H11"
-    ],
-    "decisiones": ""
-  },
-  "H13": {
-    "titulo": "Enviar notas a revisión",
-    "epica": "E3",
-    "predecesoras": [
-      "H12"
-    ],
+    "prioridad": "Posterior",
+    "enlace": "https://trello.com/c/BwGUry5T",
     "decisiones": ""
   },
   "H14": {
-    "titulo": "Aprobar y publicar calificaciones",
+    "titulo": "Crear una evaluación presencial",
     "epica": "E3",
     "predecesoras": [
-      "H13"
+      "H09",
+      "H11"
     ],
-    "decisiones": ""
+    "prioridad": "MVP",
+    "enlace": "https://trello.com/c/Q2DPoorX",
+    "decisiones": "D1"
   },
   "H15": {
-    "titulo": "Devolver y reenviar calificaciones",
+    "titulo": "Ingresar notas en borrador",
     "epica": "E3",
     "predecesoras": [
-      "H13"
+      "H14"
     ],
-    "decisiones": ""
+    "prioridad": "MVP",
+    "enlace": "https://trello.com/c/pkndAe3f",
+    "decisiones": "D1"
   },
   "H16": {
-    "titulo": "Consultar mis notas publicadas",
+    "titulo": "Registrar ausencias en borrador",
     "epica": "E3",
     "predecesoras": [
-      "H14"
+      "H15"
     ],
-    "decisiones": ""
+    "prioridad": "MVP",
+    "enlace": "https://trello.com/c/iM5a6Z87",
+    "decisiones": "D1"
   },
   "H17": {
-    "titulo": "Corregir una nota de cierre",
+    "titulo": "Enviar evaluación a revisión",
     "epica": "E3",
     "predecesoras": [
-      "H14"
+      "H15",
+      "H16"
     ],
-    "decisiones": "D7"
+    "prioridad": "MVP",
+    "enlace": "https://trello.com/c/FLz2acBM",
+    "decisiones": "D1"
   },
   "H18": {
-    "titulo": "Consultar la trazabilidad de cambios",
+    "titulo": "Devolver evaluación observada",
     "epica": "E3",
     "predecesoras": [
-      "H14"
+      "H17"
     ],
-    "decisiones": "D6"
+    "prioridad": "MVP",
+    "enlace": "https://trello.com/c/mm4Hxtdu",
+    "decisiones": ""
   },
   "H19": {
-    "titulo": "Publicar material y syllabus",
-    "epica": "E4",
+    "titulo": "Reenviar evaluación corregida",
+    "epica": "E3",
     "predecesoras": [
-      "H07"
+      "H18"
     ],
-    "decisiones": "D4"
+    "prioridad": "MVP",
+    "enlace": "https://trello.com/c/2n2jOSHg",
+    "decisiones": ""
   },
   "H20": {
-    "titulo": "Consultar y descargar material",
-    "epica": "E4",
+    "titulo": "Publicar notas aprobadas",
+    "epica": "E3",
     "predecesoras": [
-      "H19",
-      "H08"
+      "H17"
     ],
+    "prioridad": "MVP",
+    "enlace": "https://trello.com/c/C4WdFt31",
     "decisiones": ""
   },
   "H21": {
+    "titulo": "Consultar notas propias publicadas",
+    "epica": "E3",
+    "predecesoras": [
+      "H20"
+    ],
+    "prioridad": "MVP",
+    "enlace": "https://trello.com/c/YVSAOw4X",
+    "decisiones": ""
+  },
+  "H22": {
+    "titulo": "Corregir una nota publicada",
+    "epica": "E3",
+    "predecesoras": [
+      "H20"
+    ],
+    "prioridad": "Posterior",
+    "enlace": "https://trello.com/c/BLfsG4iJ",
+    "decisiones": "D7"
+  },
+  "H23": {
+    "titulo": "Consultar auditoría de calificaciones",
+    "epica": "E3",
+    "predecesoras": [
+      "H20"
+    ],
+    "prioridad": "MVP",
+    "enlace": "https://trello.com/c/GDqQSw6C",
+    "decisiones": "D6"
+  },
+  "H24": {
+    "titulo": "Publicar un material de curso",
+    "epica": "E4",
+    "predecesoras": [
+      "H09"
+    ],
+    "prioridad": "MVP",
+    "enlace": "https://trello.com/c/pcuW5Kai",
+    "decisiones": "D4"
+  },
+  "H25": {
+    "titulo": "Descargar materiales autorizados",
+    "epica": "E4",
+    "predecesoras": [
+      "H11",
+      "H24"
+    ],
+    "prioridad": "MVP",
+    "enlace": "https://trello.com/c/eux5cgqp",
+    "decisiones": "D4"
+  },
+  "H26": {
     "titulo": "Reutilizar material entre períodos",
     "epica": "E4",
     "predecesoras": [
-      "H19"
+      "H24"
     ],
+    "prioridad": "Posterior",
+    "enlace": "https://trello.com/c/2NNtgPZa",
     "decisiones": "D6"
   },
-  "H22": {
-    "titulo": "Habilitar la recepción de un informe",
+  "H27": {
+    "titulo": "Crear una actividad de entrega",
     "epica": "E4",
     "predecesoras": [
-      "H11"
+      "H09"
     ],
+    "prioridad": "MVP",
+    "enlace": "https://trello.com/c/UaCYtNSb",
     "decisiones": "D4"
   },
-  "H23": {
-    "titulo": "Enviar un archivo y obtener comprobante",
-    "epica": "E4",
-    "predecesoras": [
-      "H22"
-    ],
-    "decisiones": ""
-  },
-  "H24": {
-    "titulo": "Consultar y descargar entregas",
-    "epica": "E4",
-    "predecesoras": [
-      "H23"
-    ],
-    "decisiones": ""
-  },
-  "H25": {
-    "titulo": "Recuperar una carga fallida",
-    "epica": "E4",
-    "predecesoras": [
-      "H23"
-    ],
-    "decisiones": "D4 D6"
-  },
-  "H26": {
-    "titulo": "Registrar asistencia por clase",
-    "epica": "E5",
-    "predecesoras": [
-      "H08"
-    ],
-    "decisiones": "D2"
-  },
-  "H27": {
-    "titulo": "Consultar asistencia propia",
-    "epica": "E5",
-    "predecesoras": [
-      "H26"
-    ],
-    "decisiones": "D2"
-  },
   "H28": {
-    "titulo": "Corregir un registro de asistencia",
-    "epica": "E5",
+    "titulo": "Configurar plazo y formatos de entrega",
+    "epica": "E4",
     "predecesoras": [
-      "H26"
+      "H27"
     ],
-    "decisiones": "D2"
+    "prioridad": "MVP",
+    "enlace": "https://trello.com/c/6aN3JxDF",
+    "decisiones": "D4"
   },
   "H29": {
-    "titulo": "Importar historial validado",
-    "epica": "E6",
+    "titulo": "Enviar un archivo de actividad",
+    "epica": "E4",
     "predecesoras": [
-      "H08"
+      "H11",
+      "H28"
     ],
-    "decisiones": "D5"
+    "prioridad": "MVP",
+    "enlace": "https://trello.com/c/clwfvU65",
+    "decisiones": "D4"
   },
   "H30": {
-    "titulo": "Consultar historial por período",
-    "epica": "E6",
+    "titulo": "Obtener comprobante de entrega",
+    "epica": "E4",
     "predecesoras": [
-      "H16"
+      "H29"
     ],
-    "decisiones": ""
+    "prioridad": "MVP",
+    "enlace": "https://trello.com/c/PzQjRAq0",
+    "decisiones": "D4"
   },
   "H31": {
-    "titulo": "Consultar historial tras el egreso",
-    "epica": "E6",
+    "titulo": "Consultar informes recibidos",
+    "epica": "E4",
     "predecesoras": [
-      "H04",
-      "H30"
+      "H29"
     ],
-    "decisiones": "D3"
+    "prioridad": "MVP",
+    "enlace": "https://trello.com/c/CzzqL8z6",
+    "decisiones": "D4"
   },
   "H32": {
-    "titulo": "Consultar métricas de mi curso",
-    "epica": "E7",
+    "titulo": "Descargar un informe recibido",
+    "epica": "E4",
     "predecesoras": [
-      "H16",
-      "H26"
+      "H31"
     ],
-    "decisiones": "D2"
+    "prioridad": "MVP",
+    "enlace": "https://trello.com/c/DINnm5ys",
+    "decisiones": "D4"
   },
   "H33": {
-    "titulo": "Consultar reportes institucionales agregados",
-    "epica": "E7",
+    "titulo": "Reintentar una carga interrumpida",
+    "epica": "E4",
     "predecesoras": [
-      "H32"
+      "H29"
     ],
-    "decisiones": ""
+    "prioridad": "Posterior",
+    "enlace": "https://trello.com/c/0X0Yudh6",
+    "decisiones": "D4"
   },
   "H34": {
-    "titulo": "Exportar un reporte agregado",
-    "epica": "E7",
+    "titulo": "Crear un registro de clase",
+    "epica": "E5",
     "predecesoras": [
-      "H33"
+      "H09",
+      "H11"
     ],
-    "decisiones": ""
+    "prioridad": "Posterior",
+    "enlace": "https://trello.com/c/Vk7is5RK",
+    "decisiones": "D2"
   },
   "H35": {
-    "titulo": "Programar un reporte periódico",
-    "epica": "E7",
+    "titulo": "Marcar asistencia del alumnado",
+    "epica": "E5",
     "predecesoras": [
       "H34"
     ],
-    "decisiones": "D8"
+    "prioridad": "Posterior",
+    "enlace": "https://trello.com/c/eWBLagb7",
+    "decisiones": "D2"
   },
   "H36": {
-    "titulo": "Publicar un anuncio del curso",
-    "epica": "E8",
+    "titulo": "Consultar asistencia propia",
+    "epica": "E5",
     "predecesoras": [
-      "H07"
+      "H35"
     ],
+    "prioridad": "Posterior",
+    "enlace": "https://trello.com/c/VRwExBfG",
     "decisiones": "D2"
   },
   "H37": {
-    "titulo": "Consultar anuncios de mis cursos",
-    "epica": "E8",
+    "titulo": "Corregir una marca de asistencia",
+    "epica": "E5",
     "predecesoras": [
-      "H36",
-      "H08"
+      "H35"
     ],
+    "prioridad": "Posterior",
+    "enlace": "https://trello.com/c/2Nc1JCm6",
     "decisiones": "D2"
   },
   "H38": {
-    "titulo": "Recibir avisos de notas por correo",
+    "titulo": "Calcular proporción de asistencia",
+    "epica": "E5",
+    "predecesoras": [
+      "H36",
+      "H37"
+    ],
+    "prioridad": "Posterior",
+    "enlace": "https://trello.com/c/lPRTop5Z",
+    "decisiones": "D2"
+  },
+  "H39": {
+    "titulo": "Consolidar calificaciones por período",
+    "epica": "E6",
+    "predecesoras": [
+      "H21",
+      "H05"
+    ],
+    "prioridad": "MVP",
+    "enlace": "https://trello.com/c/ypTzZ9bx",
+    "decisiones": ""
+  },
+  "H40": {
+    "titulo": "Validar lote de notas históricas",
+    "epica": "E6",
+    "predecesoras": [
+      "H07"
+    ],
+    "prioridad": "Posterior",
+    "enlace": "https://trello.com/c/9LAiTa48",
+    "decisiones": "D5"
+  },
+  "H41": {
+    "titulo": "Confirmar importación histórica",
+    "epica": "E6",
+    "predecesoras": [
+      "H40"
+    ],
+    "prioridad": "Posterior",
+    "enlace": "https://trello.com/c/EJSCFMlW",
+    "decisiones": "D5"
+  },
+  "H42": {
+    "titulo": "Mostrar notas históricas importadas",
+    "epica": "E6",
+    "predecesoras": [
+      "H39",
+      "H41"
+    ],
+    "prioridad": "Posterior",
+    "enlace": "https://trello.com/c/uwy1SOg2",
+    "decisiones": "D5"
+  },
+  "H43": {
+    "titulo": "Vincular una cuenta personal verificada",
+    "epica": "E6",
+    "predecesoras": [
+      "H04"
+    ],
+    "prioridad": "Posterior",
+    "enlace": "https://trello.com/c/qNHaCbo2",
+    "decisiones": "D3"
+  },
+  "H44": {
+    "titulo": "Acceder al historial tras el egreso",
+    "epica": "E6",
+    "predecesoras": [
+      "H39",
+      "H43"
+    ],
+    "prioridad": "Posterior",
+    "enlace": "https://trello.com/c/JTmZ1q1w",
+    "decisiones": "D3"
+  },
+  "H45": {
+    "titulo": "Revertir un lote histórico",
+    "epica": "E6",
+    "predecesoras": [
+      "H41"
+    ],
+    "prioridad": "Posterior",
+    "enlace": "https://trello.com/c/CbFx5HM4",
+    "decisiones": "D5"
+  },
+  "H46": {
+    "titulo": "Consultar distribución de notas por sección",
+    "epica": "E7",
+    "predecesoras": [
+      "H20"
+    ],
+    "prioridad": "Posterior",
+    "enlace": "https://trello.com/c/yRubVn9V",
+    "decisiones": ""
+  },
+  "H47": {
+    "titulo": "Consultar asistencia agregada por sección",
+    "epica": "E7",
+    "predecesoras": [
+      "H38"
+    ],
+    "prioridad": "Posterior",
+    "enlace": "https://trello.com/c/TLbKWEiP",
+    "decisiones": "D2"
+  },
+  "H48": {
+    "titulo": "Consultar indicadores institucionales",
+    "epica": "E7",
+    "predecesoras": [
+      "H46",
+      "H47"
+    ],
+    "prioridad": "Posterior",
+    "enlace": "https://trello.com/c/lOuYn6mj",
+    "decisiones": "D2"
+  },
+  "H49": {
+    "titulo": "Filtrar reportes por facultad y período",
+    "epica": "E7",
+    "predecesoras": [
+      "H48"
+    ],
+    "prioridad": "Posterior",
+    "enlace": "https://trello.com/c/fslbrEdB",
+    "decisiones": ""
+  },
+  "H50": {
+    "titulo": "Exportar un reporte agregado",
+    "epica": "E7",
+    "predecesoras": [
+      "H49"
+    ],
+    "prioridad": "Posterior",
+    "enlace": "https://trello.com/c/FF9zQExV",
+    "decisiones": ""
+  },
+  "H51": {
+    "titulo": "Programar un reporte periódico",
+    "epica": "E7",
+    "predecesoras": [
+      "H50"
+    ],
+    "prioridad": "Posterior",
+    "enlace": "https://trello.com/c/R1Ke1H6y",
+    "decisiones": "D8"
+  },
+  "H52": {
+    "titulo": "Publicar anuncio de sección",
     "epica": "E8",
     "predecesoras": [
-      "H14",
-      "H17"
+      "H09"
     ],
+    "prioridad": "Posterior",
+    "enlace": "https://trello.com/c/bzAsy7fz",
+    "decisiones": "D2"
+  },
+  "H53": {
+    "titulo": "Consultar anuncios del curso",
+    "epica": "E8",
+    "predecesoras": [
+      "H11",
+      "H52"
+    ],
+    "prioridad": "Posterior",
+    "enlace": "https://trello.com/c/VFodS422",
+    "decisiones": "D2"
+  },
+  "H54": {
+    "titulo": "Avisar por correo la publicación de notas",
+    "epica": "E8",
+    "predecesoras": [
+      "H20"
+    ],
+    "prioridad": "Posterior",
+    "enlace": "https://trello.com/c/y7sWAzfF",
+    "decisiones": ""
+  },
+  "H55": {
+    "titulo": "Avisar por correo una corrección de nota",
+    "epica": "E8",
+    "predecesoras": [
+      "H22"
+    ],
+    "prioridad": "Posterior",
+    "enlace": "https://trello.com/c/aILyotnh",
+    "decisiones": "D7"
+  },
+  "H56": {
+    "titulo": "Consultar estado de avisos enviados",
+    "epica": "E8",
+    "predecesoras": [
+      "H54",
+      "H55"
+    ],
+    "prioridad": "Posterior",
+    "enlace": "https://trello.com/c/apaomCYU",
     "decisiones": ""
   }
 }

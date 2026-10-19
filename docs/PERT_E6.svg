@@ -1,1 +1,59 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="476" viewBox="0 0 1000 476"><defs><marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="none" stroke="#506070"/></marker></defs><rect width="100%" height="100%" fill="white"/><path d="M338.0,140 L338.0,159.0 L176.0,159.0 L176.0,178" fill="none" stroke="#506070" stroke-width="2" marker-end="url(#arr)"/><path d="M662.0,140 L662.0,159.0 L824.0,159.0 L824.0,178" fill="none" stroke="#506070" stroke-width="2" marker-end="url(#arr)"/><path d="M500.0,298 L500.0,317.0 L500.0,317.0 L500.0,336" fill="none" stroke="#506070" stroke-width="2" marker-end="url(#arr)"/><path d="M824.0,298 L824.0,317.0 L500.0,317.0 L500.0,336" fill="none" stroke="#506070" stroke-width="2" marker-end="url(#arr)"/><rect x="188.0" y="20" width="300" height="120" fill="#EFF1F3" stroke="#8B949C"/><text x="338.0" y="49" text-anchor="middle" font-family="DejaVu Sans" font-size="22" font-weight="bold">H08 · externa</text><text x="338.0" y="77" text-anchor="middle" font-family="DejaVu Sans" font-size="22">Cargar y consultar la</text><text x="338.0" y="102" text-anchor="middle" font-family="DejaVu Sans" font-size="22">nómina oficial</text><rect x="512.0" y="20" width="300" height="120" fill="#EFF1F3" stroke="#8B949C"/><text x="662.0" y="49" text-anchor="middle" font-family="DejaVu Sans" font-size="22" font-weight="bold">H16 · externa</text><text x="662.0" y="77" text-anchor="middle" font-family="DejaVu Sans" font-size="22">Consultar mis notas</text><text x="662.0" y="102" text-anchor="middle" font-family="DejaVu Sans" font-size="22">publicadas</text><rect x="26.0" y="178" width="300" height="120" fill="#EAF2FA" stroke="#2B597F"/><text x="176.0" y="207" text-anchor="middle" font-family="DejaVu Sans" font-size="22" font-weight="bold">H29</text><text x="176.0" y="235" text-anchor="middle" font-family="DejaVu Sans" font-size="22">Importar historial</text><text x="176.0" y="260" text-anchor="middle" font-family="DejaVu Sans" font-size="22">validado</text><rect x="350.0" y="178" width="300" height="120" fill="#EFF1F3" stroke="#8B949C"/><text x="500.0" y="207" text-anchor="middle" font-family="DejaVu Sans" font-size="22" font-weight="bold">H04 · externa</text><text x="500.0" y="235" text-anchor="middle" font-family="DejaVu Sans" font-size="22">Vincular acceso para</text><text x="500.0" y="260" text-anchor="middle" font-family="DejaVu Sans" font-size="22">el egreso</text><rect x="674.0" y="178" width="300" height="120" fill="#EAF2FA" stroke="#2B597F"/><text x="824.0" y="207" text-anchor="middle" font-family="DejaVu Sans" font-size="22" font-weight="bold">H30</text><text x="824.0" y="235" text-anchor="middle" font-family="DejaVu Sans" font-size="22">Consultar historial</text><text x="824.0" y="260" text-anchor="middle" font-family="DejaVu Sans" font-size="22">por período</text><rect x="350.0" y="336" width="300" height="120" fill="#EAF2FA" stroke="#2B597F"/><text x="500.0" y="365" text-anchor="middle" font-family="DejaVu Sans" font-size="22" font-weight="bold">H31</text><text x="500.0" y="393" text-anchor="middle" font-family="DejaVu Sans" font-size="22">Consultar historial</text><text x="500.0" y="418" text-anchor="middle" font-family="DejaVu Sans" font-size="22">tras el egreso</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="850" height="710" viewBox="0 0 850 710">
+<title>Precedencias E6: Historial académico</title>
+<defs><marker id="flecha" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8" fill="#64748b"/></marker></defs>
+<rect width="100%" height="100%" fill="#f8fafc"/>
+<text x="24" y="35" font-family="sans-serif" font-size="23" fill="#1e3a8a">E6 · Historial académico</text>
+<text x="24" y="65" font-family="sans-serif" font-size="13" fill="#475569">Catálogo 18-10-2026 · Dependencias; no avance. Gris: predecesora de otra épica.</text>
+<path d="M145 200 C145 225,145 220,145 241" fill="none" stroke="#64748b" marker-end="url(#flecha)"/>
+<path d="M685 200 C685 225,280 365,280 386" fill="none" stroke="#64748b" marker-end="url(#flecha)"/>
+<path d="M145 345 C145 370,280 365,280 386" fill="none" stroke="#64748b" marker-end="url(#flecha)"/>
+<path d="M415 200 C415 225,415 220,415 241" fill="none" stroke="#64748b" marker-end="url(#flecha)"/>
+<path d="M415 345 C415 370,550 365,550 386" fill="none" stroke="#64748b" marker-end="url(#flecha)"/>
+<path d="M280 490 C280 515,145 510,145 531" fill="none" stroke="#64748b" marker-end="url(#flecha)"/>
+<path d="M550 490 C550 515,145 510,145 531" fill="none" stroke="#64748b" marker-end="url(#flecha)"/>
+<path d="M145 200 C145 225,685 220,685 241" fill="none" stroke="#64748b" marker-end="url(#flecha)"/>
+<path d="M280 490 C280 515,415 510,415 531" fill="none" stroke="#64748b" marker-end="url(#flecha)"/>
+<path d="M685 345 C685 370,415 510,415 531" fill="none" stroke="#64748b" marker-end="url(#flecha)"/>
+<path d="M550 490 C550 515,685 510,685 531" fill="none" stroke="#64748b" marker-end="url(#flecha)"/>
+<rect x="20" y="100" width="250" height="100" rx="10" fill="#e2e8f0" stroke="#94a3b8"/>
+<text x="34" y="122" font-family="sans-serif" font-size="13" fill="#0f172a">H04</text>
+<text x="34" y="141" font-family="sans-serif" font-size="13" fill="#0f172a">Aislar datos por institución y</text>
+<text x="34" y="160" font-family="sans-serif" font-size="13" fill="#0f172a">sección</text>
+<rect x="20" y="245" width="250" height="100" rx="10" fill="#e2e8f0" stroke="#94a3b8"/>
+<text x="34" y="267" font-family="sans-serif" font-size="13" fill="#0f172a">H05</text>
+<text x="34" y="286" font-family="sans-serif" font-size="13" fill="#0f172a">Crear un período académico</text>
+<rect x="290" y="100" width="250" height="100" rx="10" fill="#e2e8f0" stroke="#94a3b8"/>
+<text x="304" y="122" font-family="sans-serif" font-size="13" fill="#0f172a">H07</text>
+<text x="304" y="141" font-family="sans-serif" font-size="13" fill="#0f172a">Crear una sección de curso</text>
+<rect x="560" y="100" width="250" height="100" rx="10" fill="#e2e8f0" stroke="#94a3b8"/>
+<text x="574" y="122" font-family="sans-serif" font-size="13" fill="#0f172a">H21</text>
+<text x="574" y="141" font-family="sans-serif" font-size="13" fill="#0f172a">Consultar notas propias</text>
+<text x="574" y="160" font-family="sans-serif" font-size="13" fill="#0f172a">publicadas</text>
+<rect x="155" y="390" width="250" height="100" rx="10" fill="#dbeafe" stroke="#94a3b8"/>
+<text x="169" y="412" font-family="sans-serif" font-size="13" fill="#0f172a">H39</text>
+<text x="169" y="431" font-family="sans-serif" font-size="13" fill="#0f172a">Consolidar calificaciones por</text>
+<text x="169" y="450" font-family="sans-serif" font-size="13" fill="#0f172a">período</text>
+<rect x="290" y="245" width="250" height="100" rx="10" fill="#dbeafe" stroke="#94a3b8"/>
+<text x="304" y="267" font-family="sans-serif" font-size="13" fill="#0f172a">H40</text>
+<text x="304" y="286" font-family="sans-serif" font-size="13" fill="#0f172a">Validar lote de notas</text>
+<text x="304" y="305" font-family="sans-serif" font-size="13" fill="#0f172a">históricas</text>
+<rect x="425" y="390" width="250" height="100" rx="10" fill="#dbeafe" stroke="#94a3b8"/>
+<text x="439" y="412" font-family="sans-serif" font-size="13" fill="#0f172a">H41</text>
+<text x="439" y="431" font-family="sans-serif" font-size="13" fill="#0f172a">Confirmar importación</text>
+<text x="439" y="450" font-family="sans-serif" font-size="13" fill="#0f172a">histórica</text>
+<rect x="20" y="535" width="250" height="100" rx="10" fill="#dbeafe" stroke="#94a3b8"/>
+<text x="34" y="557" font-family="sans-serif" font-size="13" fill="#0f172a">H42</text>
+<text x="34" y="576" font-family="sans-serif" font-size="13" fill="#0f172a">Mostrar notas históricas</text>
+<text x="34" y="595" font-family="sans-serif" font-size="13" fill="#0f172a">importadas</text>
+<rect x="560" y="245" width="250" height="100" rx="10" fill="#dbeafe" stroke="#94a3b8"/>
+<text x="574" y="267" font-family="sans-serif" font-size="13" fill="#0f172a">H43</text>
+<text x="574" y="286" font-family="sans-serif" font-size="13" fill="#0f172a">Vincular una cuenta personal</text>
+<text x="574" y="305" font-family="sans-serif" font-size="13" fill="#0f172a">verificada</text>
+<rect x="290" y="535" width="250" height="100" rx="10" fill="#dbeafe" stroke="#94a3b8"/>
+<text x="304" y="557" font-family="sans-serif" font-size="13" fill="#0f172a">H44</text>
+<text x="304" y="576" font-family="sans-serif" font-size="13" fill="#0f172a">Acceder al historial tras el</text>
+<text x="304" y="595" font-family="sans-serif" font-size="13" fill="#0f172a">egreso</text>
+<rect x="560" y="535" width="250" height="100" rx="10" fill="#dbeafe" stroke="#94a3b8"/>
+<text x="574" y="557" font-family="sans-serif" font-size="13" fill="#0f172a">H45</text>
+<text x="574" y="576" font-family="sans-serif" font-size="13" fill="#0f172a">Revertir un lote histórico</text>
+</svg>

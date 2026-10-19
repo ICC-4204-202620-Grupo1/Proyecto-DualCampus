@@ -1,21 +1,24 @@
-# Propuesta de proceso — pendiente de ratificación
+# Proceso vigente del tablero
 
-Este tablero materializa el borrador de la Entrega 4. Las 38 historias comienzan en Refinamiento.
+Actualización comunicada por el equipo el 18-10-2026.
+[Tablero](https://trello.com/b/V2a6wZ1z/dualcampus).
+Jerarquía: épicas → historias. Criterios y pasos técnicos se registran dentro de cada historia.
 
-## Jerarquía y uso
-Solo dos niveles de producto: **épica → historia de usuario**. Las tarjetas E1–E8 son índices de referencia; H01–H38 recorren el flujo. Los criterios y pasos técnicos van dentro de la historia, no como un tercer nivel. Esta lista de referencia no es un estado y no cuenta en los límites.
+## Flujo
 
-## Estados y políticas
-1. **Refinamiento**: completar contexto, persona, criterios y decisiones. Sin límite.
-2. **Listo (máx. 8)**: cumple DoR y tiene prioridad acordada. Se toma trabajo por capacidad disponible.
-3. **En desarrollo (WIP 4)**: responsable asignado, rama vinculada y trabajo en curso; máximo una historia activa por persona.
-4. **En revisión (WIP 2)**: PR abierto, comprobaciones aplicables ejecutadas y evidencia. Un revisor distinto del autor revisa.
-5. **Validación (WIP 2)**: revisión aprobada e integración en develop; ejecutar criterios y regresiones en demostración antes de promover a main.
-6. **Terminado**: cumple DoD, integrado en main y validado en demostración; tarjeta con PR, versión, evidencia, validador y fecha. Sin límite.
+Por hacer → En desarrollo → En revisión → Validación → Terminado.
 
-## Transiciones y excepciones
-Flujo normal: Refinamiento → Listo → En desarrollo → En revisión → Validación → Terminado.
-Si falla revisión o validación, regresar a En desarrollo y registrar el motivo; respetar capacidad antes de retomar. Si pierde DoR, volver a Refinamiento.
-Una historia bloqueada permanece en su columna y sigue contando en WIP: indicar BLOQUEADA en el título, causa, responsable de desbloqueo y próxima revisión. La etiqueta Bloqueada es la convención prevista, pendiente de configurar. Desbloquear al resolver y registrar evidencia.
-Revisar diariamente capacidad y bloqueos; priorizar terminar trabajo antes de iniciar más. Los límites escritos se controlan manualmente: no se ha configurado automatización de WIP.
+- Por hacer: pendiente; revisar DoR y dependencias antes de tomarla.
+- En desarrollo: comenzó trabajo real; registrar rama, responsable y pendientes.
+- En revisión: PR abierto y comprobaciones aplicables. Sin aprobación independiente permanece aquí.
+- Validación: cambio aprobado e integrado en develop; probar criterios antes de promoción.
+- Terminado: integrado en main, comprobado en producción y con DoD completa.
 
+No hay límites WIP por columna o persona, reparto fijo de historias ni revisores preasignados.
+Cualquier compañero disponible distinto del autor puede revisar un PR.
+Un bloqueo conserva el estado real e indica causa y próximo paso; no se inventan transiciones retrospectivas.
+
+## Esta implementación
+
+Los [textos preparados](entrega-5/tablero.md) y la [evidencia](entrega-5/evidencia.md)
+permiten registrar el trabajo sin confundir implementación, PR, integración y producción.
