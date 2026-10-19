@@ -61,7 +61,9 @@ export class EvaluacionesService {
     const sid = id(seccionId);
     return this.ejecutar(institucion, async (db) => {
       const tieneAcceso = await db.query(
-        `SELECT 1 FROM rol_en_institucion r
+        `SELECT r.rol = 'ADMINISTRADOR' OR EXISTS (
+           SELECT 1 FROM equipo_docente e WHERE e.seccion_id=$3 AND e.usuario_id=$1
+         ) AS "puedeGestionar" FROM rol_en_institucion r
          WHERE r.usuario_id = $1 AND r.institucion_id = $2
            AND (
              r.rol = 'ADMINISTRADOR'
@@ -78,9 +80,9 @@ export class EvaluacionesService {
                 escala_aprobacion AS "escalaAprobacion", estado, creado_en AS "creadoEn",
                 enviado_por AS "enviadoPor", enviado_en AS "enviadoEn"
          FROM evaluacion
-         WHERE seccion_id = $1
+         WHERE seccion_id = $1 AND ($2::boolean OR estado='PUBLICADA')
          ORDER BY fecha ASC, creado_en ASC`,
-        [sid],
+        [sid, tieneAcceso.rows.some((r: { puedeGestionar: boolean }) => r.puedeGestionar)],
       );
       return rows;
     });

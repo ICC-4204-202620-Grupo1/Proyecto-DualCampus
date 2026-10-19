@@ -12,6 +12,15 @@ export class EvaluacionesController {
     private readonly notasServicio: NotasService,
   ) {}
 
+  @Get('secciones/:id/mis-notas')
+  propias(
+    @UsuarioActual() u: UsuarioSesion,
+    @InstitucionActiva() i: string,
+    @Param('id') seccionId: string,
+  ) {
+    return this.notasServicio.propias(u.usuarioId, i, seccionId);
+  }
+
   @Get('secciones/:id/evaluaciones')
   listar(
     @UsuarioActual() u: UsuarioSesion,
