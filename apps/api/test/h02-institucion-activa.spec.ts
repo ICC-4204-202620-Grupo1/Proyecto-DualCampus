@@ -2,7 +2,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { cookieSesion, crearApp, ID_AJENA, ID_ICS, ID_UG, sesionDe, UsuariosEnMemoria } from './apoyo';
+import { cookieSesion, crearApp, ID_AJENA, ID_ICS, ID_UG, sesionDe, UsuariosEnMemoria } from './apoyo.js';
 
 describe('H02 · Seleccionar institución activa', () => {
   let app: INestApplication;

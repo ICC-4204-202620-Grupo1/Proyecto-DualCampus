@@ -3,7 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { INestApplication } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import request from 'supertest';
-import { cookieSesion, cookiesDe, crearApp, ICS, iniciarSesion, SECRETO, UG, UsuariosEnMemoria } from './apoyo';
+import { cookieSesion, cookiesDe, crearApp, ICS, iniciarSesion, SECRETO, UG, UsuariosEnMemoria } from './apoyo.js';
 
 describe('H01 · Ingresar con cuenta institucional', () => {
   let app: INestApplication;

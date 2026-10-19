@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import type { Rol } from '../autenticacion/usuario-sesion';
-import { UsuariosRepositorio } from '../autenticacion/usuarios.repositorio';
+import type { Rol } from '../autenticacion/usuario-sesion.js';
+import { UsuariosRepositorio } from '../autenticacion/usuarios.repositorio.js';
 
 /**
  * H03: exige un rol vigente de la institución activa en cada operación.

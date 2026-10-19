@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { OAuth2Client, type GenerateAuthUrlOpts } from 'google-auth-library';
-import { CONFIG, Config } from '../../config/config';
-import type { IdentidadGoogle } from './usuario-sesion';
+import { CONFIG, Config } from '../../config/config.js';
+import type { IdentidadGoogle } from './usuario-sesion.js';
 
 /**
  * Adaptador de Google Workspace (OpenID Connect, flujo authorization code).

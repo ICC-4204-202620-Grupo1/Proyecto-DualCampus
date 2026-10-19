@@ -2,7 +2,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { crearApp, ID_ICS, ID_UG, PeriodosEnMemoria, sesionDe, sesionEn, UsuariosEnMemoria } from './apoyo';
+import { crearApp, ID_ICS, ID_UG, PeriodosEnMemoria, sesionDe, sesionEn, UsuariosEnMemoria } from './apoyo.js';
 
 const VALIDO = { nombre: '2026-2', fechaInicio: '2026-08-03', fechaFin: '2026-12-18' };
 

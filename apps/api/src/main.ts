@@ -1,8 +1,8 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
-import { AppModule } from './app.module';
-import { configurarApp } from './app.setup';
+import { AppModule } from './app.module.js';
+import { configurarApp } from './app.setup.js';
 
 // En desarrollo carga apps/api/.env si existe; en Vercel las variables vienen del proyecto
 try {

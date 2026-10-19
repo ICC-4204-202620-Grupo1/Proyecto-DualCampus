@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { CONFIG, Config } from '../../config/config';
-import type { IdentidadGoogle, UsuarioSesion } from './usuario-sesion';
-import { UsuarioRegistrado, UsuariosRepositorio } from './usuarios.repositorio';
+import { CONFIG, Config } from '../../config/config.js';
+import type { IdentidadGoogle, UsuarioSesion } from './usuario-sesion.js';
+import { UsuarioRegistrado, UsuariosRepositorio } from './usuarios.repositorio.js';
 
 export interface InstitucionAutorizada {
   id: string;

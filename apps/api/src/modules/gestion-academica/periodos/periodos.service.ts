@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { AutorizacionService } from '../../autorizacion/autorizacion.service';
-import { Periodo, PeriodoDuplicadoError, PeriodosRepositorio } from './periodos.repositorio';
+import { AutorizacionService } from '../../autorizacion/autorizacion.service.js';
+import { Periodo, PeriodoDuplicadoError, PeriodosRepositorio } from './periodos.repositorio.js';
 
 export interface CrearPeriodoDto {
   nombre?: unknown;

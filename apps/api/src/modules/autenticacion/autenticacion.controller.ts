@@ -1,13 +1,13 @@
 import { Controller, Get, HttpCode, Inject, Logger, Post, Query, Req, Res } from '@nestjs/common';
 import { randomBytes } from 'node:crypto';
 import type { Request, Response } from 'express';
-import { Publico } from '../../common/decorators/publico.decorator';
-import { UsuarioActual } from '../../common/decorators/usuario-actual.decorator';
-import { CONFIG, Config } from '../../config/config';
-import { AutenticacionService } from './autenticacion.service';
-import { GoogleOidcAdapter } from './google-oidc.adapter';
-import { COOKIE_OIDC, COOKIE_SESION, SesionService } from './sesion.service';
-import type { UsuarioSesion } from './usuario-sesion';
+import { Publico } from '../../common/decorators/publico.decorator.js';
+import { UsuarioActual } from '../../common/decorators/usuario-actual.decorator.js';
+import { CONFIG, Config } from '../../config/config.js';
+import { AutenticacionService } from './autenticacion.service.js';
+import { GoogleOidcAdapter } from './google-oidc.adapter.js';
+import { COOKIE_OIDC, COOKIE_SESION, SesionService } from './sesion.service.js';
+import type { UsuarioSesion } from './usuario-sesion.js';
 
 @Controller('auth')
 export class AutenticacionController {

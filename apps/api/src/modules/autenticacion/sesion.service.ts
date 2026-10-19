@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import type { CookieOptions } from 'express';
-import { CONFIG, Config } from '../../config/config';
-import type { UsuarioSesion } from './usuario-sesion';
+import { CONFIG, Config } from '../../config/config.js';
+import type { UsuarioSesion } from './usuario-sesion.js';
 
 export const COOKIE_SESION = 'dc_sesion';
 export const COOKIE_OIDC = 'dc_oidc';

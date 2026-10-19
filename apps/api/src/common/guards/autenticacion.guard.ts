@@ -1,10 +1,10 @@
 import { CanActivate, ConflictException, ExecutionContext, ForbiddenException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
-import { ES_PUBLICO } from '../decorators/publico.decorator';
-import { COOKIE_SESION, SesionService } from '../../modules/autenticacion/sesion.service';
-import { UsuariosRepositorio } from '../../modules/autenticacion/usuarios.repositorio';
-import { CONFIG, Config } from '../../config/config';
+import { ES_PUBLICO } from '../decorators/publico.decorator.js';
+import { COOKIE_SESION, SesionService } from '../../modules/autenticacion/sesion.service.js';
+import { UsuariosRepositorio } from '../../modules/autenticacion/usuarios.repositorio.js';
+import { CONFIG, Config } from '../../config/config.js';
 
 @Injectable()
 export class AutenticacionGuard implements CanActivate {

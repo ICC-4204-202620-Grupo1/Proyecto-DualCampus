@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Pool } from 'pg';
-import { ContextoInstitucion } from '../../database/contexto-institucion';
-import { PG_POOL } from '../../database/pg-pool.token';
-import type { Rol, RolEnInstitucion } from './usuario-sesion';
+import { ContextoInstitucion } from '../../database/contexto-institucion.js';
+import { PG_POOL } from '../../database/pg-pool.token.js';
+import type { Rol, RolEnInstitucion } from './usuario-sesion.js';
 
 export interface UsuarioRegistrado {
   id: string;
