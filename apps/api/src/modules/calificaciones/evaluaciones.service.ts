@@ -302,4 +302,41 @@ export class EvaluacionesService {
     });
   }
 
+
+  /** H20: publicar exige profesor asignado, incluso para administradores. */
+  async publicar(actor: string, institucion: string, evaluacionId: string) {
+    await this.autorizacion.exigirRol(actor, institucion, 'PROFESOR');
+    const eid = id(evaluacionId);
+    return this.ejecutar(institucion, async (db) => {
+      const res = await db.query('SELECT id, seccion_id, estado FROM evaluacion WHERE id=$1 FOR UPDATE', [eid]);
+      if (!res.rowCount) throw new NotFoundException('Evaluación no encontrada');
+      const evaluacion = res.rows[0];
+      const permiso = await db.query(
+        "SELECT 1 FROM equipo_docente WHERE seccion_id=$1 AND usuario_id=$2 AND rol='PROFESOR'",
+        [evaluacion.seccion_id, actor],
+      );
+      if (!permiso.rowCount) throw new ForbiddenException('Solo el profesor asignado puede publicar esta evaluación');
+      if (evaluacion.estado !== 'EN_REVISION') {
+        throw new ConflictException('Solo se puede publicar una evaluación en revisión');
+      }
+      // Revalidar la nómina: puede haber cambiado desde el envío.
+      const pendientes = await db.query(
+        `SELECT 1 FROM matricula m LEFT JOIN nota n ON n.evaluacion_id=$1 AND n.usuario_id=m.usuario_id
+         JOIN evaluacion e ON e.id=$1
+         WHERE m.seccion_id=$2 AND (n.id IS NULL OR
+           NOT COALESCE((n.es_ausente AND n.valor IS NULL) OR
+             (NOT n.es_ausente AND n.valor BETWEEN e.escala_minima AND e.escala_maxima), false)) LIMIT 1`,
+        [eid, evaluacion.seccion_id],
+      );
+      if (pendientes.rowCount) throw new BadRequestException('La nómina tiene alumnos sin nota válida ni ausencia. Devuelve la evaluación para corregirla.');
+      const { rows } = await db.query(
+        `UPDATE evaluacion SET estado='PUBLICADA', publicado_por=$2, publicado_en=now()
+         WHERE id=$1 RETURNING id, estado, publicado_por AS "publicadoPor", publicado_en AS "publicadoEn"`,
+        [eid, actor],
+      );
+      await this.registrar(db, institucion, actor, eid, 'PUBLICAR_EVALUACION', { publicadoEn: rows[0].publicadoEn });
+      return rows[0];
+    });
+  }
+
 }

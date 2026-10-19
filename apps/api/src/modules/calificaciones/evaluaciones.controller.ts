@@ -59,6 +59,15 @@ export class EvaluacionesController {
     return this.servicio.devolver(u.usuarioId, i, evaluacionId, datos ?? {});
   }
 
+  @Post('evaluaciones/:id/publicar')
+  publicar(
+    @UsuarioActual() u: UsuarioSesion,
+    @InstitucionActiva() i: string,
+    @Param('id') evaluacionId: string,
+  ) {
+    return this.servicio.publicar(u.usuarioId, i, evaluacionId);
+  }
+
   @Get('evaluaciones/:id/notas')
   listarNotas(
     @UsuarioActual() u: UsuarioSesion,

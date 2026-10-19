@@ -20,6 +20,8 @@ interface RespuestaNotas {
     devueltoEn: string | null;
     reenviadoEn: string | null;
     puedeDevolver: boolean;
+    puedePublicar: boolean;
+    publicadoEn: string | null;
     escalaMinima: number;
     escalaMaxima: number;
   };
@@ -55,6 +57,8 @@ export function PlanillaNotas({
   const [comentario, setComentario] = useState('');
   const [devueltoEn, setDevueltoEn] = useState<string | null>(null);
   const [reenviadoEn, setReenviadoEn] = useState<string | null>(null);
+  const [puedePublicar, setPuedePublicar] = useState(false);
+  const [publicadoEn, setPublicadoEn] = useState<string | null>(null);
   const [puedeDevolver, setPuedeDevolver] = useState(false);
 
   const esAlumno = roles.every((r) => r === 'ALUMNO');
@@ -72,6 +76,8 @@ export function PlanillaNotas({
         setDevueltoEn(data.evaluacion.devueltoEn);
         setReenviadoEn(data.evaluacion.reenviadoEn);
         setPuedeDevolver(data.evaluacion.puedeDevolver);
+        setPuedePublicar(data.evaluacion.puedePublicar);
+        setPublicadoEn(data.evaluacion.publicadoEn);
         setPendiente(false);
         const inicialValores: Record<string, string> = {};
         const inicialAusentes: Record<string, boolean> = {};
@@ -220,6 +226,23 @@ export function PlanillaNotas({
     }
   }
 
+  async function publicar() {
+    setGuardando(true);
+    setError('');
+    setAviso('');
+    try {
+      const data = await api<{ publicadoEn: string }>(`/calificaciones/evaluaciones/${evaluacionId}/publicar`, 'POST', {});
+      setEstado('PUBLICADA');
+      setPublicadoEn(data.publicadoEn);
+      setAviso('Notas publicadas oficialmente. Cada alumno puede consultar únicamente su resultado.');
+      onEnviada();
+    } catch (err) {
+      setError(mensaje(err));
+    } finally {
+      setGuardando(false);
+    }
+  }
+
   return (
     <div
       style={{
@@ -253,6 +276,13 @@ export function PlanillaNotas({
 
       {error && <p role="alert" className="alerta" style={{ marginBottom: '1rem' }}>{error}</p>}
       {estado && <p>Estado: <strong>{estado === 'EN_REVISION' ? 'En revisión' : estado}</strong>{!editable && !esAlumno && ' · Solo lectura'}</p>}
+      {publicadoEn && <p>Publicada el {new Date(publicadoEn).toLocaleString()}</p>}
+      {!cargando && estado === 'EN_REVISION' && puedePublicar && <section className="panel" aria-label="Publicación de notas">
+        <p>Al publicar, los resultados serán oficiales y cada alumno podrá consultar su propia nota.</p>
+        <button type="button" className="boton" disabled={guardando} onClick={publicar}>
+          {guardando ? 'Publicando…' : 'Publicar notas aprobadas'}
+        </button>
+      </section>}
       {reenviadoEn && <p>Último reenvío: {new Date(reenviadoEn).toLocaleString()}</p>}
       {observacion && <section className="panel" aria-label="Observación del profesor">
         <h4>Observación del profesor</h4>
