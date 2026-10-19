@@ -35,6 +35,27 @@ export class NotasService {
     );
   }
 
+  /** H21: identidad tomada exclusivamente de la sesión, nunca del cliente. */
+  async propias(actor: string, institucion: string, seccionId: string) {
+    await this.autorizacion.exigirRol(actor, institucion, 'ALUMNO');
+    const sid = id(seccionId);
+    return this.ejecutar(institucion, async (db) => {
+      const matricula = await db.query('SELECT 1 FROM matricula WHERE seccion_id=$1 AND usuario_id=$2', [sid, actor]);
+      if (!matricula.rowCount) throw new ForbiddenException('No estás inscrito en esta sección');
+      const { rows } = await db.query(
+        `SELECT e.id, e.nombre, e.fecha, e.ponderacion, e.publicado_en AS "publicadoEn",
+           e.escala_minima AS "escalaMinima", e.escala_maxima AS "escalaMaxima",
+           e.escala_aprobacion AS "escalaAprobacion", n.valor, n.es_ausente AS "esAusente"
+         FROM evaluacion e JOIN nota n ON n.evaluacion_id=e.id AND n.usuario_id=$2
+         WHERE e.seccion_id=$1 AND e.estado='PUBLICADA' ORDER BY e.fecha, e.creado_en`,
+        [sid, actor],
+      );
+      return rows.map(r => ({ ...r, valor: r.valor === null ? null : Number(r.valor),
+        ponderacion: Number(r.ponderacion), escalaMinima: Number(r.escalaMinima),
+        escalaMaxima: Number(r.escalaMaxima), escalaAprobacion: Number(r.escalaAprobacion) }));
+    });
+  }
+
   /**
    * Obtiene la nómina de alumnos con sus notas para una evaluación.
    * CA3: Si está en BORRADOR, el alumno no puede ver las notas (403 Forbidden).
