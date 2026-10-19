@@ -1,7 +1,13 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { CONFIG, Config } from '../../config/config';
 import type { IdentidadGoogle, UsuarioSesion } from './usuario-sesion';
-import { UsuariosRepositorio } from './usuarios.repositorio';
+import { UsuarioRegistrado, UsuariosRepositorio } from './usuarios.repositorio';
+
+export interface InstitucionAutorizada {
+  id: string;
+  nombre: string;
+  roles: string[];
+}
 
 @Injectable()
 export class AutenticacionService {
@@ -27,12 +33,48 @@ export class AutenticacionService {
     if (usuario.googleSub && usuario.googleSub !== identidad.sub) return null;
 
     await this.usuarios.registrarAcceso(usuario.id, identidad.sub);
-    return {
-      usuarioId: usuario.id,
-      email: usuario.email,
-      nombre: usuario.nombre ?? identidad.nombre,
-      institucionActivaId: null,
-      roles: usuario.roles,
-    };
+
+    // Con una sola institución no hay nada que elegir: queda activa de inmediato (H02)
+    const instituciones = institucionesDe(usuario);
+    const activa = instituciones.length === 1 ? instituciones[0].id : null;
+    return construirSesion(usuario, activa, identidad.nombre);
   }
+
+  /** Instituciones activas en que el usuario tiene al menos un rol, leídas de la base. */
+  async institucionesAutorizadas(usuarioId: string): Promise<InstitucionAutorizada[]> {
+    const usuario = await this.usuarios.buscarPorId(usuarioId);
+    if (!usuario || !usuario.activo) return [];
+    return institucionesDe(usuario);
+  }
+
+  /**
+   * Nueva sesión con la institución elegida. Devuelve null si el usuario no tiene
+   * rol en ella (o dejó de estar habilitado).
+   */
+  async cambiarInstitucion(usuarioId: string, institucionId: string): Promise<UsuarioSesion | null> {
+    const usuario = await this.usuarios.buscarPorId(usuarioId);
+    if (!usuario || !usuario.activo) return null;
+    if (!institucionesDe(usuario).some((i) => i.id === institucionId)) return null;
+    return construirSesion(usuario, institucionId);
+  }
+}
+
+function institucionesDe(usuario: UsuarioRegistrado): InstitucionAutorizada[] {
+  const porId = new Map<string, InstitucionAutorizada>();
+  for (const r of usuario.roles) {
+    const inst = porId.get(r.institucionId) ?? { id: r.institucionId, nombre: r.institucion, roles: [] };
+    inst.roles.push(r.rol);
+    porId.set(r.institucionId, inst);
+  }
+  return [...porId.values()];
+}
+
+function construirSesion(u: UsuarioRegistrado, institucionActivaId: string | null, nombreGoogle = ''): UsuarioSesion {
+  return {
+    usuarioId: u.id,
+    email: u.email,
+    nombre: u.nombre || nombreGoogle || u.email,
+    institucionActivaId,
+    roles: u.roles,
+  };
 }

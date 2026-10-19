@@ -1,703 +1,1025 @@
-# Tarjetas de DualCampus
+# Catálogo vigente de DualCampus
 
-Propuesta de desglose para validar por el Grupo 1. Estado inicial: Refinamiento.
+56 historias · 8 épicas · 29 MVP · 67 dependencias.
 
-## E1 Acceso institucional
+El avance comprobado se registra en [evidencia](entrega-5/evidencia.md).
 
-### H01 Iniciar sesión con Google
+### H01 · E1 · Ingresar con cuenta institucional [MVP]
 
-**Tarjeta en Trello:** https://trello.com/c/70m8H9f3
+Estado observado: **En revisión**. Prioridad: **MVP**.
 
-**Contexto:** La identidad se delega a Google Workspace y el acceso depende de roles locales.
+Tarjeta: https://trello.com/c/5na2rMNR
 
-Como Benjamin Alonso, quiero ingresar con mi cuenta institucional de Google, para acceder sin una contraseña adicional.
+Como Benjamin Alonso (profesor), quiero iniciar sesión con mi cuenta institucional, para acceder a DualCampus.
 
-**Criterios de aceptación:**
+**Aceptación**
 
-- [ ] CA1: Una cuenta institucional habilitada accede y conserva su identidad al recargar la página.
-- [ ] CA2: Una cuenta sin rol habilitado no accede a datos académicos.
-- [ ] CA3: Una sesión expirada exige autenticarse y no muestra datos protegidos.
+- [ ] CA1. Una cuenta institucional habilitada inicia sesión y conserva su identidad al recargar.
+- [ ] CA2. Una cuenta no autorizada no obtiene una sesión.
+- [ ] CA3. Una sesión vencida impide acceder a recursos protegidos.
 
-**Dependencias:** Ninguna. **Decisiones previas:** Ninguna adicional.
-**Prioridad:** MVP. **Slicing:** Operación.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+**Predecesoras**
 
-### H02 Seleccionar la institución activa
+Sin historias predecesoras.
 
-**Tarjeta en Trello:** https://trello.com/c/KKtmqZ85
+### H02 · E1 · Seleccionar institución activa [MVP]
 
-**Contexto:** El profesor trabaja en ambas instituciones, pero opera solo en una a la vez.
+Estado observado: **En revisión**. Prioridad: **MVP**.
 
-Como Benjamin Alonso, quiero cambiar entre mis instituciones autorizadas, para gestionar cada universidad por separado.
+Tarjeta: https://trello.com/c/slt9retL
 
-**Criterios de aceptación:**
+Como Benjamin Alonso (profesor), quiero seleccionar una institución en la que tengo un rol, para trabajar en el contexto correcto.
 
-- [ ] CA1: El selector muestra únicamente las instituciones en que el usuario tiene un rol.
-- [ ] CA2: Al cambiar de institución se actualizan cursos y datos y se identifica la institución activa.
-- [ ] CA3: Solicitar un recurso de una institución no autorizada no devuelve su contenido.
+**Aceptación**
 
-**Dependencias:** H01. **Decisiones previas:** Ninguna adicional.
-**Prioridad:** MVP. **Slicing:** Operación.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+- [ ] CA1. El selector muestra solamente instituciones autorizadas.
+- [ ] CA2. La institución seleccionada queda visible y persiste durante la sesión.
+- [ ] CA3. El cambio actualiza el contexto de las consultas posteriores.
 
-### H03 Aplicar permisos por rol y sección
+**Predecesoras**
 
-**Tarjeta en Trello:** https://trello.com/c/fZ9QnpKb
+- [H01 · Ingresar con cuenta institucional](https://trello.com/c/5na2rMNR)
 
-**Contexto:** Se aplica la matriz del informe 3 y la negación por defecto. Los roles iniciales se precargan en el piloto.
+### H03 · E1 · Restringir acciones según el rol [MVP]
 
-Como Rodolfo Ávila, quiero que cada usuario acceda solo a las acciones y datos autorizados, para resguardar la información académica.
+Estado observado: **Por hacer**. Prioridad: **MVP**.
 
-**Criterios de aceptación:**
+Tarjeta: https://trello.com/c/tz5CwUMi
 
-- [ ] CA1: El ayudante no puede aprobar notas y el director no obtiene notas individuales.
-- [ ] CA2: Un docente solo accede a secciones asignadas y un alumno solo a sus datos y cursos.
-- [ ] CA3: Una petición directa a la API tampoco permite eludir esos límites.
+Como Rodolfo Ávila (administrador), quiero aplicar los permisos de cada rol, para proteger las acciones académicas.
 
-**Dependencias:** H02. **Decisiones previas:** Ninguna adicional.
-**Prioridad:** MVP. **Slicing:** Regla de negocio.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+**Aceptación**
 
-### H04 Vincular acceso para el egreso
+- [ ] CA1. Cada rol dispone solo de las operaciones definidas para él.
+- [ ] CA2. Una acción prohibida se rechaza también si se invoca directamente por API.
+- [ ] CA3. El rechazo no modifica los datos.
 
-**Tarjeta en Trello:** https://trello.com/c/7uz5662H
+**Predecesoras**
 
-**Contexto:** El riesgo R02 propone una identidad alternativa. Su política debe confirmarse con el cliente.
+- [H02 · Seleccionar institución activa](https://trello.com/c/slt9retL)
 
-Como Tomás Alcaíno, quiero vincular una cuenta personal verificada antes de egresar, para conservar el acceso a mi historial.
+### H04 · E1 · Aislar datos por institución y sección [MVP]
 
-**Criterios de aceptación:**
+Estado observado: **Por hacer**. Prioridad: **MVP**.
 
-- [ ] CA1: La vinculación requiere una sesión vigente y comprobar la propiedad de la cuenta personal.
-- [ ] CA2: La cuenta vinculada identifica al mismo alumno y mantiene solo la consulta de su historial al egresar.
-- [ ] CA3: Una cuenta ya asociada a otra persona se rechaza y el intento queda registrado.
+Tarjeta: https://trello.com/c/Ti1basLl
 
-**Dependencias:** H03. **Decisiones previas:** D3.
-**Prioridad:** Posterior. **Slicing:** Contexto de usuario.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+Como Rodolfo Ávila (administrador), quiero limitar las consultas al ámbito autorizado, para evitar acceso a datos ajenos.
 
-## E2 Configuración académica
+**Aceptación**
 
-### H05 Crear el período académico
+- [ ] CA1. Un profesor consulta solo las secciones que tiene asignadas.
+- [ ] CA2. Un alumno consulta solo sus propios datos y cursos.
+- [ ] CA3. Cambiar identificadores en la solicitud no expone otra institución ni sección.
 
-**Tarjeta en Trello:** https://trello.com/c/r1Zu7qnK
+**Predecesoras**
 
-**Contexto:** La configuración previa al semestre debe conservar autor y fecha.
+- [H03 · Restringir acciones según el rol](https://trello.com/c/tz5CwUMi)
 
-Como Rodolfo Ávila, quiero registrar el período de una institución, para preparar el semestre correcto.
+### H05 · E2 · Crear un período académico [MVP]
 
-**Criterios de aceptación:**
+Estado observado: **En revisión**. Prioridad: **MVP**.
 
-- [ ] CA1: El administrador guarda nombre, institución y fechas coherentes de inicio y término.
-- [ ] CA2: Un período repetido en la misma institución se rechaza sin crear duplicados.
-- [ ] CA3: Al consultar nuevamente se recuperan los datos y el registro de quién lo creó.
+Tarjeta: https://trello.com/c/zOdvgBcH
 
-**Dependencias:** H03. **Decisiones previas:** Ninguna adicional.
-**Prioridad:** MVP. **Slicing:** Operación.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+Como Rodolfo Ávila (administrador), quiero registrar las fechas y el nombre de un período, para preparar el semestre.
 
-### H06 Registrar cursos y secciones
+**Aceptación**
 
-**Tarjeta en Trello:** https://trello.com/c/xV11gEIJ
+- [ ] CA1. Un período válido se guarda en su institución y puede volver a consultarse.
+- [ ] CA2. Se rechazan fechas incoherentes y duplicados dentro de la institución.
+- [ ] CA3. Se registra quién lo creó.
 
-**Contexto:** Los cursos pertenecen a la institución activa y las secciones a un período.
+**Predecesoras**
 
-Como Rodolfo Ávila, quiero registrar cursos y sus secciones en un período, para ordenar la oferta académica.
+- [H04 · Aislar datos por institución y sección](https://trello.com/c/Ti1basLl)
 
-**Criterios de aceptación:**
+### H06 · E2 · Registrar un curso [MVP]
 
-- [ ] CA1: Un curso y una sección válidos quedan asociados al período seleccionado.
-- [ ] CA2: El sistema impide códigos duplicados en el mismo ámbito y referencias a otra institución.
-- [ ] CA3: La lista del período permite revisar los cursos y sus secciones guardadas.
+Estado observado: **Por hacer**. Prioridad: **MVP**.
 
-**Dependencias:** H05. **Decisiones previas:** Ninguna adicional.
-**Prioridad:** MVP. **Slicing:** Operación.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+Tarjeta: https://trello.com/c/9ib0lftY
 
-### H07 Asignar profesores y ayudantes
+Como Rodolfo Ávila (administrador), quiero crear un curso en un período, para organizar la oferta académica.
 
-**Tarjeta en Trello:** https://trello.com/c/3dIpOKsb
+**Aceptación**
 
-**Contexto:** Solo se asignan usuarios habilitados de la institución.
+- [ ] CA1. El curso queda asociado al período e institución seleccionados.
+- [ ] CA2. Se rechaza un código duplicado en el mismo ámbito.
+- [ ] CA3. La lista del período muestra el nuevo curso.
 
-Como Rodolfo Ávila, quiero asignar el equipo docente de cada sección, para dejar habilitado su trabajo académico.
+**Predecesoras**
 
-**Criterios de aceptación:**
+- [H05 · Crear un período académico](https://trello.com/c/zOdvgBcH)
 
-- [ ] CA1: La sección muestra el profesor y los ayudantes asignados después de guardar.
-- [ ] CA2: Un usuario de otra institución sin rol local no se puede asignar.
-- [ ] CA3: La asignación habilita el acceso correspondiente y su modificación deja autor y fecha.
+### H07 · E2 · Crear una sección de curso [MVP]
 
-**Dependencias:** H06. **Decisiones previas:** Ninguna adicional.
-**Prioridad:** MVP. **Slicing:** Operación.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+Estado observado: **Por hacer**. Prioridad: **MVP**.
 
-### H08 Cargar y consultar la nómina oficial
+Tarjeta: https://trello.com/c/vOot6mky
 
-**Tarjeta en Trello:** https://trello.com/c/qBGgS5QX
+Como Rodolfo Ávila (administrador), quiero crear una sección de un curso existente, para distribuir sus grupos docentes.
 
-**Contexto:** Se copia la nómina oficial. DualCampus no realiza inscripción ni toma de ramos.
+**Aceptación**
 
-Como Rodolfo Ávila, quiero cargar la nómina recibida del sistema de inscripción, para mantener los alumnos de cada sección.
+- [ ] CA1. La sección queda vinculada al curso y período correctos.
+- [ ] CA2. Se rechaza una referencia a un curso de otra institución.
+- [ ] CA3. La sección aparece al consultar el curso.
 
-**Criterios de aceptación:**
+**Predecesoras**
 
-- [ ] CA1: Una lista válida asocia alumnos existentes a una sección y permite consultar el total.
-- [ ] CA2: Las filas inválidas se identifican con su motivo antes de confirmar la carga.
-- [ ] CA3: Repetir la misma carga no duplica alumnos y el docente ve la nómina de su sección.
+- [H06 · Registrar un curso](https://trello.com/c/9ib0lftY)
 
-**Dependencias:** H07. **Decisiones previas:** D5.
-**Prioridad:** MVP. **Slicing:** Operación.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+### H08 · E2 · Asignar profesor a una sección [MVP]
 
-### H09 Registrar un retiro informado
+Estado observado: **Por hacer**. Prioridad: **MVP**.
 
-**Tarjeta en Trello:** https://trello.com/c/01CyUeEK
+Tarjeta: https://trello.com/c/45vqPEPZ
 
-**Contexto:** Se actualiza el estado recibido desde el sistema externo, sin tramitar el retiro.
+Como Rodolfo Ávila (administrador), quiero asignar un profesor habilitado, para dejar responsable la sección.
 
-Como Rodolfo Ávila, quiero reflejar un retiro comunicado oficialmente, para mantener actualizada la nómina sin perder antecedentes.
+**Aceptación**
 
-**Criterios de aceptación:**
+- [ ] CA1. La sección muestra al profesor asignado.
+- [ ] CA2. No se acepta un usuario sin rol docente en esa institución.
+- [ ] CA3. El profesor puede consultar su sección tras la asignación.
 
-- [ ] CA1: El registro exige alumno, sección, fecha y referencia del retiro oficial.
-- [ ] CA2: El alumno deja de aparecer como activo y su información histórica se conserva.
-- [ ] CA3: Quedan visibles el responsable, la fecha y el motivo de la actualización.
+**Predecesoras**
 
-**Dependencias:** H08. **Decisiones previas:** Ninguna adicional.
-**Prioridad:** Posterior. **Slicing:** Regla de negocio.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+- [H07 · Crear una sección de curso](https://trello.com/c/vOot6mky)
 
-### H10 Consultar el calendario académico
+### H09 · E2 · Asignar ayudantes a una sección [MVP]
 
-**Tarjeta en Trello:** https://trello.com/c/xpVYMeBs
+Estado observado: **Por hacer**. Prioridad: **MVP**.
 
-**Contexto:** La matriz permite consultar el calendario a los cinco roles. La fuente inicial son las fechas del período.
+Tarjeta: https://trello.com/c/Gm2OO42q
 
-Como Tomás Alcaíno, quiero consultar fechas del período, para organizar mis actividades.
+Como Rodolfo Ávila (administrador), quiero asignar ayudantes habilitados, para permitirles apoyar al profesor.
 
-**Criterios de aceptación:**
+**Aceptación**
 
-- [ ] CA1: La vista muestra las fechas del período de la institución activa.
-- [ ] CA2: Al cambiar de período se muestran sus fechas sin mezclar instituciones.
-- [ ] CA3: Profesor, ayudante, alumno, administrador y director pueden consultar la vista.
+- [ ] CA1. La sección muestra sus ayudantes asignados.
+- [ ] CA2. Un usuario sin rol local se rechaza.
+- [ ] CA3. La modificación registra autor y fecha.
 
-**Dependencias:** H05. **Decisiones previas:** Ninguna adicional.
-**Prioridad:** Posterior. **Slicing:** Operación.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+**Predecesoras**
 
-## E3 Calificaciones con trazabilidad
+- [H08 · Asignar profesor a una sección](https://trello.com/c/45vqPEPZ)
 
-### H11 Crear una evaluación presencial
+### H10 · E2 · Validar una nómina antes de cargarla [MVP]
 
-**Tarjeta en Trello:** https://trello.com/c/LCHj0R4W
+Estado observado: **Por hacer**. Prioridad: **MVP**.
 
-**Contexto:** La prueba se realiza en papel. Se registra su referencia y escala, sin evaluación online.
+Tarjeta: https://trello.com/c/K5Z8BJ63
 
-Como Javiera Ossandón, quiero registrar una evaluación de mi sección, para organizar el posterior ingreso de notas.
+Como Rodolfo Ávila (administrador), quiero revisar la nómina oficial recibida, para detectar filas incorrectas.
 
-**Criterios de aceptación:**
+**Aceptación**
 
-- [ ] CA1: El profesor asignado guarda nombre y fecha y la evaluación aparece en su sección.
-- [ ] CA2: El ayudante no puede crear evaluaciones.
-- [ ] CA3: La evaluación utiliza la escala acordada para la institución, sin aceptar límites incoherentes.
+- [ ] CA1. La vista previa identifica alumnos, sección y cantidad de filas.
+- [ ] CA2. Cada fila inválida muestra el motivo sin modificar la nómina vigente.
+- [ ] CA3. Una nómina de otra institución no se acepta.
 
-**Dependencias:** H08. **Decisiones previas:** D1.
-**Prioridad:** MVP. **Slicing:** Operación.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+**Predecesoras**
 
-### H12 Guardar notas en borrador
+- [H07 · Crear una sección de curso](https://trello.com/c/vOot6mky)
 
-**Tarjeta en Trello:** https://trello.com/c/meg8mhMd
+### H11 · E2 · Confirmar inscripción de alumnos [MVP]
 
-**Contexto:** El informe 3 contempla autoguardado y permite ingreso al profesor y al ayudante.
+Estado observado: **Por hacer**. Prioridad: **MVP**.
 
-Como Diego Riquelme, quiero ingresar y recuperar notas en borrador, para evitar pérdida de digitación.
+Tarjeta: https://trello.com/c/qPP83Rtd
 
-**Criterios de aceptación:**
+Como Rodolfo Ávila (administrador), quiero confirmar una nómina validada, para mantener a los alumnos activos de la sección.
 
-- [ ] CA1: Las notas válidas se guardan y se recuperan al reabrir la evaluación.
-- [ ] CA2: Un valor fuera de escala se rechaza sin sustituir la última nota válida; ausente queda diferenciado de cero.
-- [ ] CA3: Profesor y ayudante asignados pueden editar el borrador; el alumno no ve notas sin publicar.
+**Aceptación**
 
-**Dependencias:** H11. **Decisiones previas:** Ninguna adicional.
-**Prioridad:** MVP. **Slicing:** Paso del flujo.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+- [ ] CA1. Los alumnos válidos quedan inscritos en la sección.
+- [ ] CA2. Repetir la misma carga no crea inscripciones duplicadas.
+- [ ] CA3. El docente puede consultar el total de inscritos.
 
-### H13 Enviar notas a revisión
+**Predecesoras**
 
-**Tarjeta en Trello:** https://trello.com/c/bFU18P2B
+- [H10 · Validar una nómina antes de cargarla](https://trello.com/c/K5Z8BJ63)
 
-**Contexto:** El envío congela la edición del conjunto y cambia su estado.
+### H12 · E2 · Registrar un retiro oficial
 
-Como Diego Riquelme, quiero enviar una evaluación completa al profesor, para dejar constancia de que puede revisarla.
+Estado observado: **Por hacer**. Prioridad: **Posterior**.
 
-**Criterios de aceptación:**
+Tarjeta: https://trello.com/c/v4RbzD3n
 
-- [ ] CA1: Con todas las filas resueltas mediante nota válida o ausencia explícita, el estado pasa a En revisión.
-- [ ] CA2: Una fila incompleta impide enviar y se indica cuál falta.
-- [ ] CA3: En revisión se bloquea la edición, incluso mediante peticiones directas, y queda fecha y autor del envío.
+Como Rodolfo Ávila (administrador), quiero registrar el retiro informado de un alumno, para actualizar la nómina sin perder antecedentes.
 
-**Dependencias:** H12. **Decisiones previas:** Ninguna adicional.
-**Prioridad:** MVP. **Slicing:** Paso del flujo.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+**Aceptación**
 
-### H14 Aprobar y publicar calificaciones
+- [ ] CA1. Se exige alumno, sección, fecha y referencia de la comunicación oficial.
+- [ ] CA2. El alumno deja de figurar como activo y se conservan registros anteriores.
+- [ ] CA3. La operación registra responsable y fecha.
 
-**Tarjeta en Trello:** https://trello.com/c/bl0X5pRu
+**Predecesoras**
 
-**Contexto:** Publicar es una facultad exclusiva del profesor de la sección.
+- [H11 · Confirmar inscripción de alumnos](https://trello.com/c/qPP83Rtd)
 
-Como Javiera Ossandón, quiero aprobar las notas revisadas, para poner los resultados oficiales a disposición de mis alumnos.
+### H13 · E2 · Consultar calendario del período
 
-**Criterios de aceptación:**
+Estado observado: **Por hacer**. Prioridad: **Posterior**.
 
-- [ ] CA1: El profesor consulta la evaluación En revisión y puede aprobarla.
-- [ ] CA2: La aprobación cambia a Publicada y habilita la consulta de las notas propias de cada alumno.
-- [ ] CA3: Un ayudante o docente no asignado no puede publicar y la operación deja registro auditable.
+Tarjeta: https://trello.com/c/BwGUry5T
 
-**Dependencias:** H13. **Decisiones previas:** Ninguna adicional.
-**Prioridad:** MVP. **Slicing:** Paso del flujo.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+Como Tomás Alcaíno (alumno), quiero consultar las fechas del período activo, para organizar mis actividades.
 
-### H15 Devolver y reenviar calificaciones
+**Aceptación**
 
-**Tarjeta en Trello:** https://trello.com/c/o1qae3Cl
+- [ ] CA1. La vista presenta inicio y término del período de la institución activa.
+- [ ] CA2. Cambiar de período actualiza las fechas sin mezclar instituciones.
+- [ ] CA3. Una institución sin calendario muestra Sin datos.
 
-**Contexto:** El ciclo de devolución es un camino alternativo a la aprobación.
+**Predecesoras**
 
-Como Javiera Ossandón, quiero devolver notas con observaciones, para corregir errores antes de publicarlas.
+- [H05 · Crear un período académico](https://trello.com/c/zOdvgBcH)
 
-**Criterios de aceptación:**
+### H14 · E3 · Crear una evaluación presencial [MVP]
 
-- [ ] CA1: La devolución exige un comentario y cambia de En revisión a Devuelta.
-- [ ] CA2: El ayudante ve el comentario, corrige las notas y las conserva sin publicarlas.
-- [ ] CA3: El reenvío vuelve a En revisión, bloquea la edición y conserva la observación previa.
+Estado observado: **Por hacer**. Prioridad: **MVP**.
 
-**Dependencias:** H13. **Decisiones previas:** Ninguna adicional.
-**Prioridad:** MVP. **Slicing:** Flujo alternativo.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+Tarjeta: https://trello.com/c/Q2DPoorX
 
-### H16 Consultar mis notas publicadas
+Como Javiera Ossandón (profesora), quiero registrar una evaluación de mi sección, para organizar su calificación.
 
-**Tarjeta en Trello:** https://trello.com/c/iJcqjPTQ
+**Aceptación**
 
-**Contexto:** La visibilidad individual aplica solo al titular de la nota.
+- [ ] CA1. Nombre y fecha válidos crean una evaluación en la sección.
+- [ ] CA2. El ayudante no puede crearla.
+- [ ] CA3. La evaluación usa la escala definida para la institución.
 
-Como Tomás Alcaíno, quiero consultar las calificaciones publicadas de mis cursos, para conocer mis resultados.
+**Predecesoras**
 
-**Criterios de aceptación:**
+- [H09 · Asignar ayudantes a una sección](https://trello.com/c/Gm2OO42q)
+- [H11 · Confirmar inscripción de alumnos](https://trello.com/c/qPP83Rtd)
 
-- [ ] CA1: El alumno ve evaluación, nota y estado publicado de sus cursos.
-- [ ] CA2: Borradores y notas En revisión o Devueltas no exponen valores al alumno.
-- [ ] CA3: Cambiar el identificador de alumno o sección no permite consultar notas ajenas.
+### H15 · E3 · Ingresar notas en borrador [MVP]
 
-**Dependencias:** H14. **Decisiones previas:** Ninguna adicional.
-**Prioridad:** MVP. **Slicing:** Rol.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+Estado observado: **Por hacer**. Prioridad: **MVP**.
 
-### H17 Corregir una nota de cierre
+Tarjeta: https://trello.com/c/pkndAe3f
 
-**Tarjeta en Trello:** https://trello.com/c/kkR2ZJNe
+Como Diego Riquelme (ayudante), quiero guardar notas parciales de una evaluación, para evitar pérdida de digitación.
 
-**Contexto:** La operación extraordinaria corresponde solo al administrador y exige motivo.
+**Aceptación**
 
-Como Rodolfo Ávila, quiero corregir una nota final por solicitud formal, para resolver errores conservando el historial.
+- [ ] CA1. Una nota válida se guarda y se recupera al reabrir.
+- [ ] CA2. Un valor fuera de escala no reemplaza la última nota válida.
+- [ ] CA3. El alumno no ve valores en el borrador.
 
-**Criterios de aceptación:**
+**Predecesoras**
 
-- [ ] CA1: Una corrección autorizada exige nueva nota válida, motivo y referencia de la solicitud.
-- [ ] CA2: Se conservan valor anterior, valor nuevo, autor y fecha sin borrar la trazabilidad.
-- [ ] CA3: El alumno ve el valor corregido y ningún profesor o ayudante puede ejecutar esta operación.
+- [H14 · Crear una evaluación presencial](https://trello.com/c/Q2DPoorX)
 
-**Dependencias:** H14. **Decisiones previas:** D7.
-**Prioridad:** Posterior. **Slicing:** Regla de negocio.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+### H16 · E3 · Registrar ausencias en borrador [MVP]
 
-### H18 Consultar la trazabilidad de cambios
+Estado observado: **Por hacer**. Prioridad: **MVP**.
 
-**Tarjeta en Trello:** https://trello.com/c/uBzYZwR8
+Tarjeta: https://trello.com/c/iM5a6Z87
 
-**Contexto:** Los registros se generan desde cada operación, aunque la consulta se entregue después.
+Como Diego Riquelme (ayudante), quiero marcar explícitamente a un alumno ausente, para distinguir ausencia de nota cero.
 
-Como Rodolfo Ávila, quiero consultar quién modificó una evaluación, para respaldar la revisión de incidentes.
+**Aceptación**
 
-**Criterios de aceptación:**
+- [ ] CA1. La ausencia se guarda como un estado distinto de cero.
+- [ ] CA2. El profesor ve la marca al revisar el borrador.
+- [ ] CA3. Solo profesor o ayudante asignado pueden modificarla.
 
-- [ ] CA1: Una búsqueda por evaluación lista eventos en orden con autor, fecha y acción.
-- [ ] CA2: Los cambios de nota muestran valor previo y posterior y motivo cuando corresponde.
-- [ ] CA3: La consulta no ofrece editar o eliminar eventos y respeta la institución activa.
+**Predecesoras**
 
-**Dependencias:** H14. **Decisiones previas:** D6.
-**Prioridad:** MVP. **Slicing:** Operación.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+- [H15 · Ingresar notas en borrador](https://trello.com/c/pkndAe3f)
 
-## E4 Materiales y entregas
+### H17 · E3 · Enviar evaluación a revisión [MVP]
 
-### H19 Publicar material y syllabus
+Estado observado: **Por hacer**. Prioridad: **MVP**.
 
-**Tarjeta en Trello:** https://trello.com/c/WOtz0YEL
+Tarjeta: https://trello.com/c/FLz2acBM
 
-**Contexto:** El material incluye PDFs, presentaciones y el syllabus.
+Como Diego Riquelme (ayudante), quiero enviar un borrador completo al profesor, para pedir su aprobación.
 
-Como Javiera Ossandón, quiero publicar documentos de mi sección, para compartir el contenido de clases.
+**Aceptación**
 
-**Criterios de aceptación:**
+- [ ] CA1. Todas las filas deben tener nota válida o ausencia explícita.
+- [ ] CA2. El envío cambia el estado a "En revisión” y bloquea nuevas ediciones.
+- [ ] CA3. Se conservan autor y fecha del envío.
 
-- [ ] CA1: Un archivo permitido con título queda asociado a la sección y aparece al consultar sus materiales.
-- [ ] CA2: Un archivo que excede los límites acordados se rechaza con un mensaje claro.
-- [ ] CA3: Solo el profesor asignado puede publicar y el archivo no aparece si la carga falla.
+**Predecesoras**
 
-**Dependencias:** H07. **Decisiones previas:** D4.
-**Prioridad:** MVP. **Slicing:** Operación.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+- [H15 · Ingresar notas en borrador](https://trello.com/c/pkndAe3f)
+- [H16 · Registrar ausencias en borrador](https://trello.com/c/iM5a6Z87)
 
-### H20 Consultar y descargar material
+### H18 · E3 · Devolver evaluación observada [MVP]
 
-**Tarjeta en Trello:** https://trello.com/c/dcbSemsI
+Estado observado: **Por hacer**. Prioridad: **MVP**.
 
-**Contexto:** Profesor y ayudante también consultan material de sus secciones.
+Tarjeta: https://trello.com/c/mm4Hxtdu
 
-Como Tomás Alcaíno, quiero descargar el material de mis cursos, para estudiar con los documentos del profesor.
+Como Javiera Ossandón (profesora), quiero devolver una evaluación con comentarios, para solicitar su corrección.
 
-**Criterios de aceptación:**
+**Aceptación**
 
-- [ ] CA1: El alumno inscrito ve el título del material y descarga el archivo correcto.
-- [ ] CA2: Profesor y ayudante asignados pueden consultar el mismo material.
-- [ ] CA3: Un usuario ajeno al curso no descarga el archivo, incluso si conoce su enlace.
+- [ ] CA1. La devolución exige un comentario y cambia el estado a Devuelta.
+- [ ] CA2. El ayudante asignado ve la observación y puede corregir.
+- [ ] CA3. Las notas siguen ocultas al alumnado.
 
-**Dependencias:** H19, H08. **Decisiones previas:** Ninguna adicional.
-**Prioridad:** MVP. **Slicing:** Rol.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+**Predecesoras**
 
-### H21 Reutilizar material entre períodos
+- [H17 · Enviar evaluación a revisión](https://trello.com/c/FLz2acBM)
 
-**Tarjeta en Trello:** https://trello.com/c/mAqdWi5O
+### H19 · E3 · Reenviar evaluación corregida [MVP]
 
-**Contexto:** Se atiende el desgaste documentado en la entrega 2. Se propone copia dentro de una institución.
+Estado observado: **Por hacer**. Prioridad: **MVP**.
 
-Como Benjamin Alonso, quiero copiar material de una sección anterior, para preparar el semestre sin repetir cargas.
+Tarjeta: https://trello.com/c/2n2jOSHg
 
-**Criterios de aceptación:**
+Como Diego Riquelme (ayudante), quiero reenviar la evaluación de vuelta, para dejarla lista para otra revisión.
 
-- [ ] CA1: El profesor elige material de una sección de origen y una de destino en que está autorizado.
-- [ ] CA2: La copia conserva el archivo y permite revisar título y sección antes de publicar.
-- [ ] CA3: Cambiar la copia no altera el material anterior y no se permite copiar entre instituciones.
+**Aceptación**
 
-**Dependencias:** H19. **Decisiones previas:** D6.
-**Prioridad:** Posterior. **Slicing:** Operación.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+- [ ] CA1. Se verifica otra vez que todas las filas estén resueltas.
+- [ ] CA2. El reenvío cambia el estado a "En revisión” y bloquea la edición.
+- [ ] CA3. Quedan visibles la observación anterior y fecha del reenvío.
 
-### H22 Habilitar la recepción de un informe
+**Predecesoras**
 
-**Tarjeta en Trello:** https://trello.com/c/4ncpj4oy
+- [H18 · Devolver evaluación observada](https://trello.com/c/mm4Hxtdu)
 
-**Contexto:** La recepción de documentos acompaña una evaluación presencial.
+### H20 · E3 · Publicar notas aprobadas [MVP]
 
-Como Javiera Ossandón, quiero definir instrucciones y plazo de una entrega, para recibir los archivos de mi evaluación.
+Estado observado: **Por hacer**. Prioridad: **MVP**.
 
-**Criterios de aceptación:**
+Tarjeta: https://trello.com/c/C4WdFt31
 
-- [ ] CA1: El profesor guarda instrucciones, fecha y hora límite, formatos y tamaño máximo acordados.
-- [ ] CA2: El alumno del curso puede consultar esas condiciones antes de subir el archivo.
-- [ ] CA3: Un cierre anterior a la apertura se rechaza sin habilitar la entrega.
+Como Javiera Ossandón (profesora), quiero aprobar una evaluación revisada, para comunicar resultados oficiales.
 
-**Dependencias:** H11. **Decisiones previas:** D4.
-**Prioridad:** MVP. **Slicing:** Operación.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+**Aceptación**
 
-### H23 Enviar un archivo y obtener comprobante
+- [ ] CA1. Solo el profesor asignado puede publicar una evaluación En revisión.
+- [ ] CA2. La publicación deja autor y fecha y cambia el estado a Publicada.
+- [ ] CA3. Un ayudante o docente no asignado no puede ejecutar la operación.
 
-**Tarjeta en Trello:** https://trello.com/c/P8R0ugQO
+**Predecesoras**
 
-**Contexto:** El riesgo R06 exige confirmar almacenamiento antes de informar éxito.
+- [H17 · Enviar evaluación a revisión](https://trello.com/c/FLz2acBM)
 
-Como Tomás Alcaíno, quiero subir mi informe y confirmar su recepción, para tener evidencia de que lo entregué.
+### H21 · E3 · Consultar notas propias publicadas [MVP]
 
-**Criterios de aceptación:**
+Estado observado: **Por hacer**. Prioridad: **MVP**.
 
-- [ ] CA1: Dentro de plazo, un archivo permitido queda almacenado y asociado al alumno y evaluación.
-- [ ] CA2: Solo después de guardar el archivo se muestra comprobante con nombre y fecha de recepción.
-- [ ] CA3: Una carga fallida o fuera de plazo no emite éxito y explica la causa sin afectar una entrega previa.
+Tarjeta: https://trello.com/c/YVSAOw4X
 
-**Dependencias:** H22. **Decisiones previas:** Ninguna adicional.
-**Prioridad:** MVP. **Slicing:** Flujo habitual.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+Como Tomás Alcaíno (alumno), quiero ver mis notas publicadas, para conocer mis resultados.
 
-### H24 Consultar y descargar entregas
+**Aceptación**
 
-**Tarjeta en Trello:** https://trello.com/c/jLY5Mn1F
+- [ ] CA1. Se muestran evaluación y nota de mis cursos publicados.
+- [ ] CA2. Borradores y evaluaciones en revisión o devueltas no se exponen.
+- [ ] CA3. Solicitar el identificador de otro alumno no muestra sus notas.
 
-**Contexto:** Ayudante y profesor acceden a entregas de su sección; el alumno solo a las propias.
+**Predecesoras**
 
-Como Javiera Ossandón, quiero consultar los informes de mi sección, para revisar el trabajo recibido.
+- [H20 · Publicar notas aprobadas](https://trello.com/c/C4WdFt31)
 
-**Criterios de aceptación:**
+### H22 · E3 · Corregir una nota publicada
 
-- [ ] CA1: Profesor y ayudante ven nombre del archivo, autor y fecha, y descargan el archivo recibido.
-- [ ] CA2: El alumno consulta su comprobante y su propio archivo.
-- [ ] CA3: Ni otro alumno ni un docente no asignado pueden descargar la entrega.
+Estado observado: **Por hacer**. Prioridad: **Posterior**.
 
-**Dependencias:** H23. **Decisiones previas:** Ninguna adicional.
-**Prioridad:** MVP. **Slicing:** Rol.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+Tarjeta: https://trello.com/c/BLfsG4iJ
 
-### H25 Recuperar una carga fallida
+Como Rodolfo Ávila (administrador), quiero modificar una nota por solicitud formal, para resolver un error documentado.
 
-**Tarjeta en Trello:** https://trello.com/c/1hgotzsx
+**Aceptación**
 
-**Contexto:** El riesgo R06 propone reintento y reapertura excepcional por el profesor.
+- [ ] CA1. Se exige valor válido, motivo y referencia de la solicitud.
+- [ ] CA2. Se conservan valor previo, valor nuevo, autor y fecha.
+- [ ] CA3. El alumno ve el valor vigente; profesor y ayudante no pueden corregir por esta vía.
 
-Como Tomás Alcaíno, quiero reanudar o reintentar una carga interrumpida, para completar la entrega sin perder el progreso disponible.
+**Predecesoras**
 
-**Criterios de aceptación:**
+- [H20 · Publicar notas aprobadas](https://trello.com/c/C4WdFt31)
 
-- [ ] CA1: Una interrupción permite reintentar sin duplicar una entrega confirmada.
-- [ ] CA2: El intento fallido conserva fecha y motivo para su revisión por el profesor.
-- [ ] CA3: Una reapertura autorizada se limita al alumno y plazo indicados y queda registrada.
+### H23 · E3 · Consultar auditoría de calificaciones [MVP]
 
-**Dependencias:** H23. **Decisiones previas:** D4 D6.
-**Prioridad:** Posterior. **Slicing:** Flujo infeliz.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+Estado observado: **Por hacer**. Prioridad: **MVP**.
 
-## E5 Registro de asistencia
+Tarjeta: https://trello.com/c/GDqQSw6C
 
-### H26 Registrar asistencia por clase
+Como Rodolfo Ávila (administrador), quiero consultar eventos de una evaluación, para revisar quién actuó y cuándo.
 
-**Tarjeta en Trello:** https://trello.com/c/ROLiYyXf
+**Aceptación**
 
-**Contexto:** La asistencia está en el alcance previo, pero falta su matriz de permisos.
+- [ ] CA1. Se listan creación, envío, devolución y publicación con autor y fecha.
+- [ ] CA2. Los eventos existentes no se pueden editar ni eliminar desde la consulta.
+- [ ] CA3. Una corrección posterior añade su valor previo, nuevo y motivo al registro.
 
-Como Javiera Ossandón, quiero registrar la asistencia de mi sección, para mantener evidencia de participación.
+**Predecesoras**
 
-**Criterios de aceptación:**
+- [H20 · Publicar notas aprobadas](https://trello.com/c/C4WdFt31)
 
-- [ ] CA1: El profesor asignado registra una clase y resuelve la asistencia de cada alumno activo.
-- [ ] CA2: Al reabrir la clase se recuperan exactamente los valores guardados.
-- [ ] CA3: Un usuario no autorizado no altera asistencia y cada registro identifica autor y fecha.
+### H24 · E4 · Publicar un material de curso [MVP]
 
-**Dependencias:** H08. **Decisiones previas:** D2.
-**Prioridad:** Posterior. **Slicing:** Operación.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+Estado observado: **Por hacer**. Prioridad: **MVP**.
 
-### H27 Consultar asistencia propia
+Tarjeta: https://trello.com/c/pcuW5Kai
 
-**Tarjeta en Trello:** https://trello.com/c/sS3mhYnX
+Como Javiera Ossandón (profesora), quiero subir un documento con título a mi sección, para compartirlo con mis alumnos.
 
-**Contexto:** Se propone consulta individual del alumno y denominador explícito para el porcentaje.
+**Aceptación**
 
-Como Tomás Alcaíno, quiero consultar mis registros de asistencia, para detectar posibles diferencias.
+- [ ] CA1. El archivo permitido aparece solo después de almacenarse correctamente.
+- [ ] CA2. Un archivo fuera de límites muestra el motivo del rechazo.
+- [ ] CA3. Solo el profesor asignado puede publicarlo.
 
-**Criterios de aceptación:**
+**Predecesoras**
 
-- [ ] CA1: El alumno ve su estado por clase registrada, sin datos de otros alumnos.
-- [ ] CA2: La vista muestra presentes y total de clases consideradas y calcula su proporción.
-- [ ] CA3: Con cero clases válidas se muestra Sin datos y no un porcentaje inventado.
+- [H09 · Asignar ayudantes a una sección](https://trello.com/c/Gm2OO42q)
 
-**Dependencias:** H26. **Decisiones previas:** D2.
-**Prioridad:** Posterior. **Slicing:** Rol.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+### H25 · E4 · Descargar materiales autorizados [MVP]
 
-### H28 Corregir un registro de asistencia
+Estado observado: **Por hacer**. Prioridad: **MVP**.
 
-**Tarjeta en Trello:** https://trello.com/c/Ovz1HRhc
+Tarjeta: https://trello.com/c/eux5cgqp
 
-**Contexto:** Se conserva el dato anterior para respaldar la corrección.
+Como Tomás Alcaíno (alumno), quiero descargar material de mis cursos, para estudiar su contenido.
 
-Como Javiera Ossandón, quiero corregir una marca equivocada, para mantener un registro preciso.
+**Aceptación**
 
-**Criterios de aceptación:**
+- [ ] CA1. El alumno inscrito descarga el archivo correspondiente al título.
+- [ ] CA2. Profesor y ayudante asignados también pueden consultarlo.
+- [ ] CA3. Un usuario ajeno no descarga el archivo aunque conozca su enlace.
 
-- [ ] CA1: El profesor autorizado cambia una marca con motivo obligatorio.
-- [ ] CA2: Se conservan el estado previo, el nuevo, autor, fecha y motivo.
-- [ ] CA3: La consulta individual y las métricas posteriores usan el dato corregido.
+**Predecesoras**
 
-**Dependencias:** H26. **Decisiones previas:** D2.
-**Prioridad:** Posterior. **Slicing:** Flujo infeliz.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+- [H11 · Confirmar inscripción de alumnos](https://trello.com/c/qPP83Rtd)
+- [H24 · Publicar un material de curso](https://trello.com/c/pcuW5Kai)
 
-## E6 Historial académico
+### H26 · E4 · Reutilizar material entre períodos
 
-### H29 Importar historial validado
+Estado observado: **Por hacer**. Prioridad: **Posterior**.
 
-**Tarjeta en Trello:** https://trello.com/c/KJ3Gi93R
+Tarjeta: https://trello.com/c/2NNtgPZa
 
-**Contexto:** El riesgo R01 propone lotes conciliados con Registro Curricular.
+Como Benjamin Alonso (profesor), quiero copiar un material anterior a otra sección autorizada, para preparar el siguiente semestre.
 
-Como Rodolfo Ávila, quiero importar calificaciones históricas verificadas, para centralizar los registros dispersos.
+**Aceptación**
 
-**Criterios de aceptación:**
+- [ ] CA1. Se seleccionan secciones de origen y destino de la misma institución.
+- [ ] CA2. La copia se revisa antes de publicarse en destino.
+- [ ] CA3. Editar la copia no altera el material original.
 
-- [ ] CA1: La vista previa identifica filas inválidas por identidad, sección o escala y explica el rechazo.
-- [ ] CA2: Solo un lote validado y conciliado se confirma, con identificador y totales de control.
-- [ ] CA3: El mismo lote no duplica registros y una reversión elimina únicamente sus efectos sin alterar datos posteriores.
+**Predecesoras**
 
-**Dependencias:** H08. **Decisiones previas:** D5.
-**Prioridad:** Posterior. **Slicing:** Operación.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+- [H24 · Publicar un material de curso](https://trello.com/c/pcuW5Kai)
 
-### H30 Consultar historial por período
+### H27 · E4 · Crear una actividad de entrega [MVP]
 
-**Tarjeta en Trello:** https://trello.com/c/cjdDrK0Y
+Estado observado: **Por hacer**. Prioridad: **MVP**.
 
-**Contexto:** La consulta funciona con notas publicadas actuales. La importación histórica amplía su contenido después.
+Tarjeta: https://trello.com/c/UaCYtNSb
 
-Como Tomás Alcaíno, quiero consultar mis calificaciones por período y asignatura, para revisar mi trayectoria académica.
+Como Javiera Ossandón (profesora), quiero definir una actividad para recibir un informe, para abrir una entrega sin necesitar una evaluación de notas.
 
-**Criterios de aceptación:**
+**Aceptación**
 
-- [ ] CA1: El alumno selecciona un período y consulta asignaturas y calificaciones propias disponibles.
-- [ ] CA2: Un período sin registros muestra Sin datos y no calificaciones supuestas.
-- [ ] CA3: Las notas importadas validadas aparecen cuando existe un lote confirmado, sin exponer datos ajenos.
+- [ ] CA1. Título e instrucciones crean una actividad en la sección.
+- [ ] CA2. El alumno inscrito consulta las instrucciones.
+- [ ] CA3. La actividad no requiere una evaluación presencial previa.
 
-**Dependencias:** H16. **Decisiones previas:** Ninguna adicional.
-**Prioridad:** MVP. **Slicing:** Operación.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+**Predecesoras**
 
-### H31 Consultar historial tras el egreso
+- [H09 · Asignar ayudantes a una sección](https://trello.com/c/Gm2OO42q)
 
-**Tarjeta en Trello:** https://trello.com/c/DeJld3db
+### H28 · E4 · Configurar plazo y formatos de entrega [MVP]
 
-**Contexto:** Se utiliza la identidad personal vinculada según la política acordada.
+Estado observado: **Por hacer**. Prioridad: **MVP**.
 
-Como Tomás Alcaíno, quiero consultar mi historial después de egresar, para acceder a mis antecedentes académicos.
+Tarjeta: https://trello.com/c/6aN3JxDF
 
-**Criterios de aceptación:**
+Como Javiera Ossandón (profesora), quiero definir apertura, cierre y tipos de archivo, para establecer condiciones claras.
 
-- [ ] CA1: Con la cuenta institucional deshabilitada, la cuenta vinculada permite consultar el historial del mismo alumno.
-- [ ] CA2: El egresado no modifica datos ni accede a cursos de terceros.
-- [ ] CA3: Sin vinculación verificada se informa el canal de asistencia de Registro Curricular.
+**Aceptación**
 
-**Dependencias:** H04, H30. **Decisiones previas:** D3.
-**Prioridad:** Posterior. **Slicing:** Contexto de usuario.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+- [ ] CA1. Se guardan fecha y hora de apertura y cierre, formato y tamaño máximo.
+- [ ] CA2. Un cierre anterior a la apertura se rechaza.
+- [ ] CA3. El alumno ve las condiciones antes de subir un archivo.
 
-## E7 Reportería institucional
+**Predecesoras**
 
-### H32 Consultar métricas de mi curso
+- [H27 · Crear una actividad de entrega](https://trello.com/c/UaCYtNSb)
 
-**Tarjeta en Trello:** https://trello.com/c/39JDhp7A
+### H29 · E4 · Enviar un archivo de actividad [MVP]
 
-**Contexto:** La matriz permite métricas al profesor asignado. Las notas usadas deben estar publicadas.
+Estado observado: **Por hacer**. Prioridad: **MVP**.
 
-Como Benjamin Alonso, quiero consultar rendimiento y asistencia de mi sección, para identificar necesidades de seguimiento.
+Tarjeta: https://trello.com/c/clwfvU65
 
-**Criterios de aceptación:**
+Como Tomás Alcaíno (alumno), quiero subir mi informe dentro del plazo, para entregar mi trabajo.
 
-- [ ] CA1: El profesor selecciona su sección y ve distribución de notas publicadas y asistencia registrada.
-- [ ] CA2: Los indicadores explicitan período, cantidad de datos y denominadores utilizados.
-- [ ] CA3: Un docente no asignado no consulta estas métricas y la ausencia de datos se muestra expresamente.
+**Aceptación**
 
-**Dependencias:** H16, H26. **Decisiones previas:** D2.
-**Prioridad:** Posterior. **Slicing:** Operación.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+- [ ] CA1. Un archivo permitido queda asociado a mi actividad y cuenta.
+- [ ] CA2. Un archivo inválido o fuera de plazo se rechaza con motivo.
+- [ ] CA3. Una falla de carga no sustituye una entrega previamente confirmada.
 
-### H33 Consultar reportes institucionales agregados
+**Predecesoras**
 
-**Tarjeta en Trello:** https://trello.com/c/TUWgDkPi
+- [H11 · Confirmar inscripción de alumnos](https://trello.com/c/qPP83Rtd)
+- [H28 · Configurar plazo y formatos de entrega](https://trello.com/c/6aN3JxDF)
 
-**Contexto:** El informe 3 fija grupos de al menos cinco alumnos y una institución activa.
+### H30 · E4 · Obtener comprobante de entrega [MVP]
 
-Como Rodrigo Manríquez, quiero filtrar indicadores por facultad y período, para evaluar el desempeño sin identificar alumnos.
+Estado observado: **Por hacer**. Prioridad: **MVP**.
 
-**Criterios de aceptación:**
+Tarjeta: https://trello.com/c/PzQjRAq0
 
-- [ ] CA1: El director obtiene indicadores agregados de la institución activa sin nombres ni identificadores individuales.
-- [ ] CA2: Se suprimen grupos con menos de cinco alumnos y combinaciones que permitan inferir un grupo pequeño.
-- [ ] CA3: Los filtros y totales no permiten reconstruir valores individuales y una consulta directa tampoco devuelve el detalle.
+Como Tomás Alcaíno (alumno), quiero ver la confirmación del archivo recibido, para tener evidencia de la entrega.
 
-**Dependencias:** H32. **Decisiones previas:** Ninguna adicional.
-**Prioridad:** Posterior. **Slicing:** Operación.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+**Aceptación**
 
-### H34 Exportar un reporte agregado
+- [ ] CA1. Solo una entrega almacenada genera comprobante.
+- [ ] CA2. El comprobante muestra archivo, actividad y fecha de recepción.
+- [ ] CA3. Al reabrir la actividad puedo consultar el mismo comprobante.
 
-**Tarjeta en Trello:** https://trello.com/c/RXICpr7N
+**Predecesoras**
 
-**Contexto:** Las restricciones se mantienen también en el archivo exportado.
+- [H29 · Enviar un archivo de actividad](https://trello.com/c/clwfvU65)
 
-Como Rodrigo Manríquez, quiero exportar el reporte que estoy consultando, para compartir indicadores autorizados.
+### H31 · E4 · Consultar informes recibidos [MVP]
 
-**Criterios de aceptación:**
+Estado observado: **Por hacer**. Prioridad: **MVP**.
 
-- [ ] CA1: La exportación identifica filtros, período y fecha, y coincide con los datos visibles.
-- [ ] CA2: El archivo conserva la supresión de grupos pequeños y no incluye identificadores individuales.
-- [ ] CA3: Sin permiso vigente se rechaza la descarga.
+Tarjeta: https://trello.com/c/CzzqL8z6
 
-**Dependencias:** H33. **Decisiones previas:** Ninguna adicional.
-**Prioridad:** Posterior. **Slicing:** Operación.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+Como Javiera Ossandón (profesora), quiero ver los informes de mi sección, para organizar su revisión.
 
-### H35 Programar un reporte periódico
+**Aceptación**
 
-**Tarjeta en Trello:** https://trello.com/c/MXRd1Ft7
+- [ ] CA1. Profesor y ayudante asignados ven autor, archivo y fecha.
+- [ ] CA2. Una sección sin entregas muestra ese estado.
+- [ ] CA3. Un docente no asignado no consulta la lista.
 
-**Contexto:** La matriz del informe 3 incluye la programación; el Worker ejecuta tareas diferidas.
+**Predecesoras**
 
-Como Rodrigo Manríquez, quiero programar reportes agregados, para recibir información periódica sin repetir la consulta.
+- [H29 · Enviar un archivo de actividad](https://trello.com/c/clwfvU65)
 
-**Criterios de aceptación:**
+### H32 · E4 · Descargar un informe recibido [MVP]
 
-- [ ] CA1: El director guarda filtros, frecuencia y destino institucional autorizado.
-- [ ] CA2: Al ejecutarse se revalidan permisos y privacidad y queda fecha y estado del resultado.
-- [ ] CA3: El director puede cancelar la programación y una ejecución fallida no se registra como exitosa.
+Estado observado: **Por hacer**. Prioridad: **MVP**.
 
-**Dependencias:** H34. **Decisiones previas:** D8.
-**Prioridad:** Posterior. **Slicing:** Optimización posterior.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+Tarjeta: https://trello.com/c/DINnm5ys
 
-## E8 Comunicación académica
+Como Javiera Ossandón (profesora), quiero descargar un archivo entregado, para revisar su contenido.
 
-### H36 Publicar un anuncio del curso
+**Aceptación**
 
-**Tarjeta en Trello:** https://trello.com/c/3WC9JySN
+- [ ] CA1. El archivo descargado corresponde a la entrega seleccionada.
+- [ ] CA2. El alumno puede descargar solo su propia entrega.
+- [ ] CA3. Ni otro alumno ni un usuario ajeno obtienen el archivo.
 
-**Contexto:** La comunicación está en la entrega 2. Se propone un canal de anuncios, con permisos pendientes.
+**Predecesoras**
 
-Como Javiera Ossandón, quiero publicar un anuncio en mi sección, para comunicar indicaciones en un canal común.
+- [H31 · Consultar informes recibidos](https://trello.com/c/CzzqL8z6)
 
-**Criterios de aceptación:**
+### H33 · E4 · Reintentar una carga interrumpida
 
-- [ ] CA1: El profesor asignado guarda título y mensaje y el anuncio aparece en su sección.
-- [ ] CA2: Un usuario no autorizado no puede publicar.
-- [ ] CA3: La publicación identifica autor y fecha y no aparece en otra institución.
+Estado observado: **Por hacer**. Prioridad: **Posterior**.
 
-**Dependencias:** H07. **Decisiones previas:** D2.
-**Prioridad:** Posterior. **Slicing:** Operación.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+Tarjeta: https://trello.com/c/0X0Yudh6
 
-### H37 Consultar anuncios de mis cursos
+Como Tomás Alcaíno (alumno), quiero reintentar el envío fallido, para completar mi entrega sin duplicarla.
 
-**Tarjeta en Trello:** https://trello.com/c/y4FoRq31
+**Aceptación**
 
-**Contexto:** El primer corte aborda comunicación unidireccional. Mensajería bidireccional requiere validación adicional.
+- [ ] CA1. Un reintento exitoso deja una sola entrega confirmada.
+- [ ] CA2. El fallo muestra una causa y no emite comprobante.
+- [ ] CA3. El reintento respeta el plazo vigente o una reapertura autorizada.
 
-Como Tomás Alcaíno, quiero consultar los anuncios de mis secciones, para conocer las indicaciones del profesor.
+**Predecesoras**
 
-**Criterios de aceptación:**
+- [H29 · Enviar un archivo de actividad](https://trello.com/c/clwfvU65)
 
-- [ ] CA1: El alumno inscrito ve anuncios ordenados por fecha con título, mensaje y autor.
-- [ ] CA2: El alumno no ve anuncios de cursos ajenos ni de otra institución.
-- [ ] CA3: Una sección sin anuncios muestra ese estado con claridad.
+### H34 · E5 · Crear un registro de clase
 
-**Dependencias:** H36, H08. **Decisiones previas:** D2.
-**Prioridad:** Posterior. **Slicing:** Rol.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+Estado observado: **Por hacer**. Prioridad: **Posterior**.
 
-### H38 Recibir avisos de notas por correo
+Tarjeta: https://trello.com/c/Vk7is5RK
 
-**Tarjeta en Trello:** https://trello.com/c/4GJ2dQOB
+Como Javiera Ossandón (profesora), quiero registrar una sesión con fecha, para preparar el control de asistencia.
 
-**Contexto:** El correo es un aviso y la plataforma conserva la información oficial, según R14.
+**Aceptación**
 
-Como Tomás Alcaíno, quiero recibir un aviso cuando se publique o corrija una nota, para saber cuándo consultar la plataforma.
+- [ ] CA1. La clase queda asociada a mi sección y fecha.
+- [ ] CA2. Un usuario no asignado no puede crearla.
+- [ ] CA3. Una clase duplicada según la regla acordada se rechaza.
 
-**Criterios de aceptación:**
+**Predecesoras**
 
-- [ ] CA1: La publicación o corrección genera un aviso para el alumno afectado con enlace autenticado y sin la nota en el correo.
-- [ ] CA2: Un fallo permite reintentar sin duplicar avisos ya enviados y deja estado de entrega.
-- [ ] CA3: El alumno puede consultar sus notas en la plataforma aunque el proveedor de correo falle.
+- [H09 · Asignar ayudantes a una sección](https://trello.com/c/Gm2OO42q)
+- [H11 · Confirmar inscripción de alumnos](https://trello.com/c/qPP83Rtd)
 
-**Dependencias:** H14, H17. **Decisiones previas:** Ninguna adicional.
-**Prioridad:** Posterior. **Slicing:** Canal de comunicación.
-**Responsable:** por asignar. **Revisor:** por asignar. **PR:** pendiente.
+### H35 · E5 · Marcar asistencia del alumnado
+
+Estado observado: **Por hacer**. Prioridad: **Posterior**.
+
+Tarjeta: https://trello.com/c/eWBLagb7
+
+Como Javiera Ossandón (profesora), quiero guardar presentes y ausentes de una clase, para dejar constancia de participación.
+
+**Aceptación**
+
+- [ ] CA1. Cada alumno activo tiene una marca guardada.
+- [ ] CA2. Las marcas se recuperan al reabrir la clase.
+- [ ] CA3. Quedan registrados autor y fecha.
+
+**Predecesoras**
+
+- [H34 · Crear un registro de clase](https://trello.com/c/Vk7is5RK)
+
+### H36 · E5 · Consultar asistencia propia
+
+Estado observado: **Por hacer**. Prioridad: **Posterior**.
+
+Tarjeta: https://trello.com/c/VRwExBfG
+
+Como Tomás Alcaíno (alumno), quiero ver mis marcas de asistencia, para detectar diferencias.
+
+**Aceptación**
+
+- [ ] CA1. Veo mis clases y estados sin datos de compañeros.
+- [ ] CA2. Con cero clases se muestra Sin datos.
+- [ ] CA3. El resumen indica presentes y clases consideradas.
+
+**Predecesoras**
+
+- [H35 · Marcar asistencia del alumnado](https://trello.com/c/eWBLagb7)
+
+### H37 · E5 · Corregir una marca de asistencia
+
+Estado observado: **Por hacer**. Prioridad: **Posterior**.
+
+Tarjeta: https://trello.com/c/2Nc1JCm6
+
+Como Javiera Ossandón (profesora), quiero corregir una marca con motivo, para reparar un error.
+
+**Aceptación**
+
+- [ ] CA1. Se exige motivo y autorización para modificar la marca.
+- [ ] CA2. Se conservan el estado anterior, nuevo, autor y fecha.
+- [ ] CA3. La consulta individual usa la marca vigente.
+
+**Predecesoras**
+
+- [H35 · Marcar asistencia del alumnado](https://trello.com/c/eWBLagb7)
+
+### H38 · E5 · Calcular proporción de asistencia
+
+Estado observado: **Por hacer**. Prioridad: **Posterior**.
+
+Tarjeta: https://trello.com/c/lPRTop5Z
+
+Como Tomás Alcaíno (alumno), quiero ver mi proporción de presencia, para entender mi registro.
+
+**Aceptación**
+
+- [ ] CA1. El cálculo usa las clases válidas y marcas corregidas.
+- [ ] CA2. Se muestran numerador y denominador.
+- [ ] CA3. Con denominador cero no se inventa un porcentaje.
+
+**Predecesoras**
+
+- [H36 · Consultar asistencia propia](https://trello.com/c/VRwExBfG)
+- [H37 · Corregir una marca de asistencia](https://trello.com/c/2Nc1JCm6)
+
+### H39 · E6 · Consolidar calificaciones por período [MVP]
+
+Estado observado: **Por hacer**. Prioridad: **MVP**.
+
+Tarjeta: https://trello.com/c/ypTzZ9bx
+
+Como Tomás Alcaíno (alumno), quiero ver mis resultados publicados agrupados por período, para revisar mi trayectoria.
+
+**Aceptación**
+
+- [ ] CA1. Se muestran períodos, asignaturas y notas publicadas propias.
+- [ ] CA2. Un período sin registros muestra Sin datos.
+- [ ] CA3. Los resultados de otra institución no se mezclan.
+
+**Predecesoras**
+
+- [H21 · Consultar notas propias publicadas](https://trello.com/c/YVSAOw4X)
+- [H05 · Crear un período académico](https://trello.com/c/zOdvgBcH)
+
+### H40 · E6 · Validar lote de notas históricas
+
+Estado observado: **Por hacer**. Prioridad: **Posterior**.
+
+Tarjeta: https://trello.com/c/9LAiTa48
+
+Como Rodolfo Ávila (administrador), quiero previsualizar registros históricos, para detectar errores antes de importarlos.
+
+**Aceptación**
+
+- [ ] CA1. La vista previa identifica identidad, curso, escala y filas inválidas.
+- [ ] CA2. Cada rechazo informa una causa sin escribir registros.
+- [ ] CA3. Se muestran totales de control del lote.
+
+**Predecesoras**
+
+- [H07 · Crear una sección de curso](https://trello.com/c/vOot6mky)
+
+### H41 · E6 · Confirmar importación histórica
+
+Estado observado: **Por hacer**. Prioridad: **Posterior**.
+
+Tarjeta: https://trello.com/c/EJSCFMlW
+
+Como Rodolfo Ávila (administrador), quiero incorporar un lote validado, para centralizar antecedentes anteriores.
+
+**Aceptación**
+
+- [ ] CA1. Solo se confirma un lote validado y conciliado.
+- [ ] CA2. El lote guarda identificador, responsable y totales.
+- [ ] CA3. Confirmar el mismo lote otra vez no duplica notas.
+
+**Predecesoras**
+
+- [H40 · Validar lote de notas históricas](https://trello.com/c/9LAiTa48)
+
+### H42 · E6 · Mostrar notas históricas importadas
+
+Estado observado: **Por hacer**. Prioridad: **Posterior**.
+
+Tarjeta: https://trello.com/c/uwy1SOg2
+
+Como Tomás Alcaíno (alumno), quiero ver notas importadas en el período correspondiente, para consultar mis antecedentes.
+
+**Aceptación**
+
+- [ ] CA1. Las notas confirmadas aparecen con su origen identificado.
+- [ ] CA2. No se muestran lotes rechazados o revertidos.
+- [ ] CA3. El alumno no obtiene registros ajenos.
+
+**Predecesoras**
+
+- [H39 · Consolidar calificaciones por período](https://trello.com/c/ypTzZ9bx)
+- [H41 · Confirmar importación histórica](https://trello.com/c/EJSCFMlW)
+
+### H43 · E6 · Vincular una cuenta personal verificada
+
+Estado observado: **Por hacer**. Prioridad: **Posterior**.
+
+Tarjeta: https://trello.com/c/qNHaCbo2
+
+Como Tomás Alcaíno (alumno), quiero asociar una cuenta personal antes del egreso, para preparar la consulta posterior.
+
+**Aceptación**
+
+- [ ] CA1. La vinculación requiere sesión vigente y verificar la propiedad de la cuenta.
+- [ ] CA2. Una cuenta ya asociada a otra persona se rechaza.
+- [ ] CA3. La asociación persiste y se puede consultar desde mi perfil.
+
+**Predecesoras**
+
+- [H04 · Aislar datos por institución y sección](https://trello.com/c/Ti1basLl)
+
+### H44 · E6 · Acceder al historial tras el egreso
+
+Estado observado: **Por hacer**. Prioridad: **Posterior**.
+
+Tarjeta: https://trello.com/c/JTmZ1q1w
+
+Como Tomás Alcaíno (egresado), quiero ingresar con la cuenta personal vinculada, para consultar mis antecedentes tras perder la institucional.
+
+**Aceptación**
+
+- [ ] CA1. La cuenta verificada identifica al mismo alumno aunque la institucional esté inactiva.
+- [ ] CA2. El acceso permite solo consulta de su historial.
+- [ ] CA3. Sin vinculación se informa el canal de asistencia.
+
+**Predecesoras**
+
+- [H39 · Consolidar calificaciones por período](https://trello.com/c/ypTzZ9bx)
+- [H43 · Vincular una cuenta personal verificada](https://trello.com/c/qNHaCbo2)
+
+### H45 · E6 · Revertir un lote histórico
+
+Estado observado: **Por hacer**. Prioridad: **Posterior**.
+
+Tarjeta: https://trello.com/c/CbFx5HM4
+
+Como Rodolfo Ávila (administrador), quiero revertir una importación errónea, para conservar un historial correcto.
+
+**Aceptación**
+
+- [ ] CA1. La reversión afecta solo los registros del lote seleccionado.
+- [ ] CA2. No altera notas posteriores independientes.
+- [ ] CA3. Se registra responsable, fecha y motivo.
+
+**Predecesoras**
+
+- [H41 · Confirmar importación histórica](https://trello.com/c/EJSCFMlW)
+
+### H46 · E7 · Consultar distribución de notas por sección
+
+Estado observado: **Por hacer**. Prioridad: **Posterior**.
+
+Tarjeta: https://trello.com/c/yRubVn9V
+
+Como Benjamin Alonso (profesor), quiero ver el rendimiento de mi sección, para identificar necesidades de apoyo.
+
+**Aceptación**
+
+- [ ] CA1. La distribución usa solo notas publicadas e indica cantidad y período.
+- [ ] CA2. Una sección sin datos lo informa explícitamente.
+- [ ] CA3. Un docente no asignado no ve la distribución.
+
+**Predecesoras**
+
+- [H20 · Publicar notas aprobadas](https://trello.com/c/C4WdFt31)
+
+### H47 · E7 · Consultar asistencia agregada por sección
+
+Estado observado: **Por hacer**. Prioridad: **Posterior**.
+
+Tarjeta: https://trello.com/c/TLbKWEiP
+
+Como Benjamin Alonso (profesor), quiero ver asistencia agregada de mi sección, para identificar patrones.
+
+**Aceptación**
+
+- [ ] CA1. La vista muestra período, presentes y clases consideradas.
+- [ ] CA2. Usa marcas corregidas sin inventar datos faltantes.
+- [ ] CA3. Un docente no asignado no puede consultarla.
+
+**Predecesoras**
+
+- [H38 · Calcular proporción de asistencia](https://trello.com/c/lPRTop5Z)
+
+### H48 · E7 · Consultar indicadores institucionales
+
+Estado observado: **Por hacer**. Prioridad: **Posterior**.
+
+Tarjeta: https://trello.com/c/lOuYn6mj
+
+Como Rodrigo Manríquez (director), quiero ver indicadores agregados de mi institución, para evaluar su desempeño.
+
+**Aceptación**
+
+- [ ] CA1. La vista excluye nombres e identificadores individuales.
+- [ ] CA2. Suprime grupos con menos de cinco alumnos y combinaciones reveladoras.
+- [ ] CA3. Una petición directa tampoco entrega el detalle personal.
+
+**Predecesoras**
+
+- [H46 · Consultar distribución de notas por sección](https://trello.com/c/yRubVn9V)
+- [H47 · Consultar asistencia agregada por sección](https://trello.com/c/TLbKWEiP)
+
+### H49 · E7 · Filtrar reportes por facultad y período
+
+Estado observado: **Por hacer**. Prioridad: **Posterior**.
+
+Tarjeta: https://trello.com/c/fslbrEdB
+
+Como Rodrigo Manríquez (director), quiero aplicar filtros al reporte agregado, para comparar contextos autorizados.
+
+**Aceptación**
+
+- [ ] CA1. Filtros y totales indican facultad, período y denominadores.
+- [ ] CA2. La supresión de grupos pequeños se mantiene tras filtrar.
+- [ ] CA3. Los filtros no mezclan instituciones.
+
+**Predecesoras**
+
+- [H48 · Consultar indicadores institucionales](https://trello.com/c/lOuYn6mj)
+
+### H50 · E7 · Exportar un reporte agregado
+
+Estado observado: **Por hacer**. Prioridad: **Posterior**.
+
+Tarjeta: https://trello.com/c/FF9zQExV
+
+Como Rodrigo Manríquez (director), quiero descargar el reporte visible, para compartir indicadores autorizados.
+
+**Aceptación**
+
+- [ ] CA1. El archivo coincide con filtros y datos visibles e indica fecha.
+- [ ] CA2. La exportación conserva supresiones y carece de identificadores.
+- [ ] CA3. Sin permiso vigente se deniega la descarga.
+
+**Predecesoras**
+
+- [H49 · Filtrar reportes por facultad y período](https://trello.com/c/fslbrEdB)
+
+### H51 · E7 · Programar un reporte periódico
+
+Estado observado: **Por hacer**. Prioridad: **Posterior**.
+
+Tarjeta: https://trello.com/c/R1Ke1H6y
+
+Como Rodrigo Manríquez (director), quiero guardar frecuencia y destino institucional, para recibir el reporte actualizado.
+
+**Aceptación**
+
+- [ ] CA1. Se guardan filtros, frecuencia y destino autorizado.
+- [ ] CA2. Cada ejecución revalida permisos y privacidad y registra estado.
+- [ ] CA3. La programación puede cancelarse; un fallo no figura como éxito.
+
+**Predecesoras**
+
+- [H50 · Exportar un reporte agregado](https://trello.com/c/FF9zQExV)
+
+### H52 · E8 · Publicar anuncio de sección
+
+Estado observado: **Por hacer**. Prioridad: **Posterior**.
+
+Tarjeta: https://trello.com/c/bzAsy7fz
+
+Como Javiera Ossandón (profesora), quiero publicar un anuncio en mi sección, para comunicar indicaciones.
+
+**Aceptación**
+
+- [ ] CA1. Título y mensaje aparecen en la sección con autor y fecha.
+- [ ] CA2. Solo el profesor asignado puede publicar.
+- [ ] CA3. El anuncio no aparece en otra institución.
+
+**Predecesoras**
+
+- [H09 · Asignar ayudantes a una sección](https://trello.com/c/Gm2OO42q)
+
+### H53 · E8 · Consultar anuncios del curso
+
+Estado observado: **Por hacer**. Prioridad: **Posterior**.
+
+Tarjeta: https://trello.com/c/VFodS422
+
+Como Tomás Alcaíno (alumno), quiero leer anuncios de mis secciones, para conocer indicaciones del profesor.
+
+**Aceptación**
+
+- [ ] CA1. Los anuncios se ordenan por fecha con título y autor.
+- [ ] CA2. No se ven anuncios de secciones ajenas.
+- [ ] CA3. Sin anuncios se muestra un estado vacío claro.
+
+**Predecesoras**
+
+- [H11 · Confirmar inscripción de alumnos](https://trello.com/c/qPP83Rtd)
+- [H52 · Publicar anuncio de sección](https://trello.com/c/bzAsy7fz)
+
+### H54 · E8 · Avisar por correo la publicación de notas
+
+Estado observado: **Por hacer**. Prioridad: **Posterior**.
+
+Tarjeta: https://trello.com/c/y7sWAzfF
+
+Como Tomás Alcaíno (alumno), quiero recibir un aviso de publicación, para saber cuándo consultar mis notas.
+
+**Aceptación**
+
+- [ ] CA1. La publicación genera un aviso solo para el alumno afectado.
+- [ ] CA2. El correo incluye enlace autenticado sin revelar la nota.
+- [ ] CA3. El fallo del correo no impide consultar la nota en la plataforma.
+
+**Predecesoras**
+
+- [H20 · Publicar notas aprobadas](https://trello.com/c/C4WdFt31)
+
+### H55 · E8 · Avisar por correo una corrección de nota
+
+Estado observado: **Por hacer**. Prioridad: **Posterior**.
+
+Tarjeta: https://trello.com/c/aILyotnh
+
+Como Tomás Alcaíno (alumno), quiero recibir un aviso de corrección, para revisar el resultado vigente.
+
+**Aceptación**
+
+- [ ] CA1. Solo una corrección confirmada genera aviso al afectado.
+- [ ] CA2. El mensaje no contiene valor de la nota.
+- [ ] CA3. La corrección permanece visible aunque falle el envío.
+
+**Predecesoras**
+
+- [H22 · Corregir una nota publicada](https://trello.com/c/BLfsG4iJ)
+
+### H56 · E8 · Consultar estado de avisos enviados
+
+Estado observado: **Por hacer**. Prioridad: **Posterior**.
+
+Tarjeta: https://trello.com/c/apaomCYU
+
+Como Rodolfo Ávila (administrador), quiero revisar si los avisos se entregaron, para detectar fallos de comunicación.
+
+**Aceptación**
+
+- [ ] CA1. Se muestran evento, destinatario y estado sin exponer notas.
+- [ ] CA2. Un aviso fallido puede reintentarse sin duplicar los ya enviados.
+- [ ] CA3. Cada intento conserva fecha y resultado.
+
+**Predecesoras**
+
+- [H54 · Avisar por correo la publicación de notas](https://trello.com/c/y7sWAzfF)
+- [H55 · Avisar por correo una corrección de nota](https://trello.com/c/aILyotnh)

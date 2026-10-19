@@ -17,10 +17,18 @@ export function useSesion() {
       .catch(() => setEstado({ tipo: 'error' }));
   }, []);
 
+  useEffect(() => {
+    const expirar = () => setEstado({ tipo: 'anonimo' });
+    window.addEventListener('sesion-expirada', expirar);
+    return () => window.removeEventListener('sesion-expirada', expirar);
+  }, []);
+
   const salir = useCallback(async () => {
     await cerrarSesion();
     setEstado({ tipo: 'anonimo' });
   }, []);
 
-  return { estado, salir };
+  const actualizar = useCallback((usuario: UsuarioSesion) => setEstado({ tipo: 'autenticado', usuario }), []);
+
+  return { estado, salir, actualizar };
 }
