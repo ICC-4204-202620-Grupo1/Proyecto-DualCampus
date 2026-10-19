@@ -82,6 +82,7 @@ export class PostgresUsuariosRepositorio extends UsuariosRepositorio {
                 json_agg(r.rol ORDER BY r.rol) AS roles
            FROM rol_en_institucion r
            JOIN institucion i ON i.id = r.institucion_id AND i.activa
+           JOIN usuario u ON u.id = r.usuario_id AND u.activo
           WHERE r.usuario_id = $1
             AND r.institucion_id = current_setting('app.institucion_id')::uuid
           GROUP BY i.nombre`,

@@ -72,6 +72,7 @@ describe('H05 · Crear un período académico', () => {
     it.each([
       ['término anterior al inicio', { fechaInicio: '2026-12-18', fechaFin: '2026-08-03' }],
       ['inicio igual al término', { fechaInicio: '2026-08-03', fechaFin: '2026-08-03' }],
+      ['año cero no válido en PostgreSQL', { fechaInicio: '0000-01-01' }],
       ['fecha inexistente', { fechaInicio: '2026-02-30' }],
       ['formato de fecha inválido', { fechaFin: '18/12/2026' }],
       ['fecha faltante', { fechaInicio: undefined }],

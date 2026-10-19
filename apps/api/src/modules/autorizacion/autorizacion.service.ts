@@ -3,8 +3,8 @@ import type { Rol } from '../autenticacion/usuario-sesion';
 import { UsuariosRepositorio } from '../autenticacion/usuarios.repositorio';
 
 /**
- * Verificación mínima de rol en la institución activa, leída de la base en cada
- * operación. H03 la reemplaza por @RequierePermiso y el EvaluadorPoliticas.
+ * H03: exige un rol vigente de la institución activa en cada operación.
+ * H04 complementa este control con asignación/matrícula y RLS en gestión académica.
  */
 @Injectable()
 export class AutorizacionService {

@@ -1,6 +1,11 @@
 // Cliente base para llamar a la API de DualCampus (mismo origen: /api).
 export const API_URL = import.meta.env.VITE_API_URL ?? '/api';
 
+let institucionEsperada: string | null = null;
+function contextoHeaders(): Record<string,string> {
+  return institucionEsperada ? { 'X-Institucion-Id': institucionEsperada } : {};
+}
+
 export type Rol = 'ADMINISTRADOR' | 'PROFESOR' | 'AYUDANTE' | 'ALUMNO' | 'DIRECTOR';
 
 export interface UsuarioSesion {
@@ -16,11 +21,14 @@ export async function obtenerSesion(): Promise<UsuarioSesion | null> {
   const res = await fetch(`${API_URL}/auth/me`, { credentials: 'include' });
   if (res.status === 401) return null;
   if (!res.ok) throw new Error(`Error ${res.status} al consultar la sesión`);
-  return res.json();
+  const usuario: UsuarioSesion = await res.json();
+  institucionEsperada = usuario.institucionActivaId;
+  return usuario;
 }
 
 export async function cerrarSesion(): Promise<void> {
-  await fetch(`${API_URL}/auth/logout`, { method: 'POST', credentials: 'include' });
+  const res = await fetch(`${API_URL}/auth/logout`, { method: 'POST', credentials: 'include' });
+  if (!res.ok) throw new Error('No se pudo cerrar la sesión');
 }
 
 export const URL_INICIAR_SESION = `${API_URL}/auth/google`;
@@ -57,7 +65,9 @@ export async function seleccionarInstitucion(institucionId: string): Promise<Usu
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ institucionId }),
   });
-  return json<UsuarioSesion>(res);
+  const usuario = await json<UsuarioSesion>(res);
+  institucionEsperada = usuario.institucionActivaId;
+  return usuario;
 }
 
 /** Consulta hecha en el contexto de la institución activa. */
@@ -84,6 +94,7 @@ export class ErrorApi extends Error {
 
 async function cuerpoOError<T>(res: Response): Promise<T> {
   const cuerpo = await res.json().catch(() => ({}));
+  if (res.status === 401) window.dispatchEvent(new Event('sesion-expirada'));
   if (!res.ok) {
     const m = cuerpo.message ?? `Error ${res.status}`;
     throw new ErrorApi(res.status, Array.isArray(m) ? m : [m]);
@@ -92,15 +103,25 @@ async function cuerpoOError<T>(res: Response): Promise<T> {
 }
 
 export async function listarPeriodos(): Promise<Periodo[]> {
-  return cuerpoOError(await fetch(`${API_URL}/periodos`, { credentials: 'include' }));
+  return api<Periodo[]>('/periodos');
 }
 
 export async function crearPeriodo(datos: { nombre: string; fechaInicio: string; fechaFin: string }): Promise<Periodo> {
   const res = await fetch(`${API_URL}/periodos`, {
     method: 'POST',
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { ...contextoHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify(datos),
   });
   return cuerpoOError(res);
+}
+
+/** Operaciones del recorrido académico; todos los datos se validan nuevamente en la API. */
+export async function api<T>(ruta:string,method='GET',datos?:unknown):Promise<T> {
+  const res=await fetch(API_URL+ruta,{
+    method,credentials:'include',
+    headers:{...contextoHeaders(),...(datos===undefined?{}:{'Content-Type':'application/json'})},
+    ...(datos===undefined?{}:{body:JSON.stringify(datos)}),
+  });
+  return cuerpoOError<T>(res);
 }

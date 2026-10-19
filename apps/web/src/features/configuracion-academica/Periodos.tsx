@@ -1,88 +1,43 @@
-import { FormEvent, useEffect, useState } from 'react';
-import { crearPeriodo, ErrorApi, listarPeriodos, type Periodo } from '../../lib/api';
+import { type FormEvent, useEffect, useState } from 'react';
+import { crearPeriodo, listarPeriodos, type Periodo, type Rol } from '../../lib/api';
+import { Academico } from './Academico';
 
-/** H05 · Lista los períodos de la institución activa; el administrador puede crear uno. */
-export function Periodos({ institucionId, esAdministrador }: { institucionId: string; esAdministrador: boolean }) {
-  const [periodos, setPeriodos] = useState<Periodo[]>([]);
-  const [form, setForm] = useState({ nombre: '', fechaInicio: '', fechaFin: '' });
-  const [errores, setErrores] = useState<string[]>([]);
-  const [guardando, setGuardando] = useState(false);
-
-  useEffect(() => {
-    listarPeriodos().then(setPeriodos).catch(() => setPeriodos([]));
-  }, [institucionId]);
-
-  async function enviar(e: FormEvent) {
-    e.preventDefault();
-    setErrores([]);
-    setGuardando(true);
+export function Periodos({roles}:{roles:Rol[]}) {
+  const [periodos,setPeriodos]=useState<Periodo[]>([]);
+  const [activo,setActivo]=useState('');
+  const [form,setForm]=useState({nombre:'',fechaInicio:'',fechaFin:''});
+  const [error,setError]=useState('');
+  const [guardando,setGuardando]=useState(false);
+  const [cargando,setCargando]=useState(true);
+  const [version,setVersion]=useState(0);
+  useEffect(()=>{
+    let vigente=true;setCargando(true);setError('');
+    listarPeriodos().then(p=>{if(vigente){setPeriodos(p);setActivo(a=>a || p[0]?.id || '');}})
+      .catch(e=>{if(vigente)setError(e.message);}).finally(()=>{if(vigente)setCargando(false);});
+    return ()=>{vigente=false;};
+  },[version]);
+  async function enviar(e:FormEvent) {
+    e.preventDefault();setError('');setGuardando(true);
     try {
-      const nuevo = await crearPeriodo(form);
-      setPeriodos((actuales) => [nuevo, ...actuales]);
-      setForm({ nombre: '', fechaInicio: '', fechaFin: '' });
-    } catch (err) {
-      setErrores(err instanceof ErrorApi ? err.mensajes : ['No se pudo guardar el período']);
-    } finally {
-      setGuardando(false);
-    }
+      const p=await crearPeriodo(form);setPeriodos(xs=>[p,...xs]);setActivo(p.id);setForm({nombre:'',fechaInicio:'',fechaFin:''});
+    } catch(e){setError(e instanceof Error?e.message:'No se pudo guardar el período');}
+    finally{setGuardando(false);}
   }
-
-  return (
-    <section>
-      <h3>Períodos académicos</h3>
-
-      {esAdministrador && (
-        <form onSubmit={enviar}>
-          <label>
-            Nombre <input value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} />
-          </label>{' '}
-          <label>
-            Inicio{' '}
-            <input type="date" value={form.fechaInicio} onChange={(e) => setForm({ ...form, fechaInicio: e.target.value })} />
-          </label>{' '}
-          <label>
-            Término{' '}
-            <input type="date" value={form.fechaFin} onChange={(e) => setForm({ ...form, fechaFin: e.target.value })} />
-          </label>{' '}
-          <button type="submit" disabled={guardando}>
-            Crear período
-          </button>
-          {errores.length > 0 && (
-            <ul role="alert" style={{ color: 'crimson' }}>
-              {errores.map((m) => (
-                <li key={m}>{m}</li>
-              ))}
-            </ul>
-          )}
-        </form>
-      )}
-
-      {periodos.length === 0 ? (
-        <p>Sin períodos registrados.</p>
-      ) : (
-        <table border={1} cellPadding={4} style={{ borderCollapse: 'collapse', marginTop: '0.5rem' }}>
-          <thead>
-            <tr>
-              <th>Nombre</th>
-              <th>Inicio</th>
-              <th>Término</th>
-              <th>Creado por</th>
-              <th>Creado el</th>
-            </tr>
-          </thead>
-          <tbody>
-            {periodos.map((p) => (
-              <tr key={p.id}>
-                <td>{p.nombre}</td>
-                <td>{p.fechaInicio}</td>
-                <td>{p.fechaFin}</td>
-                <td>{p.creadoPor.nombre ?? p.creadoPor.email}</td>
-                <td>{new Date(p.creadoEn).toLocaleString('es-CL')}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+  const seleccionado=periodos.find(p=>p.id===activo);
+  return <>
+    <section className="panel"><p className="etiqueta">01 · Calendario académico</p><h2>Períodos académicos</h2>
+      {roles.includes('ADMINISTRADOR') && <form className="formulario-fila" onSubmit={enviar}>
+        <label>Nombre<input required maxLength={100} placeholder="2026 · Segundo semestre" value={form.nombre} onChange={e=>setForm({...form,nombre:e.target.value})}/></label>
+        <label>Inicio<input required type="date" value={form.fechaInicio} onChange={e=>setForm({...form,fechaInicio:e.target.value})}/></label>
+        <label>Término<input required type="date" value={form.fechaFin} onChange={e=>setForm({...form,fechaFin:e.target.value})}/></label>
+        <button disabled={guardando}>{guardando?'Guardando…':'Crear período'}</button>
+      </form>}
+      {error && <p className="alerta" role="alert">{error} <button type="button" onClick={()=>setVersion(v=>v+1)}>Reintentar carga</button></p>}
+      {cargando?<p role="status">Cargando períodos…</p>:!periodos.length?<p className="vacio">Sin períodos registrados.</p>:
+        <label className="selector-periodo">Período de trabajo<select value={activo} onChange={e=>setActivo(e.target.value)}>{periodos.map(p=><option value={p.id} key={p.id}>{p.nombre}</option>)}</select></label>}
+      {seleccionado && <p className="texto-suave">Del {seleccionado.fechaInicio} al {seleccionado.fechaFin}. Registrado por {seleccionado.creadoPor.nombre || seleccionado.creadoPor.email} · {new Date(seleccionado.creadoEn).toLocaleString('es-CL')}.</p>}
     </section>
-  );
+    {activo && roles.some(r=>['ADMINISTRADOR','PROFESOR','AYUDANTE','ALUMNO'].includes(r)) && <Academico key={activo} periodoId={activo} roles={roles}/>}
+    {roles.every(r=>r==='DIRECTOR') && <section className="panel"><h2>Consulta institucional</h2><p>Puedes consultar el calendario académico. La reportería agregada se incorporará en una próxima iteración.</p></section>}
+  </>;
 }

@@ -3,49 +3,29 @@ import { obtenerContexto, type ContextoInstitucion, type UsuarioSesion } from '.
 import { Periodos } from '../configuracion-academica/Periodos';
 import { SelectorInstitucion } from './SelectorInstitucion';
 
-/** Vista provisoria tras iniciar sesión: identidad, institución activa y su contexto. */
-export function Inicio({
-  usuario,
-  onSalir,
-  onCambio,
-}: {
-  usuario: UsuarioSesion;
-  onSalir: () => void;
-  onCambio: (u: UsuarioSesion) => void;
-}) {
-  const [contexto, setContexto] = useState<ContextoInstitucion | null>(null);
-
-  // Cada cambio de institución vuelve a consultar con el nuevo contexto
-  useEffect(() => {
-    setContexto(null);
-    if (usuario.institucionActivaId) obtenerContexto().then(setContexto).catch(() => setContexto(null));
-  }, [usuario.institucionActivaId]);
-
-  return (
-    <div style={{ padding: '1rem', fontFamily: 'system-ui, sans-serif' }}>
-      <p>
-        <strong>DualCampus</strong> · {usuario.nombre} ({usuario.email}) ·{' '}
-        <button onClick={onSalir}>Cerrar sesión</button>
-      </p>
-      <p>
-        <SelectorInstitucion usuario={usuario} onCambio={onCambio} />
-      </p>
-      <hr />
-      {!usuario.institucionActivaId && <p>Elige una institución para continuar.</p>}
-      {contexto && (
-        <div>
-          <h2>Trabajando en: {contexto.institucion}</h2>
-          <p>Tus roles aquí: {contexto.roles.join(', ')}</p>
-          <p>
-            <small>Contexto de las consultas (app.institucion_id): {contexto.institucionContexto}</small>
-          </p>
-          <hr />
-          <Periodos
-            institucionId={contexto.institucionActivaId}
-            esAdministrador={contexto.roles.includes('ADMINISTRADOR')}
-          />
-        </div>
-      )}
-    </div>
-  );
+export function Inicio({usuario,onSalir,onCambio}:{usuario:UsuarioSesion;onSalir:()=>void;onCambio:(u:UsuarioSesion)=>void}) {
+  const [contexto,setContexto]=useState<ContextoInstitucion|null>(null);
+  const [error,setError]=useState('');
+  const [cambiando,setCambiando]=useState(false);
+  const [version,setVersion]=useState(0);
+  useEffect(()=>{
+    let vigente=true;setContexto(null);setError('');
+    if(usuario.institucionActivaId) obtenerContexto().then(c=>{if(vigente)setContexto(c);}).catch(()=>{if(vigente)setError('No se pudo verificar tu acceso. Reintenta o vuelve a iniciar sesión.');});
+    return ()=>{vigente=false;};
+  },[usuario.institucionActivaId,version]);
+  async function salir(){try{await onSalir();}catch{setError('No se pudo cerrar la sesión. Reintenta.');}}
+  const visible=!cambiando && contexto?.institucionActivaId===usuario.institucionActivaId;
+  return <>
+    <header className="barra"><div className="marca"><span className="marca-logo">D</span>DualCampus</div>
+      <div className="barra-usuario"><span>{usuario.nombre}</span><button className="boton-secundario" onClick={salir}>Cerrar sesión</button></div></header>
+    <main className="contenido">
+      <div className="encabezado"><div><p className="etiqueta">Gestión académica</p><h1>Un semestre bien organizado</h1><p className="texto-suave">Tu institución, tus cursos y tu equipo en un solo lugar.</p></div>
+        <SelectorInstitucion usuario={usuario} onCambio={onCambio} onPendiente={setCambiando}/></div>
+      {!usuario.institucionActivaId && <section className="panel vacio">Selecciona una institución para comenzar.</section>}
+      {error && <p className="alerta" role="alert">{error} <button onClick={()=>setVersion(v=>v+1)}>Reintentar</button></p>}
+      {usuario.institucionActivaId && (!visible || !contexto) && !error && <p role="status">Cargando institución…</p>}
+      {visible && contexto && <><div className="contexto"><strong>{contexto.institucion}</strong><span>{contexto.roles.map(r=>r.toLowerCase()).join(' · ')}</span></div>
+        <Periodos key={contexto.institucionActivaId} roles={contexto.roles}/></>}
+    </main><footer>DualCampus · Primera iteración funcional · Grupo 1</footer>
+  </>;
 }
