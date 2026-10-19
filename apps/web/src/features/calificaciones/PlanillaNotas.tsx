@@ -29,11 +29,13 @@ export function PlanillaNotas({
   evaluacionNombre,
   roles,
   onCerrar,
+  onEnviada,
 }: {
   evaluacionId: string;
   evaluacionNombre: string;
   roles: Rol[];
   onCerrar: () => void;
+  onEnviada: () => void;
 }) {
   const [filas, setFilas] = useState<FilaAlumno[]>([]);
   const [valores, setValores] = useState<Record<string, string>>({});
@@ -43,6 +45,8 @@ export function PlanillaNotas({
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState('');
   const [aviso, setAviso] = useState('');
+  const [estado, setEstado] = useState('');
+  const [pendiente, setPendiente] = useState(false);
 
   const esAlumno = roles.every((r) => r === 'ALUMNO');
 
@@ -54,6 +58,8 @@ export function PlanillaNotas({
       .then((data) => {
         if (!vigente) return;
         setFilas(data.filas);
+        setEstado(data.evaluacion.estado);
+        setPendiente(false);
         const inicialValores: Record<string, string> = {};
         const inicialAusentes: Record<string, boolean> = {};
         for (const f of data.filas) {
@@ -77,6 +83,7 @@ export function PlanillaNotas({
   }, [evaluacionId]);
 
   function cambiarNota(alumnoId: string, texto: string) {
+    setPendiente(true);
     setValores((prev) => ({ ...prev, [alumnoId]: texto }));
     setError('');
     setAviso('');
@@ -84,6 +91,7 @@ export function PlanillaNotas({
 
   // H16: toggle ausente. Cuando se marca ausente, se borra la nota (valor null ≠ cero)
   function toggleAusente(alumnoId: string) {
+    setPendiente(true);
     setAusentes((prev) => {
       const nuevo = !prev[alumnoId];
       if (nuevo) {
@@ -121,14 +129,14 @@ export function PlanillaNotas({
         .filter((f) => {
           const val = valores[f.alumnoId] ?? '';
           const estaAusente = ausentes[f.alumnoId] ?? false;
-          return estaAusente || val.trim() !== '';
+          return estaAusente || val.trim() !== '' || f.notaId !== null;
         })
         .map((f) => {
           const estaAusente = ausentes[f.alumnoId] ?? false;
           return {
             alumnoId: f.alumnoId,
             // H16 CA1: si ausente, valor null (distinto de cero)
-            valor: estaAusente ? null : Number(valores[f.alumnoId]),
+            valor: estaAusente || !valores[f.alumnoId]?.trim() ? null : Number(valores[f.alumnoId]),
             esAusente: estaAusente,
           };
         });
@@ -141,12 +149,33 @@ export function PlanillaNotas({
 
       await api(`/calificaciones/evaluaciones/${evaluacionId}/notas`, 'PUT', { notas: payload });
 
+      const guardadas = await api<RespuestaNotas>(`/calificaciones/evaluaciones/${evaluacionId}/notas`);
+      setFilas(guardadas.filas);
+      setPendiente(false);
       const totalAusentes = payload.filter((p) => p.esAusente).length;
       const totalNotas = payload.length - totalAusentes;
       const partes = [];
       if (totalNotas > 0) partes.push(`${totalNotas} nota${totalNotas !== 1 ? 's' : ''}`);
       if (totalAusentes > 0) partes.push(`${totalAusentes} ausencia${totalAusentes !== 1 ? 's' : ''}`);
       setAviso(`Guardado en borrador: ${partes.join(' y ')}.`);
+    } catch (err) {
+      setError(mensaje(err));
+    } finally {
+      setGuardando(false);
+    }
+  }
+
+  const editable = estado === 'BORRADOR' && !esAlumno;
+  const completa = filas.length > 0 && filas.every((f) => ausentes[f.alumnoId] || valores[f.alumnoId]?.trim());
+
+  async function enviarARevision() {
+    setGuardando(true);
+    setError('');
+    try {
+      await api(`/calificaciones/evaluaciones/${evaluacionId}/enviar-revision`, 'POST', {});
+      setEstado('EN_REVISION');
+      setAviso('Evaluación enviada a revisión. Las notas y ausencias quedaron bloqueadas.');
+      onEnviada();
     } catch (err) {
       setError(mensaje(err));
     } finally {
@@ -186,6 +215,7 @@ export function PlanillaNotas({
       </div>
 
       {error && <p role="alert" className="alerta" style={{ marginBottom: '1rem' }}>{error}</p>}
+      {estado && <p>Estado: <strong>{estado === 'EN_REVISION' ? 'En revisión' : estado}</strong>{!editable && !esAlumno && ' · Solo lectura'}</p>}
       {aviso && <p role="status" className="exito" style={{ marginBottom: '1rem' }}>{aviso}</p>}
 
       {cargando ? (
@@ -228,7 +258,7 @@ export function PlanillaNotas({
                           placeholder="—"
                           value={valActual}
                           // H16: deshabilitar input si está ausente
-                          disabled={estaAusente}
+                          disabled={estaAusente || !editable || guardando}
                           onChange={(e) => cambiarNota(f.alumnoId, e.target.value)}
                           style={{
                             width: '90px',
@@ -254,6 +284,7 @@ export function PlanillaNotas({
                           type="checkbox"
                           id={`ausente-${f.alumnoId}`}
                           checked={estaAusente}
+                          disabled={!editable || guardando}
                           onChange={() => toggleAusente(f.alumnoId)}
                           style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#f59e0b' }}
                         />
@@ -291,14 +322,18 @@ export function PlanillaNotas({
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginTop: '1.25rem' }}>
             <button
               type="submit"
-              disabled={guardando || tieneErroresEscala}
+              disabled={!editable || guardando || tieneErroresEscala}
               className="boton"
               style={{ padding: '0.6rem 1.5rem', cursor: 'pointer' }}
             >
               {guardando ? 'Guardando borrador…' : 'Guardar notas y ausencias'}
             </button>
+            {editable && <button type="button" className="boton" onClick={enviarARevision}
+              disabled={guardando || pendiente || !completa || tieneErroresEscala}>
+              Enviar a revisión
+            </button>}
             <span style={{ fontSize: '0.85rem', color: 'var(--suave)' }}>
-              Las ausencias se guardan como estado distinto de nota 0.
+              {pendiente ? 'Guarda los cambios antes de enviar. ' : ''}Las ausencias se guardan como estado distinto de nota 0.
             </span>
           </div>
         </form>

@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import type { PoolClient } from 'pg';
 import { ContextoInstitucion } from '../../database/contexto-institucion';
 import { AutorizacionService } from '../autorizacion/autorizacion.service';
@@ -81,8 +81,8 @@ export class NotasService {
 
       // CA3: El alumno no ve valores en el borrador
       if (!esAdmin && !esDocente && esAlumno) {
-        if (evaluacion.estado === 'BORRADOR') {
-          throw new ForbiddenException('El alumno no ve valores en el borrador');
+        if (evaluacion.estado !== 'PUBLICADA') {
+          throw new ForbiddenException('El alumno no ve valores en el borrador ni antes de su publicación');
         }
       }
 
@@ -94,9 +94,9 @@ export class NotasService {
          FROM matricula m
          JOIN usuario u ON u.id = m.usuario_id
          LEFT JOIN nota n ON n.evaluacion_id = $1 AND n.usuario_id = u.id
-         WHERE m.seccion_id = $2
+         WHERE m.seccion_id = $2 AND ($3::uuid IS NULL OR u.id = $3)
          ORDER BY u.nombre ASC, u.email ASC`,
-        [eid, evaluacion.seccionId],
+        [eid, evaluacion.seccionId, !esAdmin && !esDocente ? actor : null],
       );
 
       return {
@@ -139,7 +139,7 @@ export class NotasService {
         `SELECT e.id, e.seccion_id AS "seccionId", e.estado,
                 e.escala_minima AS "escalaMinima", e.escala_maxima AS "escalaMaxima"
          FROM evaluacion e
-         WHERE e.id = $1`,
+         WHERE e.id = $1 FOR UPDATE`,
         [eid],
       );
       if (!evRes.rowCount) throw new NotFoundException('Evaluación no encontrada');
@@ -160,6 +160,10 @@ export class NotasService {
         if (!docenteRes.rowCount) {
           throw new ForbiddenException('No tienes permiso para calificar en esta sección');
         }
+      }
+
+      if (evaluacion.estado !== 'BORRADOR') {
+        throw new ConflictException('La evaluación ya no está en borrador. No se pueden editar notas ni ausencias.');
       }
 
       const escalaMin = Number(evaluacion.escalaMinima);

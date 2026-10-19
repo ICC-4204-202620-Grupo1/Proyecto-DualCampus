@@ -13,6 +13,8 @@ export interface Evaluacion {
   escalaAprobacion: string | number;
   estado: string;
   creadoEn: string;
+  enviadoPor: string | null;
+  enviadoEn: string | null;
 }
 
 const mensaje = (e: unknown) => (e instanceof Error ? e.message : 'No se pudo completar la operación');
@@ -195,8 +197,9 @@ export function Evaluaciones({ seccionId, roles }: { seccionId: string; roles: R
                       className="insignia"
                       style={{ background: '#e0f2fe', color: '#0369a1', fontWeight: 600 }}
                     >
-                      {ev.estado}
+                      {ev.estado === 'EN_REVISION' ? 'En revisión' : ev.estado}
                     </span>
+                    {ev.enviadoEn && <small style={{ display: 'block' }}>Enviada: {new Date(ev.enviadoEn).toLocaleString()}</small>}
                   </td>
                   <td style={{ textAlign: 'right' }}>
                     <button
@@ -211,7 +214,7 @@ export function Evaluaciones({ seccionId, roles }: { seccionId: string; roles: R
                         backgroundColor: evaluacionSeleccionada?.id === ev.id ? 'var(--azul)' : 'var(--azul-boton)',
                       }}
                     >
-                      {evaluacionSeleccionada?.id === ev.id ? 'Viendo planilla' : '✏️ Calificar'}
+                      {evaluacionSeleccionada?.id === ev.id ? 'Viendo planilla' : ev.estado === 'BORRADOR' ? 'Calificar' : 'Ver planilla'}
                     </button>
                   </td>
                 </tr>
@@ -228,6 +231,7 @@ export function Evaluaciones({ seccionId, roles }: { seccionId: string; roles: R
           evaluacionNombre={evaluacionSeleccionada.nombre}
           roles={roles}
           onCerrar={() => setEvaluacionSeleccionada(null)}
+          onEnviada={() => setVersion((v) => v + 1)}
         />
       )}
     </div>
