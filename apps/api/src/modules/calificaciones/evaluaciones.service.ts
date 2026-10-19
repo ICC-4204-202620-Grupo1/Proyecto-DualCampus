@@ -341,4 +341,25 @@ export class EvaluacionesService {
     });
   }
 
+
+  /** H23: consulta administrativa, sin rutas para modificar el historial. */
+  async auditoria(actor: string, institucion: string, evaluacionId: string) {
+    await this.autorizacion.exigirRol(actor, institucion, 'ADMINISTRADOR');
+    const eid = id(evaluacionId);
+    return this.ejecutar(institucion, async (db) => {
+      const evaluacion = await db.query('SELECT id, seccion_id FROM evaluacion WHERE id=$1', [eid]);
+      if (!evaluacion.rowCount) throw new NotFoundException('Evaluación no encontrada');
+      const { rows } = await db.query(
+        `SELECT e.id, e.accion, COALESCE(NULLIF(u.nombre,''), u.email) AS autor,
+           e.creado_en AS fecha, e.datos
+         FROM evento_academico e JOIN usuario u ON u.id=e.actor_id
+         WHERE e.recurso_id=$1 OR (e.recurso_id=$2 AND e.accion='CREAR_EVALUACION'
+           AND e.datos->>'evaluacionId'=$1::text)
+         ORDER BY e.creado_en ASC, e.id ASC`,
+        [eid, evaluacion.rows[0].seccion_id],
+      );
+      return rows;
+    });
+  }
+
 }
