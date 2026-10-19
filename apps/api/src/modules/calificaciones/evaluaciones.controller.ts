@@ -77,6 +77,15 @@ export class EvaluacionesController {
     return this.servicio.publicar(u.usuarioId, i, evaluacionId);
   }
 
+  @Get('evaluaciones/:id/auditoria')
+  auditoria(
+    @UsuarioActual() u: UsuarioSesion,
+    @InstitucionActiva() i: string,
+    @Param('id') evaluacionId: string,
+  ) {
+    return this.servicio.auditoria(u.usuarioId, i, evaluacionId);
+  }
+
   @Get('evaluaciones/:id/notas')
   listarNotas(
     @UsuarioActual() u: UsuarioSesion,

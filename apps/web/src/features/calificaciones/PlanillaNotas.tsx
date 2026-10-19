@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { AuditoriaEvaluacion } from './AuditoriaEvaluacion';
 import { api, type Rol } from '../../lib/api';
 
 interface FilaAlumno {
@@ -298,6 +299,8 @@ export function PlanillaNotas({
         </button>
       </form>}
       {aviso && <p role="status" className="exito" style={{ marginBottom: '1rem' }}>{aviso}</p>}
+
+      {roles.includes('ADMINISTRADOR') && <AuditoriaEvaluacion evaluacionId={evaluacionId} />}
 
       {cargando ? (
         <p className="texto-suave">Cargando nómina de alumnos…</p>
