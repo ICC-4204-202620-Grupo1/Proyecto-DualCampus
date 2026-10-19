@@ -34,5 +34,8 @@
     "typescript": "~5.9.3",
     "unplugin-swc": "^2.0.0",
     "vitest": "^5.0.5"
+  },
+  "engines": {
+    "node": "22.x"
   }
 }
