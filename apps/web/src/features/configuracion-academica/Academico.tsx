@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { api, type Rol } from '../../lib/api';
+import { Evaluaciones } from '../calificaciones/Evaluaciones';
 type Curso = {id:string;codigo:string;nombre:string};
 type Seccion = {id:string;codigo:string;periodo:string;curso:string;cursoCodigo:string;totalAlumnos:number};
 type Persona = {id:string;nombre:string|null;email:string;rol?:string};
@@ -63,12 +64,12 @@ export function Academico({periodoId,roles}:{periodoId:string;roles:Rol[]}) {
       <div className="tarjetas-secciones">{secciones.map(s=><button type="button" className={'tarjeta-seccion '+(s.id===seleccion?'seleccionada':'')} key={s.id} onClick={()=>setSeleccion(s.id)}>
         <span className="etiqueta">{s.cursoCodigo} · Sección {s.codigo}</span><strong>{s.curso}</strong><span>{s.totalAlumnos} alumnos · {s.periodo}</span>
       </button>)}</div>}
-    {seleccion && !roles.every(r=>r==='ALUMNO') && <GestionSeccion key={seleccion} id={seleccion} nombre={secciones.find(s=>s.id===seleccion)?.curso+' · Sección '+secciones.find(s=>s.id===seleccion)?.codigo} admin={admin} docentes={docentes} actualizar={()=>setVersion(v=>v+1)}/>}
-    {seleccion && roles.every(r=>r==='ALUMNO') && <p className="exito">Estás en la nómina de esta sección. Las calificaciones se incorporarán en una próxima iteración.</p>}
+    {seleccion && !roles.every(r=>r==='ALUMNO') && <GestionSeccion key={seleccion} id={seleccion} nombre={secciones.find(s=>s.id===seleccion)?.curso+' · Sección '+secciones.find(s=>s.id===seleccion)?.codigo} admin={admin} docentes={docentes} roles={roles} actualizar={()=>setVersion(v=>v+1)}/>}
+    {seleccion && roles.every(r=>r==='ALUMNO') && <div className="detalle-seccion"><p className="exito">Estás en la nómina de esta sección.</p><Evaluaciones seccionId={seleccion} roles={roles} /></div>}
   </section>;
 }
 
-function GestionSeccion({id,nombre,admin,docentes,actualizar}:{id:string;nombre:string;admin:boolean;docentes:Persona[];actualizar:()=>void}) {
+function GestionSeccion({id,nombre,admin,docentes,roles,actualizar}:{id:string;nombre:string;admin:boolean;docentes:Persona[];roles:Rol[];actualizar:()=>void}) {
   const [detalle,setDetalle]=useState<Detalle|null>(null);
   const [profesor,setProfesor]=useState('');
   const [ayudantes,setAyudantes]=useState<string[]>([]);
@@ -129,7 +130,8 @@ function GestionSeccion({id,nombre,admin,docentes,actualizar}:{id:string;nombre:
       {!detalle.nomina.length?<p className="vacio">Todavía no hay alumnos en la nómina.</p>:<div className="tabla-contenedor"><table><thead><tr><th>Nombre</th><th>Correo institucional</th></tr></thead><tbody>
         {detalle.nomina.map(a=><tr key={a.id}><td>{a.nombre || 'Sin nombre'}</td><td>{a.email}</td></tr>)}
       </tbody></table></div>}
-      <details><summary>Actividad de la sección</summary><ul>{detalle.eventos.map(a=><li key={a.id}>{new Date(a.fecha).toLocaleString('es-CL')} · {a.autor} · {a.accion.replaceAll('_',' ').toLowerCase()}</li>)}</ul></details>
+      <Evaluaciones seccionId={id} roles={roles} />
+      <details style={{ marginTop: '1.5rem' }}><summary>Actividad de la sección</summary><ul>{detalle.eventos.map(a=><li key={a.id}>{new Date(a.fecha).toLocaleString('es-CL')} · {a.autor} · {a.accion.replaceAll('_',' ').toLowerCase()}</li>)}</ul></details>
     </>}
   </div>;
 }
