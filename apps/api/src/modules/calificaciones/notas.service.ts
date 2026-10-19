@@ -45,7 +45,7 @@ export class NotasService {
 
     return this.ejecutar(institucion, async (db) => {
       const evRes = await db.query(
-        `SELECT e.id, e.seccion_id AS "seccionId", e.nombre, e.estado,
+        `SELECT e.id, e.seccion_id AS "seccionId", e.nombre, e.estado, e.observacion, e.devuelto_por AS "devueltoPor", e.devuelto_en AS "devueltoEn",
                 e.escala_minima AS "escalaMinima", e.escala_maxima AS "escalaMaxima"
          FROM evaluacion e
          WHERE e.id = $1`,
@@ -104,6 +104,10 @@ export class NotasService {
           id: evaluacion.id,
           nombre: evaluacion.nombre,
           estado: evaluacion.estado,
+          observacion: esAdmin || esDocente ? evaluacion.observacion : null,
+          devueltoPor: esAdmin || esDocente ? evaluacion.devueltoPor : null,
+          devueltoEn: esAdmin || esDocente ? evaluacion.devueltoEn : null,
+          puedeDevolver: esAdmin || equipoRes.rows.some((r: { rol: string }) => r.rol === 'PROFESOR'),
           escalaMinima: Number(evaluacion.escalaMinima),
           escalaMaxima: Number(evaluacion.escalaMaxima),
         },
@@ -162,8 +166,8 @@ export class NotasService {
         }
       }
 
-      if (evaluacion.estado !== 'BORRADOR') {
-        throw new ConflictException('La evaluación ya no está en borrador. No se pueden editar notas ni ausencias.');
+      if (!['BORRADOR', 'DEVUELTA'].includes(evaluacion.estado)) {
+        throw new ConflictException('Solo se pueden editar notas y ausencias en borrador o en una evaluación devuelta.');
       }
 
       const escalaMin = Number(evaluacion.escalaMinima);

@@ -252,4 +252,42 @@ export class EvaluacionesService {
       return rows[0];
     });
   }
+
+  /** H18: únicamente el profesor asignado o un administrador pueden devolver. */
+  async devolver(actor: string, institucion: string, evaluacionId: string, dto: Datos) {
+    await this.autorizacion.exigirRol(actor, institucion, 'ADMINISTRADOR', 'PROFESOR');
+    const eid = id(evaluacionId);
+    const observacion = texto(dto.observacion, 'Observación', 2000);
+    return this.ejecutar(institucion, async (db) => {
+      const res = await db.query(
+        'SELECT id, seccion_id, estado FROM evaluacion WHERE id = $1 FOR UPDATE', [eid],
+      );
+      if (!res.rowCount) throw new NotFoundException('Evaluación no encontrada');
+      const evaluacion = res.rows[0];
+      const permiso = await db.query(
+        `SELECT 1 FROM rol_en_institucion r
+         WHERE r.usuario_id = $1 AND r.institucion_id = $2
+           AND (r.rol = 'ADMINISTRADOR' OR (r.rol = 'PROFESOR' AND EXISTS (
+             SELECT 1 FROM equipo_docente e WHERE e.seccion_id = $3
+               AND e.usuario_id = $1 AND e.rol = 'PROFESOR'
+           )))`, [actor, institucion, evaluacion.seccion_id],
+      );
+      if (!permiso.rowCount) throw new ForbiddenException('Solo el profesor asignado puede devolver esta evaluación');
+      if (evaluacion.estado !== 'EN_REVISION') {
+        throw new ConflictException('Solo se puede devolver una evaluación en revisión');
+      }
+      const { rows } = await db.query(
+        `UPDATE evaluacion SET estado = 'DEVUELTA', observacion = $2,
+           devuelto_por = $3, devuelto_en = now()
+         WHERE id = $1 RETURNING id, estado, observacion,
+           devuelto_por AS "devueltoPor", devuelto_en AS "devueltoEn"`,
+        [eid, observacion, actor],
+      );
+      await this.registrar(db, institucion, actor, eid, 'DEVOLVER_EVALUACION', {
+        observacion, devueltoEn: rows[0].devueltoEn,
+      });
+      return rows[0];
+    });
+  }
+
 }
