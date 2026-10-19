@@ -40,6 +40,15 @@ export class EvaluacionesController {
     return this.servicio.enviarARevision(u.usuarioId, i, evaluacionId);
   }
 
+  @Post('evaluaciones/:id/reenviar-revision')
+  reenviarARevision(
+    @UsuarioActual() u: UsuarioSesion,
+    @InstitucionActiva() i: string,
+    @Param('id') evaluacionId: string,
+  ) {
+    return this.servicio.reenviarARevision(u.usuarioId, i, evaluacionId);
+  }
+
   @Post('evaluaciones/:id/devolver')
   devolver(
     @UsuarioActual() u: UsuarioSesion,

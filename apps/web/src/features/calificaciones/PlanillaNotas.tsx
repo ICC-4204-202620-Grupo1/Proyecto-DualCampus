@@ -18,6 +18,7 @@ interface RespuestaNotas {
     estado: string;
     observacion: string | null;
     devueltoEn: string | null;
+    reenviadoEn: string | null;
     puedeDevolver: boolean;
     escalaMinima: number;
     escalaMaxima: number;
@@ -53,6 +54,7 @@ export function PlanillaNotas({
   const [observacion, setObservacion] = useState('');
   const [comentario, setComentario] = useState('');
   const [devueltoEn, setDevueltoEn] = useState<string | null>(null);
+  const [reenviadoEn, setReenviadoEn] = useState<string | null>(null);
   const [puedeDevolver, setPuedeDevolver] = useState(false);
 
   const esAlumno = roles.every((r) => r === 'ALUMNO');
@@ -68,6 +70,7 @@ export function PlanillaNotas({
         setEstado(data.evaluacion.estado);
         setObservacion(data.evaluacion.observacion ?? '');
         setDevueltoEn(data.evaluacion.devueltoEn);
+        setReenviadoEn(data.evaluacion.reenviadoEn);
         setPuedeDevolver(data.evaluacion.puedeDevolver);
         setPendiente(false);
         const inicialValores: Record<string, string> = {};
@@ -182,9 +185,12 @@ export function PlanillaNotas({
     setGuardando(true);
     setError('');
     try {
-      await api(`/calificaciones/evaluaciones/${evaluacionId}/enviar-revision`, 'POST', {});
+      const reenvio = estado === 'DEVUELTA';
+      const ruta = reenvio ? 'reenviar-revision' : 'enviar-revision';
+      const data = await api<{ reenviadoEn: string | null }>(`/calificaciones/evaluaciones/${evaluacionId}/${ruta}`, 'POST', {});
+      setReenviadoEn(data.reenviadoEn);
       setEstado('EN_REVISION');
-      setAviso('Evaluación enviada a revisión. Las notas y ausencias quedaron bloqueadas.');
+      setAviso(`Evaluación ${reenvio ? 'reenviada' : 'enviada'} a revisión. Las notas y ausencias quedaron bloqueadas.`);
       onEnviada();
     } catch (err) {
       setError(mensaje(err));
@@ -247,6 +253,7 @@ export function PlanillaNotas({
 
       {error && <p role="alert" className="alerta" style={{ marginBottom: '1rem' }}>{error}</p>}
       {estado && <p>Estado: <strong>{estado === 'EN_REVISION' ? 'En revisión' : estado}</strong>{!editable && !esAlumno && ' · Solo lectura'}</p>}
+      {reenviadoEn && <p>Último reenvío: {new Date(reenviadoEn).toLocaleString()}</p>}
       {observacion && <section className="panel" aria-label="Observación del profesor">
         <h4>Observación del profesor</h4>
         <p style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{observacion}</p>
@@ -372,9 +379,9 @@ export function PlanillaNotas({
             >
               {guardando ? 'Guardando borrador…' : 'Guardar notas y ausencias'}
             </button>
-            {editable && estado === 'BORRADOR' && <button type="button" className="boton" onClick={enviarARevision}
+            {editable && <button type="button" className="boton" onClick={enviarARevision}
               disabled={guardando || pendiente || !completa || tieneErroresEscala}>
-              Enviar a revisión
+              {estado === 'DEVUELTA' ? 'Reenviar a revisión' : 'Enviar a revisión'}
             </button>}
             <span style={{ fontSize: '0.85rem', color: 'var(--suave)' }}>
               {pendiente ? 'Guarda los cambios antes de enviar. ' : ''}Las ausencias se guardan como estado distinto de nota 0.

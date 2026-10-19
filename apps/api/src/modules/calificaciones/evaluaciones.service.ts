@@ -167,6 +167,14 @@ export class EvaluacionesService {
    * Permitido para: Ayudante y Profesor asignados (quien cargó el borrador).
    */
   async enviarARevision(actor: string, institucion: string, evaluacionId: string) {
+    return this.enviar(actor, institucion, evaluacionId, false);
+  }
+
+  async reenviarARevision(actor: string, institucion: string, evaluacionId: string) {
+    return this.enviar(actor, institucion, evaluacionId, true);
+  }
+
+  private async enviar(actor: string, institucion: string, evaluacionId: string, reenvio: boolean) {
     await this.autorizacion.exigirRol(actor, institucion, 'ADMINISTRADOR', 'PROFESOR', 'AYUDANTE');
     const eid = id(evaluacionId);
 
@@ -181,10 +189,10 @@ export class EvaluacionesService {
       if (!evRes.rowCount) throw new NotFoundException('Evaluación no encontrada');
       const evaluacion = evRes.rows[0];
 
-      // CA2: Solo se puede enviar desde BORRADOR
-      if (evaluacion.estado !== 'BORRADOR') {
+      const estadoOrigen = reenvio ? 'DEVUELTA' : 'BORRADOR';
+      if (evaluacion.estado !== estadoOrigen) {
         throw new ConflictException(
-          `La evaluación ya está en estado "${evaluacion.estado}". Solo se puede enviar desde BORRADOR.`,
+          `La evaluación ya está en estado "${evaluacion.estado}". Solo se puede ${reenvio ? 'reenviar' : 'enviar'} desde ${estadoOrigen}.`,
         );
       }
 
@@ -235,18 +243,22 @@ export class EvaluacionesService {
       const { rows } = await db.query(
         `UPDATE evaluacion
          SET estado = 'EN_REVISION',
-             enviado_por = $2,
-             enviado_en = now()
+             enviado_por = CASE WHEN $3 THEN enviado_por ELSE $2 END,
+             enviado_en = CASE WHEN $3 THEN enviado_en ELSE now() END,
+             reenviado_por = CASE WHEN $3 THEN $2 ELSE reenviado_por END,
+             reenviado_en = CASE WHEN $3 THEN now() ELSE reenviado_en END
          WHERE id = $1
          RETURNING id, nombre, estado,
                    enviado_por AS "enviadoPor",
-                   enviado_en  AS "enviadoEn"`,
-        [eid, actor],
+                   enviado_en AS "enviadoEn", observacion,
+                   reenviado_por AS "reenviadoPor", reenviado_en AS "reenviadoEn"`,
+        [eid, actor, reenvio],
       );
 
-      await this.registrar(db, institucion, actor, eid, 'ENVIAR_A_REVISION', {
+      await this.registrar(db, institucion, actor, eid, reenvio ? 'REENVIAR_A_REVISION' : 'ENVIAR_A_REVISION', {
         evaluacionId: eid,
         enviadoEn: rows[0].enviadoEn,
+        reenviadoEn: rows[0].reenviadoEn,
       });
 
       return rows[0];
