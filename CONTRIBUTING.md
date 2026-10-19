@@ -1,50 +1,52 @@
-# Flujo propuesto del equipo
+# Flujo del equipo de DualCampus
 
-Propuesta pendiente de ratificación. La entrega 3 mantiene React y TypeScript,
-NestJS y PostgreSQL. Este paquete contiene documentos de proceso, no la aplicación.
+Acuerdos vigentes comunicados por el equipo el 18-10-2026. Sustituyen la propuesta de la entrega 4.
+Stack: React/TypeScript, NestJS y PostgreSQL; catálogo vigente: [56 historias](docs/tarjetas.md).
 
-## Ramas
+## Ramas y revisión
 
-- main: versión estable y rama predeterminada.
-- develop: integración.
-- feature/H23-envio-informe: trabajo de una historia desde develop.
-- fix/H23-validacion-archivo y docs/proceso: correcciones y documentación.
-- hotfix/Hxx-descripcion: desde main, solo para una corrección urgente.
+- main: versión estable. develop: integración.
+- Crear feature/Hxx-descripcion desde develop actualizado.
+- Abrir PR hacia develop con la plantilla del repositorio.
+- Un compañero disponible distinto del autor revisa. No hay revisores preasignados ni cuotas.
+- Resolver observaciones y ejecutar comprobaciones antes de integrar mediante merge commit.
+- Promover develop a main mediante PR y validar producción.
+- No usar force push ni reescribir main/develop.
+- Los commits y el envío del PR de esta entrega los realiza Oscar, por instrucción expresa.
 
-Los cambios se revisan mediante PR. El autor no es su propio revisor.
-Una aprobación independiente, comentarios resueltos y comprobaciones aplicables
-son requisitos de integración. Se usa Create a merge commit para conservar la
-historia de integración. main y develop no se reescriben ni reciben force push.
-No activar Require linear history si se elige este método.
+La rama preparatoria feature/entrega-5-iteracion-funcional conserva H02 y H05 desde
+origin/feature/H05-crear-periodo. No significa que esas historias estén integradas en develop.
+Antes del PR final, revisar los PR de base y sincronizar develop con los cambios aprobados,
+sin perder los cambios locales. Véase [integración](docs/entrega-5/pr.md).
 
-La promoción usa PR de develop a main. Después de un hotfix a main, se integra
-main en develop mediante PR antes de continuar las promociones. Un hotfix requiere
-los mismos controles de revisión. No se declaran pruebas de CI ejecutadas si no
-existe el workflow: definir comandos reales al crear la aplicación.
+## Commits
 
-## Conventional Commits
-
-Formato: tipo(ambito): descripcion. Ámbito opcional.
-Ejemplos: feat(entregas): confirmar recepción de archivo
-fix(auth): impedir acceso a otra institución
-docs(proceso): actualizar políticas del tablero
-test(notas): comprobar bloqueo de edición en revisión
-Cambios incompatibles: feat(api)!: cambiar formato de calificaciones
-Explicar impacto y migración con BREAKING CHANGE en el cuerpo o pie.
+Conventional Commits: tipo(ambito): descripción. Ejemplos:
+feat(academico): configurar secciones y nóminas; test(academico): verificar aislamiento;
+docs(entrega5): actualizar catálogo y evidencia. Cambios incompatibles usan ! y un pie BREAKING CHANGE.
 
 ## Definition of Ready
 
-- La tarjeta contiene ID, épica, contexto, persona, historia y criterios de aceptación observables.
-- El equipo resolvió las decisiones de negocio y permisos aplicables; los datos de prueba están disponibles.
-- Las dependencias de desarrollo están terminadas o existe un contrato simulado explícitamente acordado para trabajo preparatorio. La validación final exige las dependencias integradas.
-- La historia permite un resultado verificable en aproximadamente uno a tres días de trabajo. Si excede ese tamaño, el equipo aplica slicing antes de iniciarla.
-- Hay un responsable, un revisor distinto y capacidad bajo el límite de trabajo en curso. La tarjeta enlaza su referencia de diseño cuando corresponde.
+Historia y criterios claros, decisiones necesarias resueltas, dependencias terminadas o
+mecanismo preparatorio explícitamente acordado y alcance verificable.
+No se exige revisor preasignado ni cupo por columna/persona.
+D5 está resuelta para el piloto; el resto de las decisiones continúa según [alcance](docs/entrega-5/alcance.md).
 
 ## Definition of Done
 
-- Todos los criterios de aceptación tienen evidencia reproducible, incluidos los resultados de error aplicables.
-- Pasan las pruebas pertinentes, compilación, tipos y lint. En cambios de acceso o datos se comprueban rol, sección, datos propios e institución.
-- Un integrante distinto del autor revisó el PR y sus observaciones están resueltas.
-- El cambio está integrado en main y validado en el entorno de demostración. Estar en develop por sí solo no completa la tarjeta.
-- La documentación, migraciones y estrategia de reversión están actualizadas cuando corresponda. No se incorporan credenciales ni datos reales de alumnos.
-- La tarjeta enlaza PR, commit o versión y evidencia. Se registra quién validó y la fecha. Las comprobaciones no aplicables se justifican, no se marcan como hechas.
+Criterios con evidencia, pruebas y compilación satisfactorias, revisión independiente resuelta,
+integración en main, validación en producción/demostración, documentación actualizada y
+tarjeta con PR, versión, evidencia, validador y fecha. Lo no aplicable se justifica.
+Código local o pruebas verdes por sí solos no completan la historia.
+
+## Comprobaciones
+
+- npm ci
+- npm run build (tipos y compilación de ambas aplicaciones)
+- npm run test:api
+- TEST_DATABASE_URL debe configurarse para incluir las pruebas PostgreSQL; sin ella se omiten explícitamente.
+- npm run test:e2e (base de prueba y navegador, instrucciones en README)
+- git diff --check
+
+No existe configuración de lint en la base heredada; no declarar lint ejecutado.
+No incorporar secretos ni datos académicos reales. Usar los datos sintéticos del piloto.

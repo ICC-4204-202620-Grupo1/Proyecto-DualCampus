@@ -5,3 +5,11 @@ coverage/
 .env.*
 !.env.example
 .DS_Store
+*.tsbuildinfo
+.vercel
+
+# Evidencia temporal de pruebas
+/test-results/
+/playwright-report/
+/.vercel/
+*.tsbuildinfo

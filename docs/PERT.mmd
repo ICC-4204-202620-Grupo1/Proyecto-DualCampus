@@ -1,97 +1,141 @@
 flowchart TD
-  subgraph E1["E1 Acceso institucional"]
-    H01["H01 Iniciar sesión con Google"]
-    H02["H02 Seleccionar la institución activa"]
-    H03["H03 Aplicar permisos por rol y sección"]
-    H04["H04 Vincular acceso para el egreso"]
+%% Catálogo vigente: 56 historias, 67 dependencias. No representa estado de avance.
+  subgraph E1["E1 · Acceso institucional"]
+    H01["H01 · Ingresar con cuenta institucional"]
+    H02["H02 · Seleccionar institución activa"]
+    H03["H03 · Restringir acciones según el rol"]
+    H04["H04 · Aislar datos por institución y sección"]
   end
-  subgraph E2["E2 Configuración académica"]
-    H05["H05 Crear el período académico"]
-    H06["H06 Registrar cursos y secciones"]
-    H07["H07 Asignar profesores y ayudantes"]
-    H08["H08 Cargar y consultar la nómina oficial"]
-    H09["H09 Registrar un retiro informado"]
-    H10["H10 Consultar el calendario académico"]
+  subgraph E2["E2 · Configuración académica"]
+    H05["H05 · Crear un período académico"]
+    H06["H06 · Registrar un curso"]
+    H07["H07 · Crear una sección de curso"]
+    H08["H08 · Asignar profesor a una sección"]
+    H09["H09 · Asignar ayudantes a una sección"]
+    H10["H10 · Validar una nómina antes de cargarla"]
+    H11["H11 · Confirmar inscripción de alumnos"]
+    H12["H12 · Registrar un retiro oficial"]
+    H13["H13 · Consultar calendario del período"]
   end
-  subgraph E3["E3 Calificaciones con trazabilidad"]
-    H11["H11 Crear una evaluación presencial"]
-    H12["H12 Guardar notas en borrador"]
-    H13["H13 Enviar notas a revisión"]
-    H14["H14 Aprobar y publicar calificaciones"]
-    H15["H15 Devolver y reenviar calificaciones"]
-    H16["H16 Consultar mis notas publicadas"]
-    H17["H17 Corregir una nota de cierre"]
-    H18["H18 Consultar la trazabilidad de cambios"]
+  subgraph E3["E3 · Calificaciones con trazabilidad"]
+    H14["H14 · Crear una evaluación presencial"]
+    H15["H15 · Ingresar notas en borrador"]
+    H16["H16 · Registrar ausencias en borrador"]
+    H17["H17 · Enviar evaluación a revisión"]
+    H18["H18 · Devolver evaluación observada"]
+    H19["H19 · Reenviar evaluación corregida"]
+    H20["H20 · Publicar notas aprobadas"]
+    H21["H21 · Consultar notas propias publicadas"]
+    H22["H22 · Corregir una nota publicada"]
+    H23["H23 · Consultar auditoría de calificaciones"]
   end
-  subgraph E4["E4 Materiales y entregas"]
-    H19["H19 Publicar material y syllabus"]
-    H20["H20 Consultar y descargar material"]
-    H21["H21 Reutilizar material entre períodos"]
-    H22["H22 Habilitar la recepción de un informe"]
-    H23["H23 Enviar un archivo y obtener comprobante"]
-    H24["H24 Consultar y descargar entregas"]
-    H25["H25 Recuperar una carga fallida"]
+  subgraph E4["E4 · Materiales y entregas"]
+    H24["H24 · Publicar un material de curso"]
+    H25["H25 · Descargar materiales autorizados"]
+    H26["H26 · Reutilizar material entre períodos"]
+    H27["H27 · Crear una actividad de entrega"]
+    H28["H28 · Configurar plazo y formatos de entrega"]
+    H29["H29 · Enviar un archivo de actividad"]
+    H30["H30 · Obtener comprobante de entrega"]
+    H31["H31 · Consultar informes recibidos"]
+    H32["H32 · Descargar un informe recibido"]
+    H33["H33 · Reintentar una carga interrumpida"]
   end
-  subgraph E5["E5 Registro de asistencia"]
-    H26["H26 Registrar asistencia por clase"]
-    H27["H27 Consultar asistencia propia"]
-    H28["H28 Corregir un registro de asistencia"]
+  subgraph E5["E5 · Registro de asistencia"]
+    H34["H34 · Crear un registro de clase"]
+    H35["H35 · Marcar asistencia del alumnado"]
+    H36["H36 · Consultar asistencia propia"]
+    H37["H37 · Corregir una marca de asistencia"]
+    H38["H38 · Calcular proporción de asistencia"]
   end
-  subgraph E6["E6 Historial académico"]
-    H29["H29 Importar historial validado"]
-    H30["H30 Consultar historial por período"]
-    H31["H31 Consultar historial tras el egreso"]
+  subgraph E6["E6 · Historial académico"]
+    H39["H39 · Consolidar calificaciones por período"]
+    H40["H40 · Validar lote de notas históricas"]
+    H41["H41 · Confirmar importación histórica"]
+    H42["H42 · Mostrar notas históricas importadas"]
+    H43["H43 · Vincular una cuenta personal verificada"]
+    H44["H44 · Acceder al historial tras el egreso"]
+    H45["H45 · Revertir un lote histórico"]
   end
-  subgraph E7["E7 Reportería institucional"]
-    H32["H32 Consultar métricas de mi curso"]
-    H33["H33 Consultar reportes institucionales agregados"]
-    H34["H34 Exportar un reporte agregado"]
-    H35["H35 Programar un reporte periódico"]
+  subgraph E7["E7 · Reportería institucional"]
+    H46["H46 · Consultar distribución de notas por sección"]
+    H47["H47 · Consultar asistencia agregada por sección"]
+    H48["H48 · Consultar indicadores institucionales"]
+    H49["H49 · Filtrar reportes por facultad y período"]
+    H50["H50 · Exportar un reporte agregado"]
+    H51["H51 · Programar un reporte periódico"]
   end
-  subgraph E8["E8 Comunicación académica"]
-    H36["H36 Publicar un anuncio del curso"]
-    H37["H37 Consultar anuncios de mis cursos"]
-    H38["H38 Recibir avisos de notas por correo"]
+  subgraph E8["E8 · Comunicación académica"]
+    H52["H52 · Publicar anuncio de sección"]
+    H53["H53 · Consultar anuncios del curso"]
+    H54["H54 · Avisar por correo la publicación de notas"]
+    H55["H55 · Avisar por correo una corrección de nota"]
+    H56["H56 · Consultar estado de avisos enviados"]
   end
   H01 --> H02
   H02 --> H03
   H03 --> H04
-  H03 --> H05
+  H04 --> H05
   H05 --> H06
   H06 --> H07
   H07 --> H08
   H08 --> H09
-  H05 --> H10
-  H08 --> H11
+  H07 --> H10
+  H10 --> H11
   H11 --> H12
-  H12 --> H13
-  H13 --> H14
-  H13 --> H15
-  H14 --> H16
-  H14 --> H17
-  H14 --> H18
-  H07 --> H19
-  H19 --> H20
-  H08 --> H20
-  H19 --> H21
-  H11 --> H22
-  H22 --> H23
-  H23 --> H24
-  H23 --> H25
-  H08 --> H26
-  H26 --> H27
-  H26 --> H28
-  H08 --> H29
-  H16 --> H30
-  H04 --> H31
-  H30 --> H31
-  H16 --> H32
-  H26 --> H32
-  H32 --> H33
-  H33 --> H34
+  H05 --> H13
+  H09 --> H14
+  H11 --> H14
+  H14 --> H15
+  H15 --> H16
+  H15 --> H17
+  H16 --> H17
+  H17 --> H18
+  H18 --> H19
+  H17 --> H20
+  H20 --> H21
+  H20 --> H22
+  H20 --> H23
+  H09 --> H24
+  H11 --> H25
+  H24 --> H25
+  H24 --> H26
+  H09 --> H27
+  H27 --> H28
+  H11 --> H29
+  H28 --> H29
+  H29 --> H30
+  H29 --> H31
+  H31 --> H32
+  H29 --> H33
+  H09 --> H34
+  H11 --> H34
   H34 --> H35
-  H07 --> H36
-  H36 --> H37
-  H08 --> H37
-  H14 --> H38
-  H17 --> H38
+  H35 --> H36
+  H35 --> H37
+  H36 --> H38
+  H37 --> H38
+  H21 --> H39
+  H05 --> H39
+  H07 --> H40
+  H40 --> H41
+  H39 --> H42
+  H41 --> H42
+  H04 --> H43
+  H39 --> H44
+  H43 --> H44
+  H41 --> H45
+  H20 --> H46
+  H38 --> H47
+  H46 --> H48
+  H47 --> H48
+  H48 --> H49
+  H49 --> H50
+  H50 --> H51
+  H09 --> H52
+  H11 --> H53
+  H52 --> H53
+  H20 --> H54
+  H22 --> H55
+  H54 --> H56
+  H55 --> H56

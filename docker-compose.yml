@@ -1,0 +1,17 @@
+# Base de datos local para desarrollo (PostgreSQL 16, igual que en el diseño técnico)
+services:
+  db:
+    image: postgres:16
+    environment:
+      # Superusuario solo para administrar el contenedor; la API usa el rol "dualcampus"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    # Puerto 5433 en tu PC para no chocar con un PostgreSQL ya instalado
+    ports:
+      - "5433:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./apps/api/db/docker-init.sql:/docker-entrypoint-initdb.d/00-roles.sql:ro
+
+volumes:
+  db-data:

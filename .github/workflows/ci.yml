@@ -1,0 +1,49 @@
+name: Verificación de DualCampus
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+permissions:
+  contents: read
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Base aislada de integración
+        run: |
+          psql -h localhost -U postgres -f apps/api/db/docker-init.sql
+          psql -h localhost -U postgres -c 'CREATE DATABASE dualcampus_test OWNER dualcampus;'
+        env:
+          PGPASSWORD: postgres
+      - run: npm run build
+      - run: npm run test:api
+        env:
+          TEST_DATABASE_URL: postgres://dualcampus:dualcampus@localhost:5432/dualcampus_test
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+        env:
+          TEST_DATABASE_URL: postgres://dualcampus:dualcampus@localhost:5432/dualcampus_test
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: evidencia-e2e
+          path: test-results/
+      - run: git diff --check
