@@ -180,10 +180,13 @@ export class NotasService {
           throw new BadRequestException(`El alumno ${alumnoId} no está matriculado en esta sección`);
         }
 
+        // H16 CA1: La ausencia es un estado distinto de cero — si esAusente, valor siempre null
+        const esAusente = item.esAusente === true;
+
         let valorNum: number | null = null;
-        if (item.valor !== undefined && item.valor !== null && item.valor !== '') {
+        if (!esAusente && item.valor !== undefined && item.valor !== null && item.valor !== '') {
           valorNum = Number(item.valor);
-          // CA2: Un valor fuera de escala no reemplaza la última nota válida
+          // CA2 (H15): Un valor fuera de escala no reemplaza la última nota válida
           if (isNaN(valorNum) || valorNum < escalaMin || valorNum > escalaMax) {
             throw new BadRequestException(
               `Valor ${item.valor} fuera de escala: la nota debe estar entre ${escalaMin.toFixed(1)} y ${escalaMax.toFixed(1)}`,
@@ -195,8 +198,9 @@ export class NotasService {
 
         validadas.push({
           alumnoId,
-          valor: valorNum,
-          esAusente: item.esAusente === true,
+          // H16 CA1: ausente → valor es null (no es cero)
+          valor: esAusente ? null : valorNum,
+          esAusente,
         });
       }
 
@@ -214,8 +218,10 @@ export class NotasService {
         );
       }
 
+      const totalAusentes = validadas.filter((v) => v.esAusente).length;
       await this.registrar(db, institucion, actor, eid, 'GUARDAR_NOTAS_BORRADOR', {
         totalGuardadas: validadas.length,
+        totalAusentes,
       });
 
       return {
