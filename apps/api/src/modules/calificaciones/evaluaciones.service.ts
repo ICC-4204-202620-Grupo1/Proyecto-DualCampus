@@ -75,7 +75,8 @@ export class EvaluacionesService {
       const { rows } = await db.query(
         `SELECT id, seccion_id AS "seccionId", nombre, fecha, ponderacion,
                 escala_minima AS "escalaMinima", escala_maxima AS "escalaMaxima",
-                escala_aprobacion AS "escalaAprobacion", estado, creado_en AS "creadoEn"
+                escala_aprobacion AS "escalaAprobacion", estado, creado_en AS "creadoEn",
+                enviado_por AS "enviadoPor", enviado_en AS "enviadoEn"
          FROM evaluacion
          WHERE seccion_id = $1
          ORDER BY fecha ASC, creado_en ASC`,
@@ -155,6 +156,100 @@ export class EvaluacionesService {
       });
 
       return evaluacion;
+    });
+  }
+
+  /**
+   * H17 · Enviar evaluación a revisión.
+   * CA1: Todas las filas deben tener nota válida o ausencia explícita.
+   * CA2: El envío cambia el estado a "EN_REVISION" y bloquea nuevas ediciones.
+   * CA3: Se conservan autor y fecha del envío.
+   * Permitido para: Ayudante y Profesor asignados (quien cargó el borrador).
+   */
+  async enviarARevision(actor: string, institucion: string, evaluacionId: string) {
+    await this.autorizacion.exigirRol(actor, institucion, 'ADMINISTRADOR', 'PROFESOR', 'AYUDANTE');
+    const eid = id(evaluacionId);
+
+    return this.ejecutar(institucion, async (db) => {
+      // Obtener la evaluación
+      const evRes = await db.query(
+        `SELECT e.id, e.seccion_id AS "seccionId", e.estado
+         FROM evaluacion e
+         WHERE e.id = $1 FOR UPDATE`,
+        [eid],
+      );
+      if (!evRes.rowCount) throw new NotFoundException('Evaluación no encontrada');
+      const evaluacion = evRes.rows[0];
+
+      // CA2: Solo se puede enviar desde BORRADOR
+      if (evaluacion.estado !== 'BORRADOR') {
+        throw new ConflictException(
+          `La evaluación ya está en estado "${evaluacion.estado}". Solo se puede enviar desde BORRADOR.`,
+        );
+      }
+
+      // Verificar que el actor pertenece al equipo de la sección o es admin
+      const rolAdmin = await db.query(
+        `SELECT 1 FROM rol_en_institucion WHERE usuario_id = $1 AND institucion_id = $2 AND rol = 'ADMINISTRADOR'`,
+        [actor, institucion],
+      );
+      const esAdmin = (rolAdmin.rowCount ?? 0) > 0;
+
+      if (!esAdmin) {
+        const docenteRes = await db.query(
+          `SELECT rol FROM equipo_docente WHERE seccion_id = $1 AND usuario_id = $2`,
+          [evaluacion.seccionId, actor],
+        );
+        if (!docenteRes.rowCount) {
+          throw new ForbiddenException('No perteneces al equipo docente de esta sección');
+        }
+      }
+
+      // CA1: Todas las filas deben tener nota válida o ausencia explícita
+      const filasSinCalificar = await db.query(
+        `SELECT u.id, u.nombre
+         FROM matricula m
+         JOIN usuario u ON u.id = m.usuario_id
+         LEFT JOIN nota n ON n.evaluacion_id = $1 AND n.usuario_id = u.id
+         WHERE m.seccion_id = $2
+           AND (n.id IS NULL OR NOT (
+             (n.es_ausente = true AND n.valor IS NULL)
+             OR (n.es_ausente = false AND n.valor BETWEEN 1.0 AND 7.0)
+           ) OR (n.es_ausente = false AND n.valor IS NULL))`,
+        [eid, evaluacion.seccionId],
+      );
+
+      if ((filasSinCalificar.rowCount ?? 0) > 0) {
+        const nombres = filasSinCalificar.rows
+          .slice(0, 3)
+          .map((r: { nombre: string }) => r.nombre)
+          .join(', ');
+        const total = filasSinCalificar.rowCount ?? 0;
+        throw new BadRequestException(
+          `Faltan ${total} alumno${total !== 1 ? 's' : ''} sin nota ni ausencia: ${nombres}${total > 3 ? '…' : ''}.`,
+        );
+      }
+
+      // CA2: Cambiar estado a EN_REVISION
+      // CA3: Guardar autor y fecha del envío
+      const { rows } = await db.query(
+        `UPDATE evaluacion
+         SET estado = 'EN_REVISION',
+             enviado_por = $2,
+             enviado_en = now()
+         WHERE id = $1
+         RETURNING id, nombre, estado,
+                   enviado_por AS "enviadoPor",
+                   enviado_en  AS "enviadoEn"`,
+        [eid, actor],
+      );
+
+      await this.registrar(db, institucion, actor, eid, 'ENVIAR_A_REVISION', {
+        evaluacionId: eid,
+        enviadoEn: rows[0].enviadoEn,
+      });
+
+      return rows[0];
     });
   }
 }

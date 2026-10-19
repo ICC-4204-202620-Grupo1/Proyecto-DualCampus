@@ -31,6 +31,15 @@ export class EvaluacionesController {
     return this.servicio.crear(u.usuarioId, i, seccionId, datos ?? {});
   }
 
+  @Post('evaluaciones/:id/enviar-revision')
+  enviarARevision(
+    @UsuarioActual() u: UsuarioSesion,
+    @InstitucionActiva() i: string,
+    @Param('id') evaluacionId: string,
+  ) {
+    return this.servicio.enviarARevision(u.usuarioId, i, evaluacionId);
+  }
+
   @Get('evaluaciones/:id/notas')
   listarNotas(
     @UsuarioActual() u: UsuarioSesion,
