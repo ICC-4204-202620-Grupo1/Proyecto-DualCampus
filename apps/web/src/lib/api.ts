@@ -125,3 +125,26 @@ export async function api<T>(ruta:string,method='GET',datos?:unknown):Promise<T>
   });
   return cuerpoOError<T>(res);
 }
+
+/** Descarga protegida mediante la misma cookie de sesión y el contexto institucional. */
+export async function descargarMaterial(seccionId: string, materialId: string, nombreArchivo: string): Promise<void> {
+  const res = await fetch(`${API_URL}/materiales/secciones/${encodeURIComponent(seccionId)}/materiales/${encodeURIComponent(materialId)}/descargar`, {
+    credentials: 'include', headers: contextoHeaders(),
+  });
+  if (!res.ok) {
+    await cuerpoOError(res);
+    return;
+  }
+  const archivo = await res.blob();
+  const url = URL.createObjectURL(archivo);
+  try {
+    const enlace = document.createElement('a');
+    enlace.href = url;
+    enlace.download = nombreArchivo;
+    document.body.appendChild(enlace);
+    enlace.click();
+    enlace.remove();
+  } finally {
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+}
