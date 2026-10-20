@@ -184,6 +184,29 @@ describe.skipIf(!url)('H24 · Publicar material de curso (PostgreSQL con RLS)', 
     await request(app.getHttpServer()).post('/api/materiales/secciones/' + seccion).send(documento()).expect(401);
   });
 
+  it('H25: permite descargar al alumnado matriculado y equipo docente', async () => {
+    const contenido = Buffer.from('Documento privado H25');
+    const subido = await subir(documento({ contenidoBase64: contenido.toString('base64') })).expect(201);
+    const ruta = 'materiales/secciones/' + seccion + '/materiales/' + subido.body.id + '/descargar';
+    for (const usuario of [alumno1, alumno2, prof, ayudante]) {
+      const res = await get(ruta, usuario).expect(200);
+      expect(res.headers['content-type']).toMatch(/text\/plain/);
+      expect(res.headers['content-disposition']).toContain('guia.txt');
+      expect(res.headers['cache-control']).toBe('private, no-store');
+      expect(Buffer.isBuffer(res.body) ? res.body.equals(contenido) : res.text === contenido.toString()).toBe(true);
+    }
+  });
+
+  it('H25: impide descargas de terceros y sin autenticación', async () => {
+    const subido = await subir().expect(201);
+    const ruta = 'materiales/secciones/' + seccion + '/materiales/' + subido.body.id + '/descargar';
+    await get(ruta, ajeno).expect(403);
+    await get(ruta, admin).expect(403);
+    await get('materiales/secciones/' + randomUUID() + '/materiales/' + subido.body.id + '/descargar', alumno1).expect(403);
+    await get('materiales/secciones/' + seccion + '/materiales/' + randomUUID() + '/descargar', alumno1).expect(404);
+    await request(app.getHttpServer()).get('/api/' + ruta).expect(401);
+  });
+
   it('CA1: falla la transacción sin dejar material ni evento publicado', async () => {
     await pool.query("ALTER TABLE evento_academico ADD CONSTRAINT prueba_fallo_material CHECK (accion <> 'PUBLICAR_MATERIAL') NOT VALID");
     try {
