@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Param, Post, Put, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Res, StreamableFile, UploadedFile, UseInterceptors } from '@nestjs/common';
+import type { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UsuarioActual } from '../../common/decorators/usuario-actual.decorator.js';
 import { InstitucionActiva } from '../../common/decorators/institucion-activa.decorator.js';
@@ -50,5 +51,38 @@ export class ActividadesController {
     @Param('id') seccionId: string,
   ) {
     return this.servicio.listarEntregas(u.usuarioId, i, seccionId);
+  }
+
+  @Get(':id/actividades/:actividadId/entregas/:entregaId/descargar')
+  async descargarEntrega(
+    @UsuarioActual() u: UsuarioSesion,
+    @InstitucionActiva() i: string,
+    @Param('id') seccionId: string,
+    @Param('actividadId') actividadId: string,
+    @Param('entregaId') entregaId: string,
+    @Res({ passthrough: true }) respuesta: Response,
+  ) {
+    const archivo = await this.servicio.descargarEntrega(u.usuarioId, i, seccionId, actividadId, entregaId);
+    const nombre = encodeURIComponent(archivo.nombreArchivo);
+    respuesta.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${nombre}`);
+    respuesta.setHeader('Cache-Control', 'private, no-store');
+    respuesta.setHeader('X-Content-Type-Options', 'nosniff');
+    return new StreamableFile(archivo.contenido, { type: archivo.tipo, length: archivo.contenido.length });
+  }
+
+  @Get(':id/entregas/:entregaId/descargar')
+  async descargarEntregaSeccion(
+    @UsuarioActual() u: UsuarioSesion,
+    @InstitucionActiva() i: string,
+    @Param('id') seccionId: string,
+    @Param('entregaId') entregaId: string,
+    @Res({ passthrough: true }) respuesta: Response,
+  ) {
+    const archivo = await this.servicio.descargarEntrega(u.usuarioId, i, seccionId, '', entregaId);
+    const nombre = encodeURIComponent(archivo.nombreArchivo);
+    respuesta.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${nombre}`);
+    respuesta.setHeader('Cache-Control', 'private, no-store');
+    respuesta.setHeader('X-Content-Type-Options', 'nosniff');
+    return new StreamableFile(archivo.contenido, { type: archivo.tipo, length: archivo.contenido.length });
   }
 }

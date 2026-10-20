@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { api, API_URL } from '../../lib/api';
+import { api, API_URL, descargarEntrega } from '../../lib/api';
 
 type Actividad = { id: string; titulo: string; instrucciones: string; creadoEn: string; autor: string;
     aperturaEn: string | null; cierreEn: string | null; formatosPermitidos: string[] | null; tamanoMaximoMb: number | null;
@@ -77,6 +77,19 @@ export function ActividadesEntrega({ seccionId }: { seccionId: string }) {
       setErrorTodos(e instanceof Error ? e.message : 'No se pudieron cargar los informes de la sección');
     } finally {
       setCargandoTodos(false);
+    }
+  }
+
+  const [descargando, setDescargando] = useState<string | null>(null);
+
+  async function ejecutarDescarga(actividadId: string, entregaId: string, nombreArchivo: string) {
+    setError(''); setAviso(''); setDescargando(entregaId);
+    try {
+      await descargarEntrega(seccionId, actividadId, entregaId, nombreArchivo);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo descargar el informe');
+    } finally {
+      setDescargando(null);
     }
   }
 
@@ -170,6 +183,7 @@ export function ActividadesEntrega({ seccionId }: { seccionId: string }) {
                 <th>Archivo</th>
                 <th>Tamaño</th>
                 <th>Fecha de recepción</th>
+                <th>Acción</th>
               </tr>
             </thead>
             <tbody>
@@ -180,6 +194,12 @@ export function ActividadesEntrega({ seccionId }: { seccionId: string }) {
                 <td>{inf.nombreArchivo}</td>
                 <td>{Math.ceil(inf.tamanoBytes / 1024)} KB</td>
                 <td>{new Date(inf.recibidoEn).toLocaleString('es-CL')}</td>
+                <td>
+                  <button type="button" className="boton-secundario" disabled={descargando !== null}
+                    onClick={() => void ejecutarDescarga(inf.actividadId, inf.id, inf.nombreArchivo)}>
+                    {descargando === inf.id ? 'Descargando.' : 'Descargar'}
+                  </button>
+                </td>
               </tr>)}
             </tbody>
           </table>
@@ -209,6 +229,10 @@ export function ActividadesEntrega({ seccionId }: { seccionId: string }) {
           <p>Archivo: {a.comprobante.nombreArchivo} ({Math.ceil(a.comprobante.tamanoBytes / 1024)} KB)
             <br/>Actividad: {a.titulo}
             <br/>Recibido: {new Date(a.comprobante.recibidoEn).toLocaleString('es-CL')}</p>
+          <button type="button" className="boton-secundario" disabled={descargando !== null}
+            onClick={() => void ejecutarDescarga(a.id, a.comprobante!.id, a.comprobante!.nombreArchivo)}>
+            {descargando === a.comprobante.id ? 'Descargando.' : 'Descargar mi entrega'}
+          </button>
         </div>}
         {datos.puedeEntregar && a.aperturaEn && a.cierreEn && a.formatosPermitidos && a.tamanoMaximoMb && <div>
           <label>Archivo para entregar
@@ -236,6 +260,7 @@ export function ActividadesEntrega({ seccionId }: { seccionId: string }) {
                     <th>Archivo</th>
                     <th>Tamaño</th>
                     <th>Fecha de recepción</th>
+                    <th>Acción</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -245,6 +270,12 @@ export function ActividadesEntrega({ seccionId }: { seccionId: string }) {
                     <td>{inf.nombreArchivo}</td>
                     <td>{Math.ceil(inf.tamanoBytes / 1024)} KB</td>
                     <td>{new Date(inf.recibidoEn).toLocaleString('es-CL')}</td>
+                    <td>
+                      <button type="button" className="boton-secundario" disabled={descargando !== null}
+                        onClick={() => void ejecutarDescarga(a.id, inf.id, inf.nombreArchivo)}>
+                        {descargando === inf.id ? 'Descargando.' : 'Descargar'}
+                      </button>
+                    </td>
                   </tr>)}
                 </tbody>
               </table>
