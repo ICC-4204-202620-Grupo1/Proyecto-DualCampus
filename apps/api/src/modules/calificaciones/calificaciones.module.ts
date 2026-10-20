@@ -1,5 +1,13 @@
 import { Module } from '@nestjs/common';
+import { AutorizacionModule } from '../autorizacion/autorizacion.module.js';
+import { EvaluacionesController } from './evaluaciones.controller.js';
+import { EvaluacionesService } from './evaluaciones.service.js';
+import { NotasService } from './notas.service.js';
 
-// Evaluaciones, notas y máquina de estados BORRADOR → EN_REVISION → PUBLICADA / DEVUELTA
-@Module({})
+@Module({
+  imports: [AutorizacionModule],
+  controllers: [EvaluacionesController],
+  providers: [EvaluacionesService, NotasService],
+  exports: [EvaluacionesService, NotasService],
+})
 export class CalificacionesModule {}
