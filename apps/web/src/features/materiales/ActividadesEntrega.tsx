@@ -2,7 +2,9 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { api, API_URL } from '../../lib/api';
 
 type Actividad = { id: string; titulo: string; instrucciones: string; creadoEn: string; autor: string;
-  aperturaEn: string | null; cierreEn: string | null; formatosPermitidos: string[] | null; tamanoMaximoMb: number | null };
+    aperturaEn: string | null; cierreEn: string | null; formatosPermitidos: string[] | null; tamanoMaximoMb: number | null;
+    comprobante: { id: string; nombreArchivo: string; tamanoBytes: number; recibidoEn: string } | null };
+
 type Listado = { puedeCrear: boolean; puedeEntregar: boolean; actividades: Actividad[] };
 
 export function ActividadesEntrega({ seccionId }: { seccionId: string }) {
@@ -60,8 +62,9 @@ export function ActividadesEntrega({ seccionId }: { seccionId: string }) {
       });
       const respuesta = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(Array.isArray(respuesta.message) ? respuesta.message.join(', ') : respuesta.message ?? `Error ${res.status}`);
-      setAviso(`Archivo recibido: ${respuesta.nombreArchivo}. Fecha: ${new Date(respuesta.recibidoEn).toLocaleString('es-CL')}`);
+      setAviso(`Archivo recibido para "${respuesta.actividad}": ${respuesta.nombreArchivo}. Fecha: ${new Date(respuesta.recibidoEn).toLocaleString('es-CL')}`);
       setArchivos(prev => ({...prev, [actividadId]: null}));
+      setVersion(v => v + 1);
     } catch (err) { setError(err instanceof Error ? err.message : 'No se pudo enviar el archivo'); }
     finally { setEnviando(null); }
   }
@@ -110,13 +113,19 @@ export function ActividadesEntrega({ seccionId }: { seccionId: string }) {
           <p>Abre: {new Date(a.aperturaEn).toLocaleString('es-CL')} · Cierra: {new Date(a.cierreEn).toLocaleString('es-CL')}
             <br/>Formatos: {a.formatosPermitidos.join(', ').toUpperCase()} · Máximo: {a.tamanoMaximoMb} MB</p> :
           <p>Condiciones de entrega todavía no configuradas.</p>}
+          {a.comprobante && <div className="exito" role="status" aria-label="Comprobante de entrega">
+          <strong>Comprobante de entrega</strong>
+          <p>Archivo: {a.comprobante.nombreArchivo} ({Math.ceil(a.comprobante.tamanoBytes / 1024)} KB)
+            <br/>Actividad: {a.titulo}
+            <br/>Recibido: {new Date(a.comprobante.recibidoEn).toLocaleString('es-CL')}</p>
+        </div>}
         {datos.puedeEntregar && a.aperturaEn && a.cierreEn && a.formatosPermitidos && a.tamanoMaximoMb && <div>
           <label>Archivo para entregar
             <input type="file" accept={a.formatosPermitidos.map(f => '.' + f).join(',')}
               onChange={e => setArchivos(prev => ({...prev, [a.id]: e.target.files?.[0] ?? null}))} />
           </label>
           <button type="button" disabled={!archivos[a.id] || enviando !== null}
-            onClick={() => void enviarArchivo(a.id)}>{enviando === a.id ? 'Enviando…' : 'Enviar archivo'}</button>
+            onClick={() => void enviarArchivo(a.id)}>{enviando === a.id ? 'Enviando…' : a.comprobante ? 'Reemplazar archivo' : 'Enviar archivo'}</button>
         </div>}
         {datos.puedeCrear && <button type="button" onClick={() => editar(a)}>Configurar entrega</button>}
         {datos.puedeCrear && editando === a.id && <form onSubmit={guardarConfiguracion}>
