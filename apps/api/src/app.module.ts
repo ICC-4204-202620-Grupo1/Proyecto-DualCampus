@@ -9,6 +9,7 @@ import { CalificacionesModule } from './modules/calificaciones/calificaciones.mo
 import { MaterialEntregasModule } from './modules/material-entregas/material-entregas.module.js';
 import { ReporteriaModule } from './modules/reporteria/reporteria.module.js';
 import { AuditoriaModule } from './modules/auditoria/auditoria.module.js';
+import { HistorialAcademicoModule } from './modules/historial-academico/historial-academico.module.js';
 
 // Un módulo por componente del diagrama C4 nivel 3 (Entrega 3)
 @Module({
@@ -22,6 +23,7 @@ import { AuditoriaModule } from './modules/auditoria/auditoria.module.js';
     MaterialEntregasModule,
     ReporteriaModule,
     AuditoriaModule,
+    HistorialAcademicoModule,
   ],
   controllers: [HealthController],
 })
