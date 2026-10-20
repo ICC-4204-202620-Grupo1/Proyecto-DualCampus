@@ -5,7 +5,19 @@ type Actividad = { id: string; titulo: string; instrucciones: string; creadoEn: 
     aperturaEn: string | null; cierreEn: string | null; formatosPermitidos: string[] | null; tamanoMaximoMb: number | null;
     comprobante: { id: string; nombreArchivo: string; tamanoBytes: number; recibidoEn: string } | null };
 
-type Listado = { puedeCrear: boolean; puedeEntregar: boolean; actividades: Actividad[] };
+type EntregaRecibida = {
+  id: string;
+  actividadId: string;
+  actividadTitulo?: string;
+  alumnoId: string;
+  autor: string;
+  email: string;
+  nombreArchivo: string;
+  tamanoBytes: number;
+  recibidoEn: string;
+};
+
+type Listado = { puedeCrear: boolean; puedeEntregar: boolean; puedeVerInformes?: boolean; actividades: Actividad[] };
 
 export function ActividadesEntrega({ seccionId }: { seccionId: string }) {
   const [datos, setDatos] = useState<Listado | null>(null);
@@ -23,6 +35,50 @@ export function ActividadesEntrega({ seccionId }: { seccionId: string }) {
   const [cierre, setCierre] = useState('');
   const [formatos, setFormatos] = useState<string[]>(['pdf']);
   const [tamano, setTamano] = useState(10);
+  const [actividadVerInformes, setActividadVerInformes] = useState<string | null>(null);
+  const [informes, setInformes] = useState<EntregaRecibida[]>([]);
+  const [cargandoInformes, setCargandoInformes] = useState(false);
+  const [errorInformes, setErrorInformes] = useState('');
+  const [verTodosInformes, setVerTodosInformes] = useState(false);
+  const [todosInformes, setTodosInformes] = useState<EntregaRecibida[]>([]);
+  const [cargandoTodos, setCargandoTodos] = useState(false);
+  const [errorTodos, setErrorTodos] = useState('');
+
+  async function toggleInformes(actividadId: string) {
+    if (actividadVerInformes === actividadId) {
+      setActividadVerInformes(null);
+      return;
+    }
+    setActividadVerInformes(actividadId);
+    setCargandoInformes(true);
+    setErrorInformes('');
+    try {
+      const res = await api<EntregaRecibida[]>(`/actividades/secciones/${seccionId}/actividades/${actividadId}/entregas`);
+      setInformes(res);
+    } catch (e) {
+      setErrorInformes(e instanceof Error ? e.message : 'No se pudieron cargar los informes recibidos');
+    } finally {
+      setCargandoInformes(false);
+    }
+  }
+
+  async function toggleTodosInformes() {
+    if (verTodosInformes) {
+      setVerTodosInformes(false);
+      return;
+    }
+    setVerTodosInformes(true);
+    setCargandoTodos(true);
+    setErrorTodos('');
+    try {
+      const res = await api<EntregaRecibida[]>(`/actividades/secciones/${seccionId}/entregas`);
+      setTodosInformes(res);
+    } catch (e) {
+      setErrorTodos(e instanceof Error ? e.message : 'No se pudieron cargar los informes de la sección');
+    } finally {
+      setCargandoTodos(false);
+    }
+  }
 
   function editar(a: Actividad) {
     setEditando(a.id); setError(''); setAviso('');
@@ -94,6 +150,41 @@ export function ActividadesEntrega({ seccionId }: { seccionId: string }) {
     <h3>Actividades de entrega</h3>
     {error && <p className="alerta" role="alert">{error}</p>}
     {aviso && <p className="exito" role="status">{aviso}</p>}
+    {(datos?.puedeVerInformes || datos?.puedeCrear) && <div style={{ marginBottom: '1rem' }}>
+      <button type="button" className="boton-secundario" onClick={() => void toggleTodosInformes()}>
+        {verTodosInformes ? 'Ocultar informes de la sección' : 'Consultar informes de la sección'}
+      </button>
+    </div>}
+    {verTodosInformes && <div style={{ marginBottom: '1.5rem', background: '#f8fafc', padding: '1rem', borderRadius: '6px', border: '1px solid var(--borde)' }}>
+      <h4>Informes recibidos en la sección</h4>
+      {cargandoTodos ? <p role="status">Cargando informes de la sección.</p> :
+        errorTodos ? <p role="alert" className="alerta">{errorTodos}</p> :
+        !todosInformes.length ? <p className="vacio">No hay informes recibidos en esta sección.</p> :
+        <div className="tabla-contenedor">
+          <table>
+            <thead>
+              <tr>
+                <th>Actividad</th>
+                <th>Autor</th>
+                <th>Correo</th>
+                <th>Archivo</th>
+                <th>Tamaño</th>
+                <th>Fecha de recepción</th>
+              </tr>
+            </thead>
+            <tbody>
+              {todosInformes.map(inf => <tr key={inf.id}>
+                <td><strong>{inf.actividadTitulo}</strong></td>
+                <td>{inf.autor}</td>
+                <td style={{ color: 'var(--suave)', fontSize: '0.85rem' }}>{inf.email}</td>
+                <td>{inf.nombreArchivo}</td>
+                <td>{Math.ceil(inf.tamanoBytes / 1024)} KB</td>
+                <td>{new Date(inf.recibidoEn).toLocaleString('es-CL')}</td>
+              </tr>)}
+            </tbody>
+          </table>
+        </div>}
+    </div>}
     {datos?.puedeCrear && <form onSubmit={crear}>
       <label>Título de la actividad<input required maxLength={200} value={titulo} disabled={guardando}
         onChange={e => setTitulo(e.target.value)}/></label>
@@ -128,6 +219,37 @@ export function ActividadesEntrega({ seccionId }: { seccionId: string }) {
             onClick={() => void enviarArchivo(a.id)}>{enviando === a.id ? 'Enviando…' : a.comprobante ? 'Reemplazar archivo' : 'Enviar archivo'}</button>
         </div>}
         {datos.puedeCrear && <button type="button" onClick={() => editar(a)}>Configurar entrega</button>}
+        {(datos.puedeVerInformes || datos.puedeCrear) && <button type="button" className="boton-secundario" style={{ marginLeft: '0.5rem' }} onClick={() => void toggleInformes(a.id)}>
+          {actividadVerInformes === a.id ? 'Ocultar informes' : 'Ver informes recibidos'}
+        </button>}
+        {(datos.puedeVerInformes || datos.puedeCrear) && actividadVerInformes === a.id && <div style={{ marginTop: '0.75rem', background: '#f8fafc', padding: '1rem', borderRadius: '6px', border: '1px solid var(--borde)' }}>
+          <h4>Informes recibidos: {a.titulo}</h4>
+          {cargandoInformes ? <p role="status">Cargando informes.</p> :
+            errorInformes ? <p role="alert" className="alerta">{errorInformes}</p> :
+            !informes.length ? <p className="vacio">No hay informes recibidos en esta actividad.</p> :
+            <div className="tabla-contenedor">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Autor</th>
+                    <th>Correo</th>
+                    <th>Archivo</th>
+                    <th>Tamaño</th>
+                    <th>Fecha de recepción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {informes.map(inf => <tr key={inf.id}>
+                    <td><strong>{inf.autor}</strong></td>
+                    <td style={{ color: 'var(--suave)', fontSize: '0.85rem' }}>{inf.email}</td>
+                    <td>{inf.nombreArchivo}</td>
+                    <td>{Math.ceil(inf.tamanoBytes / 1024)} KB</td>
+                    <td>{new Date(inf.recibidoEn).toLocaleString('es-CL')}</td>
+                  </tr>)}
+                </tbody>
+              </table>
+            </div>}
+        </div>}
         {datos.puedeCrear && editando === a.id && <form onSubmit={guardarConfiguracion}>
           <label>Apertura <input type="datetime-local" required value={apertura}
             onChange={e => setApertura(e.target.value)} /></label>
