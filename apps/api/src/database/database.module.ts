@@ -1,8 +1,8 @@
 import { Global, Inject, Module, OnApplicationShutdown } from '@nestjs/common';
 import { Pool, types } from 'pg';
-import { CONFIG, Config } from '../config/config';
-import { ContextoInstitucion } from './contexto-institucion';
-import { PG_POOL } from './pg-pool.token';
+import { CONFIG, Config } from '../config/config.js';
+import { ContextoInstitucion } from './contexto-institucion.js';
+import { PG_POOL } from './pg-pool.token.js';
 
 export { PG_POOL };
 

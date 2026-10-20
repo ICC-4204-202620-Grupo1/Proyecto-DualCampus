@@ -67,7 +67,7 @@ export function Academico({periodoId,roles}:{periodoId:string;roles:Rol[]}) {
         <span className="etiqueta">{s.cursoCodigo} · Sección {s.codigo}</span><strong>{s.curso}</strong><span>{s.totalAlumnos} alumnos · {s.periodo}</span>
       </button>)}</div>}
     {seleccion && !roles.every(r=>r==='ALUMNO') && <GestionSeccion key={seleccion} id={seleccion} nombre={secciones.find(s=>s.id===seleccion)?.curso+' · Sección '+secciones.find(s=>s.id===seleccion)?.codigo} admin={admin} docentes={docentes} roles={roles} actualizar={()=>setVersion(v=>v+1)}/>}
-    {seleccion && roles.every(r=>r==='ALUMNO') && <div className="detalle-seccion"><p className="exito">Estás en la nómina de esta sección.</p><MisNotas key={seleccion} seccionId={seleccion} /><Materiales key={seleccion} seccionId={seleccion} /></div>}
+    {seleccion && roles.every(r=>r==='ALUMNO') && <div className="detalle-seccion"><p className="exito">Estás en la nómina de esta sección.</p><MisNotas key={'notas-'+seleccion} seccionId={seleccion} /><Materiales key={'materiales-'+seleccion} seccionId={seleccion} /></div>}
   </section>;
 }
 

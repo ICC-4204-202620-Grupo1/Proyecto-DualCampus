@@ -6,22 +6,22 @@ import { INestApplication } from '@nestjs/common';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
-import { AppModule } from '../src/app.module';
-import { configurarApp } from '../src/app.setup';
-import { CONFIG, cargarConfig } from '../src/config/config';
-import { GoogleOidcAdapter } from '../src/modules/autenticacion/google-oidc.adapter';
-import type { IdentidadGoogle, RolEnInstitucion } from '../src/modules/autenticacion/usuario-sesion';
+import { AppModule } from '../src/app.module.js';
+import { configurarApp } from '../src/app.setup.js';
+import { CONFIG, cargarConfig } from '../src/config/config.js';
+import { GoogleOidcAdapter } from '../src/modules/autenticacion/google-oidc.adapter.js';
+import type { IdentidadGoogle, RolEnInstitucion } from '../src/modules/autenticacion/usuario-sesion.js';
 import {
   ContextoConsultado,
   UsuarioRegistrado,
   UsuariosRepositorio,
-} from '../src/modules/autenticacion/usuarios.repositorio';
+} from '../src/modules/autenticacion/usuarios.repositorio.js';
 import {
   NuevoPeriodo,
   Periodo,
   PeriodoDuplicadoError,
   PeriodosRepositorio,
-} from '../src/modules/gestion-academica/periodos/periodos.repositorio';
+} from '../src/modules/gestion-academica/periodos/periodos.repositorio.js';
 
 export const SECRETO = 'secreto-de-prueba-con-mas-de-32-caracteres';
 export const ID_UG = '11111111-1111-1111-1111-111111111111';

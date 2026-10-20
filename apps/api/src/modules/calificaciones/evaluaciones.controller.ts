@@ -1,9 +1,9 @@
 import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
-import { InstitucionActiva } from '../../common/decorators/institucion-activa.decorator';
-import { UsuarioActual } from '../../common/decorators/usuario-actual.decorator';
-import type { UsuarioSesion } from '../autenticacion/usuario-sesion';
-import { EvaluacionesService } from './evaluaciones.service';
-import { NotasService } from './notas.service';
+import { InstitucionActiva } from '../../common/decorators/institucion-activa.decorator.js';
+import { UsuarioActual } from '../../common/decorators/usuario-actual.decorator.js';
+import type { UsuarioSesion } from '../autenticacion/usuario-sesion.js';
+import { EvaluacionesService } from './evaluaciones.service.js';
+import { NotasService } from './notas.service.js';
 
 @Controller('calificaciones')
 export class EvaluacionesController {

@@ -1,8 +1,8 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { UsuarioActual } from '../../common/decorators/usuario-actual.decorator';
-import { InstitucionActiva } from '../../common/decorators/institucion-activa.decorator';
-import type { UsuarioSesion } from '../autenticacion/usuario-sesion';
-import { MaterialesService } from './materiales.service';
+import { UsuarioActual } from '../../common/decorators/usuario-actual.decorator.js';
+import { InstitucionActiva } from '../../common/decorators/institucion-activa.decorator.js';
+import type { UsuarioSesion } from '../autenticacion/usuario-sesion.js';
+import { MaterialesService } from './materiales.service.js';
 @Controller('materiales/secciones')
 export class MaterialesController {
   constructor(private readonly servicio: MaterialesService) {}

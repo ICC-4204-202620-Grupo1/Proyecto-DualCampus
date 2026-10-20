@@ -7,7 +7,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://dualcampus-api.vercel.app/api/:path*"
+      "destination": "https://proyecto-dual-campus-api.vercel.app/api/:path*"
     },
     {
       "source": "/(.*)",

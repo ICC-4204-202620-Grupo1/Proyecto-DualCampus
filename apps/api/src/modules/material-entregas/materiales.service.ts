@@ -1,7 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import type { PoolClient } from 'pg';
-import { ContextoInstitucion } from '../../database/contexto-institucion';
-import { AutorizacionService } from '../autorizacion/autorizacion.service';
+import { ContextoInstitucion } from '../../database/contexto-institucion.js';
+import { AutorizacionService } from '../autorizacion/autorizacion.service.js';
 
 const MAXIMO = 1048576;
 @Injectable()

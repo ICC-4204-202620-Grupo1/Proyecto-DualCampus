@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { AutorizacionModule } from '../autorizacion/autorizacion.module';
-import { EvaluacionesController } from './evaluaciones.controller';
-import { EvaluacionesService } from './evaluaciones.service';
-import { NotasService } from './notas.service';
+import { AutorizacionModule } from '../autorizacion/autorizacion.module.js';
+import { EvaluacionesController } from './evaluaciones.controller.js';
+import { EvaluacionesService } from './evaluaciones.service.js';
+import { NotasService } from './notas.service.js';
 
 @Module({
   imports: [AutorizacionModule],

@@ -1,8 +1,8 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { InstitucionActiva } from '../../../common/decorators/institucion-activa.decorator';
-import { UsuarioActual } from '../../../common/decorators/usuario-actual.decorator';
-import type { UsuarioSesion } from '../../autenticacion/usuario-sesion';
-import { CrearPeriodoDto, PeriodosService } from './periodos.service';
+import { InstitucionActiva } from '../../../common/decorators/institucion-activa.decorator.js';
+import { UsuarioActual } from '../../../common/decorators/usuario-actual.decorator.js';
+import type { UsuarioSesion } from '../../autenticacion/usuario-sesion.js';
+import { CrearPeriodoDto, PeriodosService } from './periodos.service.js';
 
 /** H05 · Períodos académicos de la institución activa. */
 @Controller('periodos')

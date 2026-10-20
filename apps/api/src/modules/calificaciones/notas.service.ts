@@ -1,7 +1,7 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import type { PoolClient } from 'pg';
-import { ContextoInstitucion } from '../../database/contexto-institucion';
-import { AutorizacionService } from '../autorizacion/autorizacion.service';
+import { ContextoInstitucion } from '../../database/contexto-institucion.js';
+import { AutorizacionService } from '../autorizacion/autorizacion.service.js';
 
 type Datos = Record<string, unknown>;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

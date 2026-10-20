@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "scripts": {
     "build": "nest build",
-    "start": "node dist/main",
+    "start": "node dist/main.js",
     "start:dev": "nest start --watch",
     "test": "vitest run",
     "db:migrar": "node scripts/migrar.js",
@@ -34,5 +34,9 @@
     "typescript": "~5.9.3",
     "unplugin-swc": "^2.0.0",
     "vitest": "^5.0.5"
-  }
+  },
+  "engines": {
+    "node": "22.x"
+  },
+  "type": "module"
 }

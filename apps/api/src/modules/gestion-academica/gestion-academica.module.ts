@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { AutorizacionModule } from '../autorizacion/autorizacion.module';
-import { PeriodosController } from './periodos/periodos.controller';
-import { PeriodosRepositorio, PostgresPeriodosRepositorio } from './periodos/periodos.repositorio';
-import { PeriodosService } from './periodos/periodos.service';
-import { AcademicoController } from './academico.controller';
-import { AcademicoService } from './academico.service';
+import { AutorizacionModule } from '../autorizacion/autorizacion.module.js';
+import { PeriodosController } from './periodos/periodos.controller.js';
+import { PeriodosRepositorio, PostgresPeriodosRepositorio } from './periodos/periodos.repositorio.js';
+import { PeriodosService } from './periodos/periodos.service.js';
+import { AcademicoController } from './academico.controller.js';
+import { AcademicoService } from './academico.service.js';
 
 @Module({
   imports: [AutorizacionModule],

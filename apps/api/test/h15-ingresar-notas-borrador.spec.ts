@@ -6,12 +6,12 @@ import { Pool } from 'pg';
 import { Test } from '@nestjs/testing';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
-import { AppModule } from '../src/app.module';
-import { configurarApp } from '../src/app.setup';
-import { CONFIG, cargarConfig } from '../src/config/config';
-import { PG_POOL } from '../src/database/pg-pool.token';
-import { SesionService } from '../src/modules/autenticacion/sesion.service';
-import type { Rol } from '../src/modules/autenticacion/usuario-sesion';
+import { AppModule } from '../src/app.module.js';
+import { configurarApp } from '../src/app.setup.js';
+import { CONFIG, cargarConfig } from '../src/config/config.js';
+import { PG_POOL } from '../src/database/pg-pool.token.js';
+import { SesionService } from '../src/modules/autenticacion/sesion.service.js';
+import type { Rol } from '../src/modules/autenticacion/usuario-sesion.js';
 
 const url = process.env.TEST_DATABASE_URL;
 

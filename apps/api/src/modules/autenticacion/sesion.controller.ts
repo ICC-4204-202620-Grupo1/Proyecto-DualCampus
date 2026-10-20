@@ -1,11 +1,11 @@
 import { BadRequestException, Body, Controller, ForbiddenException, Get, Put, Res } from '@nestjs/common';
 import type { Response } from 'express';
-import { InstitucionActiva } from '../../common/decorators/institucion-activa.decorator';
-import { UsuarioActual } from '../../common/decorators/usuario-actual.decorator';
-import { AutenticacionService } from './autenticacion.service';
-import { COOKIE_SESION, SesionService } from './sesion.service';
-import type { UsuarioSesion } from './usuario-sesion';
-import { UsuariosRepositorio } from './usuarios.repositorio';
+import { InstitucionActiva } from '../../common/decorators/institucion-activa.decorator.js';
+import { UsuarioActual } from '../../common/decorators/usuario-actual.decorator.js';
+import { AutenticacionService } from './autenticacion.service.js';
+import { COOKIE_SESION, SesionService } from './sesion.service.js';
+import type { UsuarioSesion } from './usuario-sesion.js';
+import { UsuariosRepositorio } from './usuarios.repositorio.js';
 
 /** H02 · Seleccionar la institución activa de la sesión. */
 @Controller('sesion')
