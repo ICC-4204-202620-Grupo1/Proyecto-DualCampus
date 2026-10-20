@@ -1,0 +1,302 @@
+import { useEffect, useState, type FormEvent } from 'react';
+import { api, API_URL, descargarEntrega } from '../../lib/api';
+
+type Actividad = { id: string; titulo: string; instrucciones: string; creadoEn: string; autor: string;
+    aperturaEn: string | null; cierreEn: string | null; formatosPermitidos: string[] | null; tamanoMaximoMb: number | null;
+    comprobante: { id: string; nombreArchivo: string; tamanoBytes: number; recibidoEn: string } | null };
+
+type EntregaRecibida = {
+  id: string;
+  actividadId: string;
+  actividadTitulo?: string;
+  alumnoId: string;
+  autor: string;
+  email: string;
+  nombreArchivo: string;
+  tamanoBytes: number;
+  recibidoEn: string;
+};
+
+type Listado = { puedeCrear: boolean; puedeEntregar: boolean; puedeVerInformes?: boolean; actividades: Actividad[] };
+
+export function ActividadesEntrega({ seccionId }: { seccionId: string }) {
+  const [datos, setDatos] = useState<Listado | null>(null);
+  const [archivos, setArchivos] = useState<Record<string, File | null>>({});
+  const [enviando, setEnviando] = useState<string | null>(null);
+  const [titulo, setTitulo] = useState('');
+  const [instrucciones, setInstrucciones] = useState('');
+  const [error, setError] = useState('');
+  const [aviso, setAviso] = useState('');
+  const [guardando, setGuardando] = useState(false);
+  const [cargando, setCargando] = useState(true);
+  const [version, setVersion] = useState(0);
+  const [editando, setEditando] = useState<string | null>(null);
+  const [apertura, setApertura] = useState('');
+  const [cierre, setCierre] = useState('');
+  const [formatos, setFormatos] = useState<string[]>(['pdf']);
+  const [tamano, setTamano] = useState(10);
+  const [actividadVerInformes, setActividadVerInformes] = useState<string | null>(null);
+  const [informes, setInformes] = useState<EntregaRecibida[]>([]);
+  const [cargandoInformes, setCargandoInformes] = useState(false);
+  const [errorInformes, setErrorInformes] = useState('');
+  const [verTodosInformes, setVerTodosInformes] = useState(false);
+  const [todosInformes, setTodosInformes] = useState<EntregaRecibida[]>([]);
+  const [cargandoTodos, setCargandoTodos] = useState(false);
+  const [errorTodos, setErrorTodos] = useState('');
+
+  async function toggleInformes(actividadId: string) {
+    if (actividadVerInformes === actividadId) {
+      setActividadVerInformes(null);
+      return;
+    }
+    setActividadVerInformes(actividadId);
+    setCargandoInformes(true);
+    setErrorInformes('');
+    try {
+      const res = await api<EntregaRecibida[]>(`/actividades/secciones/${seccionId}/actividades/${actividadId}/entregas`);
+      setInformes(res);
+    } catch (e) {
+      setErrorInformes(e instanceof Error ? e.message : 'No se pudieron cargar los informes recibidos');
+    } finally {
+      setCargandoInformes(false);
+    }
+  }
+
+  async function toggleTodosInformes() {
+    if (verTodosInformes) {
+      setVerTodosInformes(false);
+      return;
+    }
+    setVerTodosInformes(true);
+    setCargandoTodos(true);
+    setErrorTodos('');
+    try {
+      const res = await api<EntregaRecibida[]>(`/actividades/secciones/${seccionId}/entregas`);
+      setTodosInformes(res);
+    } catch (e) {
+      setErrorTodos(e instanceof Error ? e.message : 'No se pudieron cargar los informes de la sección');
+    } finally {
+      setCargandoTodos(false);
+    }
+  }
+
+  const [descargando, setDescargando] = useState<string | null>(null);
+
+  async function ejecutarDescarga(actividadId: string, entregaId: string, nombreArchivo: string) {
+    setError(''); setAviso(''); setDescargando(entregaId);
+    try {
+      await descargarEntrega(seccionId, actividadId, entregaId, nombreArchivo);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo descargar el informe');
+    } finally {
+      setDescargando(null);
+    }
+  }
+
+  function editar(a: Actividad) {
+    setEditando(a.id); setError(''); setAviso('');
+    const local = (valor: string | null) => {
+      if (!valor) return '';
+      const d = new Date(valor); const ajustada = new Date(d.getTime() - d.getTimezoneOffset()*60000);
+      return ajustada.toISOString().slice(0,16);
+    };
+    setApertura(local(a.aperturaEn)); setCierre(local(a.cierreEn));
+    setFormatos(a.formatosPermitidos ?? ['pdf']); setTamano(a.tamanoMaximoMb ?? 10);
+  }
+  async function guardarConfiguracion(e: FormEvent) {
+    e.preventDefault(); setError(''); setAviso('');
+    if (!apertura || !cierre || new Date(apertura) >= new Date(cierre)) {
+      setError('La fecha de cierre debe ser posterior a la apertura'); return;
+    }
+    setGuardando(true);
+    try {
+      await api(`/actividades/secciones/${seccionId}/actividades/${editando}/configuracion`, 'PUT', {
+        aperturaEn: new Date(apertura).toISOString(), cierreEn: new Date(cierre).toISOString(),
+        formatosPermitidos: formatos, tamanoMaximoMb: tamano,
+      });
+      setAviso('Configuración de entrega guardada.'); setEditando(null);
+      setVersion(v => v + 1);
+    } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo guardar la configuración'); }
+    finally { setGuardando(false); }
+  }
+
+  async function enviarArchivo(actividadId: string) {
+    const archivo = archivos[actividadId];
+    if (!archivo) return;
+    setError(''); setAviso(''); setEnviando(actividadId);
+    try {
+      const form = new FormData(); form.append('archivo', archivo);
+      const res = await fetch(`${API_URL}/actividades/secciones/${seccionId}/actividades/${actividadId}/entrega`, {
+        method: 'POST', credentials: 'include', body: form,
+      });
+      const respuesta = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(Array.isArray(respuesta.message) ? respuesta.message.join(', ') : respuesta.message ?? `Error ${res.status}`);
+      setAviso(`Archivo recibido para "${respuesta.actividad}": ${respuesta.nombreArchivo}. Fecha: ${new Date(respuesta.recibidoEn).toLocaleString('es-CL')}`);
+      setArchivos(prev => ({...prev, [actividadId]: null}));
+      setVersion(v => v + 1);
+    } catch (err) { setError(err instanceof Error ? err.message : 'No se pudo enviar el archivo'); }
+    finally { setEnviando(null); }
+  }
+
+  useEffect(() => {
+    let vigente = true;
+    setCargando(true); setError('');
+    api<Listado>(`/actividades/secciones/${seccionId}`)
+      .then(res => { if (vigente) setDatos(res); })
+      .catch(e => { if (vigente) setError(e instanceof Error ? e.message : 'No se pudieron cargar las actividades'); })
+      .finally(() => { if (vigente) setCargando(false); });
+    return () => { vigente = false; };
+  }, [seccionId, version]);
+
+  async function crear(e: FormEvent) {
+    e.preventDefault(); setError(''); setAviso(''); setGuardando(true);
+    try {
+      await api(`/actividades/secciones/${seccionId}`, 'POST', { titulo, instrucciones });
+      setTitulo(''); setInstrucciones('');
+      setAviso('Actividad creada correctamente.');
+      setVersion(v => v + 1);
+    } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo crear la actividad'); }
+    finally { setGuardando(false); }
+  }
+
+  return <section className="panel" aria-label="Actividades de entrega">
+    <h3>Actividades de entrega</h3>
+    {error && <p className="alerta" role="alert">{error}</p>}
+    {aviso && <p className="exito" role="status">{aviso}</p>}
+    {(datos?.puedeVerInformes || datos?.puedeCrear) && <div style={{ marginBottom: '1rem' }}>
+      <button type="button" className="boton-secundario" onClick={() => void toggleTodosInformes()}>
+        {verTodosInformes ? 'Ocultar informes de la sección' : 'Consultar informes de la sección'}
+      </button>
+    </div>}
+    {verTodosInformes && <div style={{ marginBottom: '1.5rem', background: '#f8fafc', padding: '1rem', borderRadius: '6px', border: '1px solid var(--borde)' }}>
+      <h4>Informes recibidos en la sección</h4>
+      {cargandoTodos ? <p role="status">Cargando informes de la sección.</p> :
+        errorTodos ? <p role="alert" className="alerta">{errorTodos}</p> :
+        !todosInformes.length ? <p className="vacio">No hay informes recibidos en esta sección.</p> :
+        <div className="tabla-contenedor">
+          <table>
+            <thead>
+              <tr>
+                <th>Actividad</th>
+                <th>Autor</th>
+                <th>Correo</th>
+                <th>Archivo</th>
+                <th>Tamaño</th>
+                <th>Fecha de recepción</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              {todosInformes.map(inf => <tr key={inf.id}>
+                <td><strong>{inf.actividadTitulo}</strong></td>
+                <td>{inf.autor}</td>
+                <td style={{ color: 'var(--suave)', fontSize: '0.85rem' }}>{inf.email}</td>
+                <td>{inf.nombreArchivo}</td>
+                <td>{Math.ceil(inf.tamanoBytes / 1024)} KB</td>
+                <td>{new Date(inf.recibidoEn).toLocaleString('es-CL')}</td>
+                <td>
+                  <button type="button" className="boton-secundario" disabled={descargando !== null}
+                    onClick={() => void ejecutarDescarga(inf.actividadId, inf.id, inf.nombreArchivo)}>
+                    {descargando === inf.id ? 'Descargando.' : 'Descargar'}
+                  </button>
+                </td>
+              </tr>)}
+            </tbody>
+          </table>
+        </div>}
+    </div>}
+    {datos?.puedeCrear && <form onSubmit={crear}>
+      <label>Título de la actividad<input required maxLength={200} value={titulo} disabled={guardando}
+        onChange={e => setTitulo(e.target.value)}/></label>
+      <label>Instrucciones<textarea required maxLength={10000} rows={5} value={instrucciones}
+        disabled={guardando} onChange={e => setInstrucciones(e.target.value)}/></label>
+      <button disabled={guardando || !titulo.trim() || !instrucciones.trim()}>
+        {guardando ? 'Creando…' : 'Crear actividad'}
+      </button>
+    </form>}
+    {cargando ? <p role="status">Cargando actividades…</p> : !datos ?
+      <button type="button" onClick={() => setVersion(v => v + 1)}>Reintentar</button> :
+      !datos.actividades.length ? <p className="vacio">No hay actividades de entrega en esta sección.</p> :
+      <ul>{datos.actividades.map(a => <li key={a.id} style={{ marginBlock: '1rem' }}>
+        <strong>{a.titulo}</strong><p style={{ whiteSpace: 'pre-wrap' }}>{a.instrucciones}</p>
+        <small>{a.autor} · {new Date(a.creadoEn).toLocaleString('es-CL')}</small>
+        {a.aperturaEn && a.cierreEn && a.formatosPermitidos && a.tamanoMaximoMb ?
+          <p>Abre: {new Date(a.aperturaEn).toLocaleString('es-CL')} · Cierra: {new Date(a.cierreEn).toLocaleString('es-CL')}
+            <br/>Formatos: {a.formatosPermitidos.join(', ').toUpperCase()} · Máximo: {a.tamanoMaximoMb} MB</p> :
+          <p>Condiciones de entrega todavía no configuradas.</p>}
+          {a.comprobante && <div className="exito" role="status" aria-label="Comprobante de entrega">
+          <strong>Comprobante de entrega</strong>
+          <p>Archivo: {a.comprobante.nombreArchivo} ({Math.ceil(a.comprobante.tamanoBytes / 1024)} KB)
+            <br/>Actividad: {a.titulo}
+            <br/>Recibido: {new Date(a.comprobante.recibidoEn).toLocaleString('es-CL')}</p>
+          <button type="button" className="boton-secundario" disabled={descargando !== null}
+            onClick={() => void ejecutarDescarga(a.id, a.comprobante!.id, a.comprobante!.nombreArchivo)}>
+            {descargando === a.comprobante.id ? 'Descargando.' : 'Descargar mi entrega'}
+          </button>
+        </div>}
+        {datos.puedeEntregar && a.aperturaEn && a.cierreEn && a.formatosPermitidos && a.tamanoMaximoMb && <div>
+          <label>Archivo para entregar
+            <input type="file" accept={a.formatosPermitidos.map(f => '.' + f).join(',')}
+              onChange={e => setArchivos(prev => ({...prev, [a.id]: e.target.files?.[0] ?? null}))} />
+          </label>
+          <button type="button" disabled={!archivos[a.id] || enviando !== null}
+            onClick={() => void enviarArchivo(a.id)}>{enviando === a.id ? 'Enviando…' : a.comprobante ? 'Reemplazar archivo' : 'Enviar archivo'}</button>
+        </div>}
+        {datos.puedeCrear && <button type="button" onClick={() => editar(a)}>Configurar entrega</button>}
+        {(datos.puedeVerInformes || datos.puedeCrear) && <button type="button" className="boton-secundario" style={{ marginLeft: '0.5rem' }} onClick={() => void toggleInformes(a.id)}>
+          {actividadVerInformes === a.id ? 'Ocultar informes' : 'Ver informes recibidos'}
+        </button>}
+        {(datos.puedeVerInformes || datos.puedeCrear) && actividadVerInformes === a.id && <div style={{ marginTop: '0.75rem', background: '#f8fafc', padding: '1rem', borderRadius: '6px', border: '1px solid var(--borde)' }}>
+          <h4>Informes recibidos: {a.titulo}</h4>
+          {cargandoInformes ? <p role="status">Cargando informes.</p> :
+            errorInformes ? <p role="alert" className="alerta">{errorInformes}</p> :
+            !informes.length ? <p className="vacio">No hay informes recibidos en esta actividad.</p> :
+            <div className="tabla-contenedor">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Autor</th>
+                    <th>Correo</th>
+                    <th>Archivo</th>
+                    <th>Tamaño</th>
+                    <th>Fecha de recepción</th>
+                    <th>Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {informes.map(inf => <tr key={inf.id}>
+                    <td><strong>{inf.autor}</strong></td>
+                    <td style={{ color: 'var(--suave)', fontSize: '0.85rem' }}>{inf.email}</td>
+                    <td>{inf.nombreArchivo}</td>
+                    <td>{Math.ceil(inf.tamanoBytes / 1024)} KB</td>
+                    <td>{new Date(inf.recibidoEn).toLocaleString('es-CL')}</td>
+                    <td>
+                      <button type="button" className="boton-secundario" disabled={descargando !== null}
+                        onClick={() => void ejecutarDescarga(a.id, inf.id, inf.nombreArchivo)}>
+                        {descargando === inf.id ? 'Descargando.' : 'Descargar'}
+                      </button>
+                    </td>
+                  </tr>)}
+                </tbody>
+              </table>
+            </div>}
+        </div>}
+        {datos.puedeCrear && editando === a.id && <form onSubmit={guardarConfiguracion}>
+          <label>Apertura <input type="datetime-local" required value={apertura}
+            onChange={e => setApertura(e.target.value)} /></label>
+          <label>Cierre <input type="datetime-local" required min={apertura} value={cierre}
+            onChange={e => setCierre(e.target.value)} /></label>
+          <fieldset><legend>Formatos permitidos</legend>
+            {['pdf','docx','txt','png'].map(f => <label key={f} style={{marginRight:'1rem'}}>
+              <input type="checkbox" checked={formatos.includes(f)} onChange={e =>
+                setFormatos(v => e.target.checked ? [...v,f] : v.filter(x => x !== f))} /> {f.toUpperCase()}
+            </label>)}
+          </fieldset>
+          <label>Tamaño máximo (MB) <input type="number" min={1} max={50} required value={tamano}
+            onChange={e => setTamano(Number(e.target.value))} /></label>
+          <button disabled={guardando || formatos.length === 0}>Guardar condiciones</button>
+          <button type="button" onClick={() => setEditando(null)}>Cancelar</button>
+        </form>}
+      </li>)}</ul>}
+  </section>;
+}

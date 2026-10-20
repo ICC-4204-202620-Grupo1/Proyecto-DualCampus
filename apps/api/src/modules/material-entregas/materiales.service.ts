@@ -41,6 +41,28 @@ export class MaterialesService {
     });
   }
 
+  async descargar(actor: string, institucion: string, seccionId: string, materialId: string) {
+    await this.autorizacion.exigirRol(actor, institucion, 'PROFESOR', 'AYUDANTE', 'ALUMNO');
+    const sid = this.id(seccionId);
+    const mid = this.id(materialId);
+    return this.contexto.ejecutar(institucion, async db => {
+      const acceso = await db.query(
+        `SELECT EXISTS(SELECT 1 FROM equipo_docente e WHERE e.seccion_id=$2 AND e.usuario_id=$1) AS docente,
+                EXISTS(SELECT 1 FROM matricula m WHERE m.seccion_id=$2 AND m.usuario_id=$1) AS alumno`,
+        [actor, sid],
+      );
+      if (!acceso.rows[0]?.docente && !acceso.rows[0]?.alumno) {
+        throw new ForbiddenException('No tienes permiso para descargar materiales de esta sección');
+      }
+      const { rows } = await db.query(
+        `SELECT nombre_archivo AS "nombreArchivo",tipo,contenido FROM material_curso
+         WHERE id=$1 AND seccion_id=$2`, [mid, sid],
+      );
+      if (!rows.length) throw new NotFoundException('Material no encontrado');
+      return { nombreArchivo: rows[0].nombreArchivo as string, tipo: rows[0].tipo as string, contenido: rows[0].contenido as Buffer };
+    });
+  }
+
   async publicar(actor: string, institucion: string, seccionId: string, dto: Record<string, unknown>) {
     await this.autorizacion.exigirRol(actor,institucion,'PROFESOR');
     const sid = this.id(seccionId);

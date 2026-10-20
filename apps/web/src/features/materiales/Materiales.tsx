@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { api } from '../../lib/api';
+import { api, descargarMaterial } from '../../lib/api';
 type Material = { id: string; titulo: string; nombreArchivo: string; tamano: number; publicadoEn: string; autor?: string };
 type Listado = { puedePublicar: boolean; materiales: Material[] };
 const MAXIMO = 1048576;
@@ -19,6 +19,7 @@ export function Materiales({ seccionId }: { seccionId: string }) {
   const [aviso,setAviso] = useState('');
   const [cargando,setCargando] = useState(true);
   const [guardando,setGuardando] = useState(false);
+  const [descargando,setDescargando] = useState<string | null>(null);
   const [version,setVersion] = useState(0);
   const entrada = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -47,6 +48,14 @@ export function Materiales({ seccionId }: { seccionId: string }) {
     } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo publicar el material'); }
     finally { setGuardando(false); }
   }
+  async function descargar(material: Material) {
+    setError(''); setAviso(''); setDescargando(material.id);
+    try {
+      await descargarMaterial(seccionId, material.id, material.nombreArchivo);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo descargar el material');
+    } finally { setDescargando(null); }
+  }
   return <section className="panel" aria-label="Materiales de la sección">
     <h3>Materiales del curso</h3>
     {error && <p className="alerta" role="alert">{error}</p>}
@@ -64,6 +73,7 @@ export function Materiales({ seccionId }: { seccionId: string }) {
       <ul>{datos.materiales.map(m => <li key={m.id} style={{marginBlock:'1rem'}}>
         <strong>{m.titulo}</strong><p>{m.nombreArchivo} · {Math.ceil(m.tamano / 1024)} KB</p>
         <small>{m.autor} · {new Date(m.publicadoEn).toLocaleString()}</small>
+        <p><button type="button" className="boton" disabled={descargando !== null} onClick={() => void descargar(m)}>{descargando === m.id ? 'Descargando…' : 'Descargar material'}</button></p>
       </li>)}</ul>}
   </section>;
 }

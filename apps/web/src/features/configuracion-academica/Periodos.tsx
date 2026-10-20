@@ -1,6 +1,7 @@
 import { type FormEvent, useEffect, useState } from 'react';
 import { crearPeriodo, listarPeriodos, type Periodo, type Rol } from '../../lib/api';
 import { Academico } from './Academico';
+import { HistorialAcademico } from '../historial-academico/HistorialAcademico';
 
 export function Periodos({roles}:{roles:Rol[]}) {
   const [periodos,setPeriodos]=useState<Periodo[]>([]);
@@ -37,6 +38,7 @@ export function Periodos({roles}:{roles:Rol[]}) {
         <label className="selector-periodo">Período de trabajo<select value={activo} onChange={e=>setActivo(e.target.value)}>{periodos.map(p=><option value={p.id} key={p.id}>{p.nombre}</option>)}</select></label>}
       {seleccionado && <p className="texto-suave">Del {seleccionado.fechaInicio} al {seleccionado.fechaFin}. Registrado por {seleccionado.creadoPor.nombre || seleccionado.creadoPor.email} · {new Date(seleccionado.creadoEn).toLocaleString('es-CL')}.</p>}
     </section>
+    {roles.includes('ALUMNO') && <HistorialAcademico />}
     {activo && roles.some(r=>['ADMINISTRADOR','PROFESOR','AYUDANTE','ALUMNO'].includes(r)) && <Academico key={activo} periodoId={activo} roles={roles}/>}
     {roles.every(r=>r==='DIRECTOR') && <section className="panel"><h2>Consulta institucional</h2><p>Puedes consultar el calendario académico. La reportería agregada se incorporará en una próxima iteración.</p></section>}
   </>;
