@@ -34,9 +34,15 @@ export class ActividadesService {
       const { rows } = await db.query(`SELECT a.id,a.titulo,a.instrucciones,a.creado_en AS "creadoEn",
         a.apertura_en AS "aperturaEn", a.cierre_en AS "cierreEn",
         a.formatos_permitidos AS "formatosPermitidos", a.tamano_maximo_mb AS "tamanoMaximoMb",
-        COALESCE(NULLIF(u.nombre,''),u.email) AS autor
+        COALESCE(NULLIF(u.nombre,''),u.email) AS autor,
+        CASE WHEN e.id IS NULL THEN NULL ELSE json_build_object(
+          'id',e.id,'nombreArchivo',e.nombre_archivo,
+          'tamanoBytes',e.tamano_bytes,'recibidoEn',e.recibido_en) END AS comprobante
         FROM actividad_entrega a JOIN usuario u ON u.id=a.creado_por
-        WHERE a.institucion_id=$1 AND a.seccion_id=$2 ORDER BY a.creado_en DESC,a.id`, [institucion, sid]);
+        LEFT JOIN entrega_archivo e ON e.institucion_id=a.institucion_id
+          AND e.actividad_id=a.id AND e.alumno_id=$3
+        WHERE a.institucion_id=$1 AND a.seccion_id=$2 ORDER BY a.creado_en DESC,a.id`, [institucion, sid, actor]);
+
       return { puedeCrear: acceso.profesor, puedeEntregar: acceso.alumno, actividades: rows };
     });
   }
@@ -135,7 +141,7 @@ export class ActividadesService {
       const acceso = await this.permisos(db, actor, institucion, sid);
       if (!acceso.alumno) throw new ForbiddenException('Debes estar matriculado en la sección');
       // Serializar por alumno y actividad para que dos envíos simultáneos no eludan condiciones.
-      const {rows} = await db.query(`SELECT apertura_en, cierre_en, formatos_permitidos, tamano_maximo_mb
+            const {rows} = await db.query(`SELECT titulo, apertura_en, cierre_en, formatos_permitidos, tamano_maximo_mb
         FROM actividad_entrega WHERE institucion_id=$1 AND seccion_id=$2 AND id=$3 FOR UPDATE`,
         [institucion,sid,aid]);
       if (!rows.length) throw new NotFoundException('Actividad no encontrada');
@@ -156,7 +162,7 @@ export class ActividadesService {
           tipo=EXCLUDED.tipo,contenido=EXCLUDED.contenido,tamano_bytes=EXCLUDED.tamano_bytes,recibido_en=now()
         RETURNING id,nombre_archivo AS "nombreArchivo",tamano_bytes AS "tamanoBytes",recibido_en AS "recibidoEn"`,
         [institucion,aid,actor,nombre,extension,archivo.mimetype,b,archivo.size]);
-      return guardado.rows[0];
+      return { ...guardado.rows[0], actividad: cfg.titulo };
     });
   }
 
