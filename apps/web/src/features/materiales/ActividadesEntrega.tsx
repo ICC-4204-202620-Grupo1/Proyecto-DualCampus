@@ -1,12 +1,14 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { api } from '../../lib/api';
+import { api, API_URL } from '../../lib/api';
 
 type Actividad = { id: string; titulo: string; instrucciones: string; creadoEn: string; autor: string;
   aperturaEn: string | null; cierreEn: string | null; formatosPermitidos: string[] | null; tamanoMaximoMb: number | null };
-type Listado = { puedeCrear: boolean; actividades: Actividad[] };
+type Listado = { puedeCrear: boolean; puedeEntregar: boolean; actividades: Actividad[] };
 
 export function ActividadesEntrega({ seccionId }: { seccionId: string }) {
   const [datos, setDatos] = useState<Listado | null>(null);
+  const [archivos, setArchivos] = useState<Record<string, File | null>>({});
+  const [enviando, setEnviando] = useState<string | null>(null);
   const [titulo, setTitulo] = useState('');
   const [instrucciones, setInstrucciones] = useState('');
   const [error, setError] = useState('');
@@ -45,6 +47,23 @@ export function ActividadesEntrega({ seccionId }: { seccionId: string }) {
       setVersion(v => v + 1);
     } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo guardar la configuración'); }
     finally { setGuardando(false); }
+  }
+
+  async function enviarArchivo(actividadId: string) {
+    const archivo = archivos[actividadId];
+    if (!archivo) return;
+    setError(''); setAviso(''); setEnviando(actividadId);
+    try {
+      const form = new FormData(); form.append('archivo', archivo);
+      const res = await fetch(`${API_URL}/actividades/secciones/${seccionId}/actividades/${actividadId}/entrega`, {
+        method: 'POST', credentials: 'include', body: form,
+      });
+      const respuesta = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(Array.isArray(respuesta.message) ? respuesta.message.join(', ') : respuesta.message ?? `Error ${res.status}`);
+      setAviso(`Archivo recibido: ${respuesta.nombreArchivo}. Fecha: ${new Date(respuesta.recibidoEn).toLocaleString('es-CL')}`);
+      setArchivos(prev => ({...prev, [actividadId]: null}));
+    } catch (err) { setError(err instanceof Error ? err.message : 'No se pudo enviar el archivo'); }
+    finally { setEnviando(null); }
   }
 
   useEffect(() => {
@@ -91,6 +110,14 @@ export function ActividadesEntrega({ seccionId }: { seccionId: string }) {
           <p>Abre: {new Date(a.aperturaEn).toLocaleString('es-CL')} · Cierra: {new Date(a.cierreEn).toLocaleString('es-CL')}
             <br/>Formatos: {a.formatosPermitidos.join(', ').toUpperCase()} · Máximo: {a.tamanoMaximoMb} MB</p> :
           <p>Condiciones de entrega todavía no configuradas.</p>}
+        {datos.puedeEntregar && a.aperturaEn && a.cierreEn && a.formatosPermitidos && a.tamanoMaximoMb && <div>
+          <label>Archivo para entregar
+            <input type="file" accept={a.formatosPermitidos.map(f => '.' + f).join(',')}
+              onChange={e => setArchivos(prev => ({...prev, [a.id]: e.target.files?.[0] ?? null}))} />
+          </label>
+          <button type="button" disabled={!archivos[a.id] || enviando !== null}
+            onClick={() => void enviarArchivo(a.id)}>{enviando === a.id ? 'Enviando…' : 'Enviar archivo'}</button>
+        </div>}
         {datos.puedeCrear && <button type="button" onClick={() => editar(a)}>Configurar entrega</button>}
         {datos.puedeCrear && editando === a.id && <form onSubmit={guardarConfiguracion}>
           <label>Apertura <input type="datetime-local" required value={apertura}

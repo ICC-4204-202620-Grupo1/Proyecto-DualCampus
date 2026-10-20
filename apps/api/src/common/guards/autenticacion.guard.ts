@@ -32,7 +32,14 @@ export class AutenticacionGuard implements CanActivate {
     if (sesion.institucionActivaId && !actual.roles.some(r=>r.institucionId===sesion.institucionActivaId)) {
       throw new ForbiddenException('El acceso a la institución ya no está habilitado');
     }
-    if (escritura && !req.is('application/json')) throw new ForbiddenException('La operación requiere contenido JSON');
+    const esEntregaArchivo =
+      req.method === 'POST' &&
+      /^\/api\/actividades\/secciones\/[^/]+\/actividades\/[^/]+\/entrega\/?$/.test(req.originalUrl.split('?')[0]);
+    const tipoPermitido = req.is('application/json') ||
+      (esEntregaArchivo && req.is('multipart/form-data'));
+    if (escritura && !tipoPermitido) {
+      throw new ForbiddenException('La operación requiere contenido JSON');
+    }
     req.usuario = { ...sesion, nombre:actual.nombre || sesion.nombre, email:actual.email, roles:actual.roles };
     return true;
   }
