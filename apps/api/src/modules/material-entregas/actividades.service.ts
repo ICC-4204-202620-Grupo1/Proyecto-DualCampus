@@ -37,7 +37,7 @@ export class ActividadesService {
         COALESCE(NULLIF(u.nombre,''),u.email) AS autor
         FROM actividad_entrega a JOIN usuario u ON u.id=a.creado_por
         WHERE a.institucion_id=$1 AND a.seccion_id=$2 ORDER BY a.creado_en DESC,a.id`, [institucion, sid]);
-      return { puedeCrear: acceso.profesor, actividades: rows };
+      return { puedeCrear: acceso.profesor, puedeEntregar: acceso.alumno, actividades: rows };
     });
   }
 
@@ -100,6 +100,63 @@ export class ActividadesService {
         [institucion, actor, sid, JSON.stringify({actividadId:aid,aperturaEn:apertura.toISOString(),
           cierreEn:cierre.toISOString(),formatosPermitidos:formatos,tamanoMaximoMb:mb})]);
       return rows[0];
+    });
+  }
+
+  async entregar(actor: string, institucion: string, seccion: string, actividad: string,
+    archivo?: { originalname: string; mimetype: string; buffer: Buffer; size: number }) {
+    await this.autorizacion.exigirRol(actor, institucion, 'ALUMNO');
+    const sid = this.seccionId(seccion), aid = this.seccionId(actividad);
+    if (!archivo?.buffer?.length || !archivo.originalname || !archivo.size) {
+      throw new BadRequestException('Selecciona un archivo no vacío');
+    }
+    const nombre = archivo.originalname;
+    if (nombre.length > 180 || /[\\/\x00-\x1f\x7f]/.test(nombre) || !/^[^\.]+(?:\.[^\.]+)*\.[a-zA-Z0-9]+$/.test(nombre)) {
+      throw new BadRequestException('Nombre de archivo inválido');
+    }
+    const extension = nombre.split('.').pop()!.toLowerCase();
+    const tipos: Record<string,string[]> = {
+      pdf: ['application/pdf'], docx: ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+      txt: ['text/plain'], png: ['image/png']
+    };
+    if (!tipos[extension]?.includes(archivo.mimetype)) throw new BadRequestException('Tipo de archivo no permitido');
+    const b = archivo.buffer;
+    if (extension === 'pdf' && (!b.subarray(0,5).equals(Buffer.from('%PDF-')) || !b.subarray(-1024).includes(Buffer.from('%%EOF'))))
+      throw new BadRequestException('PDF inválido');
+    if (extension === 'png' && !b.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])))
+      throw new BadRequestException('PNG inválido');
+    if (extension === 'docx' && !b.subarray(0,4).equals(Buffer.from([80,75,3,4])))
+      throw new BadRequestException('DOCX inválido');
+    if (extension === 'txt') {
+      try { new TextDecoder('utf-8', {fatal:true}).decode(b); }
+      catch { throw new BadRequestException('El TXT debe ser UTF-8'); }
+    }
+    return this.contexto.ejecutar(institucion, async db => {
+      const acceso = await this.permisos(db, actor, institucion, sid);
+      if (!acceso.alumno) throw new ForbiddenException('Debes estar matriculado en la sección');
+      // Serializar por alumno y actividad para que dos envíos simultáneos no eludan condiciones.
+      const {rows} = await db.query(`SELECT apertura_en, cierre_en, formatos_permitidos, tamano_maximo_mb
+        FROM actividad_entrega WHERE institucion_id=$1 AND seccion_id=$2 AND id=$3 FOR UPDATE`,
+        [institucion,sid,aid]);
+      if (!rows.length) throw new NotFoundException('Actividad no encontrada');
+      const cfg = rows[0];
+      if (!cfg.apertura_en || !cfg.cierre_en || !cfg.formatos_permitidos || !cfg.tamano_maximo_mb)
+        throw new BadRequestException('El profesor aún no configura las condiciones');
+      const momento = Date.now();
+      if (momento < new Date(cfg.apertura_en).getTime()) throw new BadRequestException('La entrega todavía no abre');
+      if (momento > new Date(cfg.cierre_en).getTime()) throw new BadRequestException('El plazo de entrega terminó');
+      if (!(cfg.formatos_permitidos as string[]).includes(extension)) throw new BadRequestException('Formato no admitido para esta actividad');
+      if (archivo.size > Number(cfg.tamano_maximo_mb) * 1024 * 1024)
+        throw new BadRequestException('Archivo supera el tamaño máximo permitido');
+      const guardado = await db.query(`INSERT INTO entrega_archivo
+        (institucion_id,actividad_id,alumno_id,nombre_archivo,extension,tipo,contenido,tamano_bytes)
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8)
+        ON CONFLICT(actividad_id,alumno_id) DO UPDATE SET
+          nombre_archivo=EXCLUDED.nombre_archivo, extension=EXCLUDED.extension,
+          tipo=EXCLUDED.tipo,contenido=EXCLUDED.contenido,tamano_bytes=EXCLUDED.tamano_bytes,recibido_en=now()
+        RETURNING id,nombre_archivo AS "nombreArchivo",tamano_bytes AS "tamanoBytes",recibido_en AS "recibidoEn"`,
+        [institucion,aid,actor,nombre,extension,archivo.mimetype,b,archivo.size]);
+      return guardado.rows[0];
     });
   }
 
