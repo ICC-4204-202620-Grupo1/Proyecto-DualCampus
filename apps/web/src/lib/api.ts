@@ -148,3 +148,29 @@ export async function descargarMaterial(seccionId: string, materialId: string, n
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 }
+
+/** Descarga protegida de un informe recibido (H32) para profesor, ayudante o el propio alumno. */
+export async function descargarEntrega(seccionId: string, actividadId: string, entregaId: string, nombreArchivo: string): Promise<void> {
+  const ruta = actividadId
+    ? `${API_URL}/actividades/secciones/${encodeURIComponent(seccionId)}/actividades/${encodeURIComponent(actividadId)}/entregas/${encodeURIComponent(entregaId)}/descargar`
+    : `${API_URL}/actividades/secciones/${encodeURIComponent(seccionId)}/entregas/${encodeURIComponent(entregaId)}/descargar`;
+  const res = await fetch(ruta, {
+    credentials: 'include', headers: contextoHeaders(),
+  });
+  if (!res.ok) {
+    await cuerpoOError(res);
+    return;
+  }
+  const archivo = await res.blob();
+  const url = URL.createObjectURL(archivo);
+  try {
+    const enlace = document.createElement('a');
+    enlace.href = url;
+    enlace.download = nombreArchivo;
+    document.body.appendChild(enlace);
+    enlace.click();
+    enlace.remove();
+  } finally {
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+}

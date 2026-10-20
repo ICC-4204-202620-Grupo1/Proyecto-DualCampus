@@ -200,4 +200,40 @@ export class ActividadesService {
       return rows;
     });
   }
+
+  async descargarEntrega(actor: string, institucion: string, seccion: string, actividadId: string, entregaId: string) {
+    await this.autorizacion.exigirRol(actor, institucion, 'ADMINISTRADOR', 'PROFESOR', 'AYUDANTE', 'ALUMNO');
+    const sid = this.seccionId(seccion);
+    const aid = actividadId ? this.seccionId(actividadId) : undefined;
+    const eid = this.seccionId(entregaId);
+    return this.contexto.ejecutar(institucion, async db => {
+      const acceso = await this.permisos(db, actor, institucion, sid);
+      if (!acceso.equipo && !acceso.alumno) {
+        throw new ForbiddenException('No tienes acceso a esta sección');
+      }
+      const params: unknown[] = [institucion, sid, eid];
+      let query = `SELECT e.id, e.actividad_id, e.alumno_id, e.nombre_archivo, e.tipo, e.contenido
+        FROM entrega_archivo e
+        JOIN actividad_entrega a ON a.id = e.actividad_id AND a.institucion_id = e.institucion_id
+        WHERE e.institucion_id = $1 AND a.seccion_id = $2 AND e.id = $3`;
+      if (aid) {
+        params.push(aid);
+        query += ` AND e.actividad_id = $4`;
+      }
+      const { rows } = await db.query(query, params);
+      if (!rows.length) throw new NotFoundException('Entrega no encontrada');
+      const entrega = rows[0];
+
+      // CA1 y CA2: equipo docente puede descargar cualquier informe; el alumno solo su propia entrega.
+      if (!acceso.equipo && entrega.alumno_id !== actor) {
+        throw new ForbiddenException('Solo puedes descargar tu propia entrega');
+      }
+
+      return {
+        nombreArchivo: entrega.nombre_archivo as string,
+        tipo: entrega.tipo as string,
+        contenido: entrega.contenido as Buffer,
+      };
+    });
+  }
 }
