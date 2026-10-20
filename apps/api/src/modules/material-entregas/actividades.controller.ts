@@ -32,4 +32,23 @@ export class ActividadesController {
     @Body() datos: Record<string, unknown>) {
     return this.servicio.configurar(u.usuarioId, i, id, actividadId, datos ?? {});
   }
+
+  @Get(':id/actividades/:actividadId/entregas')
+  entregasPorActividad(
+    @UsuarioActual() u: UsuarioSesion,
+    @InstitucionActiva() i: string,
+    @Param('id') seccionId: string,
+    @Param('actividadId') actividadId: string,
+  ) {
+    return this.servicio.listarEntregas(u.usuarioId, i, seccionId, actividadId);
+  }
+
+  @Get(':id/entregas')
+  entregasPorSeccion(
+    @UsuarioActual() u: UsuarioSesion,
+    @InstitucionActiva() i: string,
+    @Param('id') seccionId: string,
+  ) {
+    return this.servicio.listarEntregas(u.usuarioId, i, seccionId);
+  }
 }

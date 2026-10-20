@@ -43,7 +43,7 @@ export class ActividadesService {
           AND e.actividad_id=a.id AND e.alumno_id=$3
         WHERE a.institucion_id=$1 AND a.seccion_id=$2 ORDER BY a.creado_en DESC,a.id`, [institucion, sid, actor]);
 
-      return { puedeCrear: acceso.profesor, puedeEntregar: acceso.alumno, actividades: rows };
+      return { puedeCrear: acceso.profesor, puedeEntregar: acceso.alumno, puedeVerInformes: acceso.equipo, actividades: rows };
     });
   }
 
@@ -166,4 +166,38 @@ export class ActividadesService {
     });
   }
 
+  async listarEntregas(actor: string, institucion: string, seccion: string, actividadId?: string) {
+    await this.autorizacion.exigirRol(actor, institucion, 'ADMINISTRADOR', 'PROFESOR', 'AYUDANTE');
+    const sid = this.seccionId(seccion);
+    const aid = actividadId ? this.seccionId(actividadId) : undefined;
+    return this.contexto.ejecutar(institucion, async db => {
+      const acceso = await this.permisos(db, actor, institucion, sid);
+      if (!acceso.equipo) {
+        throw new ForbiddenException('Solo el profesor o ayudante asignados pueden consultar los informes recibidos');
+      }
+      if (aid) {
+        const existe = await db.query(
+          'SELECT 1 FROM actividad_entrega WHERE institucion_id=$1 AND seccion_id=$2 AND id=$3',
+          [institucion, sid, aid],
+        );
+        if (!existe.rowCount) throw new NotFoundException('Actividad no encontrada');
+      }
+      const params: unknown[] = [institucion, sid];
+      let query = `SELECT e.id, e.actividad_id AS "actividadId", a.titulo AS "actividadTitulo",
+        e.alumno_id AS "alumnoId", COALESCE(NULLIF(u.nombre,''), u.email) AS autor, u.email,
+        e.nombre_archivo AS "nombreArchivo", e.extension, e.tamano_bytes AS "tamanoBytes",
+        e.recibido_en AS "recibidoEn"
+        FROM entrega_archivo e
+        JOIN actividad_entrega a ON a.id = e.actividad_id AND a.institucion_id = e.institucion_id
+        JOIN usuario u ON u.id = e.alumno_id
+        WHERE e.institucion_id = $1 AND a.seccion_id = $2`;
+      if (aid) {
+        params.push(aid);
+        query += ` AND e.actividad_id = $3`;
+      }
+      query += ` ORDER BY e.recibido_en DESC, e.id`;
+      const { rows } = await db.query(query, params);
+      return rows;
+    });
+  }
 }
