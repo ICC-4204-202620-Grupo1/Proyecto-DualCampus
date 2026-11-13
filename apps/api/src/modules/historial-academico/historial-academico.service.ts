@@ -143,4 +143,17 @@ export class HistorialAcademicoService {
       return { ...creado.rows[0], duplicado: false };
     });
   }
+
+  async importadas(alumnoId: string, institucionId: string) {
+    await this.autorizacion.exigirRol(alumnoId, institucionId, 'ALUMNO');
+    return this.contexto.ejecutar(institucionId, async db => {
+      const usuario = await db.query<{email:string}>('SELECT email FROM usuario WHERE id=$1', [alumnoId]);
+      const email = usuario.rows[0]?.email;
+      if (!email) return [];
+      const lotes = await db.query<{id:string; confirmadoEn:string; filas: unknown[]}>('SELECT id, confirmado_en AS "confirmadoEn", filas FROM lote_historico WHERE institucion_id=$1 ORDER BY confirmado_en DESC', [institucionId]);
+      return lotes.rows.flatMap(lote => (Array.isArray(lote.filas) ? lote.filas : [])
+        .filter((fila): fila is Record<string, unknown> => !!fila && typeof fila === 'object' && (fila as Record<string, unknown>).identidad === email)
+        .map(fila => ({ ...fila, loteId: lote.id, origen: 'Importación histórica', confirmadoEn: lote.confirmadoEn })));
+    });
+  }
 }
