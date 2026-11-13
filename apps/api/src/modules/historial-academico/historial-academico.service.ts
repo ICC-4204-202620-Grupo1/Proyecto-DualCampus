@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ContextoInstitucion } from '../../database/contexto-institucion.js';
 import { AutorizacionService } from '../autorizacion/autorizacion.service.js';
 
@@ -125,6 +125,22 @@ export class HistorialAcademicoService {
         });
       }
       return historial;
+    });
+  }
+
+  async confirmarLote(actor: string, institucionId: string, body: { huella?: string; filas?: unknown[]; totalValidas?: number }) {
+    await this.autorizacion.exigirRol(actor, institucionId, 'ADMINISTRADOR');
+    const filas = Array.isArray(body.filas) ? body.filas : [];
+    const huella = typeof body.huella === 'string' ? body.huella.trim() : '';
+    const totalValidas = Number(body.totalValidas);
+    if (!huella || !filas.length || !Number.isInteger(totalValidas) || totalValidas !== filas.length) {
+      throw new BadRequestException('El lote debe estar validado y conciliado antes de confirmarlo');
+    }
+    return this.contexto.ejecutar(institucionId, async db => {
+      const existente = await db.query('SELECT id, total_filas AS "totalFilas", total_validas AS "totalValidas", responsable_id AS "responsableId", confirmado_en AS "confirmadoEn" FROM lote_historico WHERE institucion_id=$1 AND huella=$2', [institucionId, huella]);
+      if (existente.rowCount) return { ...existente.rows[0], duplicado: true };
+      const creado = await db.query('INSERT INTO lote_historico (institucion_id, huella, filas, total_filas, total_validas, responsable_id) VALUES ($1,$2,$3,$4,$4,$5) RETURNING id, total_filas AS "totalFilas", total_validas AS "totalValidas", responsable_id AS "responsableId", confirmado_en AS "confirmadoEn"', [institucionId, huella, JSON.stringify(filas), filas.length, actor]);
+      return { ...creado.rows[0], duplicado: false };
     });
   }
 }
