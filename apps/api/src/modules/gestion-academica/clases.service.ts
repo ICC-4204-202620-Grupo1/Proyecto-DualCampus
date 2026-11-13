@@ -103,4 +103,19 @@ export class ClasesService {
       return { mensaje: 'Asistencia guardada', total: alumnos.length };
     });
   }
+
+  async miAsistencia(actor: string, institucion: string, seccionId: string) {
+    const seccion = this.validarSeccion(seccionId);
+    await this.autorizacion.exigirRol(actor, institucion, 'ALUMNO');
+    return this.ejecutar(institucion, async db => {
+      const matriculado = await db.query('SELECT 1 FROM matricula WHERE seccion_id=$1 AND usuario_id=$2', [seccion, actor]);
+      if (!matriculado.rowCount) throw new ForbiddenException('No estás matriculado en esta sección');
+      const filas = (await db.query(`SELECT c.id,c.fecha,a.presente,a.actualizado_en AS "actualizadoEn"
+        FROM clase c LEFT JOIN asistencia_clase a ON a.clase_id=c.id AND a.alumno_id=$2
+        WHERE c.seccion_id=$1 ORDER BY c.fecha DESC`, [seccion, actor])).rows;
+      const consideradas = filas.filter(f => f.presente !== null).length;
+      const presentes = filas.filter(f => f.presente === true).length;
+      return { presentes, consideradas, totalClases: filas.length, clases: filas.map(f => ({ id:f.id, fecha:f.fecha, estado:f.presente === true ? 'Presente' : f.presente === false ? 'Ausente' : 'Sin marca', actualizadoEn:f.actualizadoEn })) };
+    });
+  }
 }

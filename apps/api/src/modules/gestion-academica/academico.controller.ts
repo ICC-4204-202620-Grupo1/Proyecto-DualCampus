@@ -34,4 +34,6 @@ export class AcademicoController {
   asistencia(@UsuarioActual() u: UsuarioSesion,@InstitucionActiva() i: string,@Param('id') s: string,@Param('claseId') c: string) { return this.clases.asistencia(u.usuarioId,i,s,c); }
   @Put('secciones/:id/clases/:claseId/asistencia')
   guardarAsistencia(@UsuarioActual() u: UsuarioSesion,@InstitucionActiva() i: string,@Param('id') s: string,@Param('claseId') c: string,@Body() d: Record<string,unknown>) { return this.clases.guardarAsistencia(u.usuarioId,i,s,c,d ?? {}); }
+  @Get('secciones/:id/mi-asistencia')
+  miAsistencia(@UsuarioActual() u: UsuarioSesion,@InstitucionActiva() i: string,@Param('id') s: string) { return this.clases.miAsistencia(u.usuarioId,i,s); }
 }
