@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ContextoInstitucion } from '../../database/contexto-institucion.js';
 import { AutorizacionService } from '../autorizacion/autorizacion.service.js';
 
@@ -150,10 +150,20 @@ export class HistorialAcademicoService {
       const usuario = await db.query<{email:string}>('SELECT email FROM usuario WHERE id=$1', [alumnoId]);
       const email = usuario.rows[0]?.email;
       if (!email) return [];
-      const lotes = await db.query<{id:string; confirmadoEn:string; filas: unknown[]}>('SELECT id, confirmado_en AS "confirmadoEn", filas FROM lote_historico WHERE institucion_id=$1 ORDER BY confirmado_en DESC', [institucionId]);
+      const lotes = await db.query<{id:string; confirmadoEn:string; filas: unknown[]}>('SELECT id, confirmado_en AS "confirmadoEn", filas FROM lote_historico WHERE institucion_id=$1 AND revertido_en IS NULL ORDER BY confirmado_en DESC', [institucionId]);
       return lotes.rows.flatMap(lote => (Array.isArray(lote.filas) ? lote.filas : [])
         .filter((fila): fila is Record<string, unknown> => !!fila && typeof fila === 'object' && (fila as Record<string, unknown>).identidad === email)
         .map(fila => ({ ...fila, loteId: lote.id, origen: 'Importación histórica', confirmadoEn: lote.confirmadoEn })));
+    });
+  }
+
+  async revertirLote(actor: string, institucionId: string, loteId: string, motivo?: string) {
+    await this.autorizacion.exigirRol(actor, institucionId, 'ADMINISTRADOR');
+    if (!/^[0-9a-f-]{36}$/i.test(loteId) || !motivo?.trim()) throw new BadRequestException('Se requiere un lote válido y un motivo');
+    return this.contexto.ejecutar(institucionId, async db => {
+      const result = await db.query(`UPDATE lote_historico SET revertido_en=now(), revertido_por=$1, motivo_reversion=$2 WHERE id=$3 AND institucion_id=$4 AND revertido_en IS NULL RETURNING id, revertido_en AS "revertidoEn", revertido_por AS "revertidoPor", motivo_reversion AS "motivo"`, [actor, motivo.trim(), loteId, institucionId]);
+      if (!result.rowCount) throw new NotFoundException('El lote no existe o ya fue revertido');
+      return result.rows[0];
     });
   }
 }

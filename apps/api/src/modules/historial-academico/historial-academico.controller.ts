@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { UsuarioActual } from '../../common/decorators/usuario-actual.decorator.js';
 import { InstitucionActiva } from '../../common/decorators/institucion-activa.decorator.js';
 import type { UsuarioSesion } from '../autenticacion/usuario-sesion.js';
@@ -24,5 +24,15 @@ export class HistorialAcademicoController {
     @Body() body: { huella?: string; filas?: unknown[]; totalValidas?: number },
   ) {
     return this.historial.confirmarLote(usuario.usuarioId, institucionId, body);
+  }
+
+  @Post('lotes/:id/revertir')
+  revertir(
+    @Param('id') loteId: string,
+    @UsuarioActual() usuario: UsuarioSesion,
+    @InstitucionActiva() institucionId: string,
+    @Body() body: { motivo?: string },
+  ) {
+    return this.historial.revertirLote(usuario.usuarioId, institucionId, loteId, body?.motivo);
   }
 }
