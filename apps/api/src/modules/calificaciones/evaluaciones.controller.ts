@@ -95,6 +95,17 @@ export class EvaluacionesController {
     return this.notasServicio.listarNotas(u.usuarioId, i, evaluacionId);
   }
 
+  @Post('evaluaciones/:id/notas/:alumnoId/correcciones')
+  corregirPublicada(
+    @UsuarioActual() u: UsuarioSesion,
+    @InstitucionActiva() i: string,
+    @Param('id') evaluacionId: string,
+    @Param('alumnoId') alumnoId: string,
+    @Body() datos: Record<string, unknown>,
+  ) {
+    return this.notasServicio.corregirPublicada(u.usuarioId, i, evaluacionId, alumnoId, datos ?? {});
+  }
+
   @Put('evaluaciones/:id/notas')
   guardarNotas(
     @UsuarioActual() u: UsuarioSesion,
