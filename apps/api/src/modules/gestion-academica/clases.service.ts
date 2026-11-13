@@ -64,4 +64,43 @@ export class ClasesService {
       return rows[0];
     });
   }
+
+  async asistencia(actor: string, institucion: string, seccionId: string, claseId: string) {
+    const seccion = this.validarSeccion(seccionId);
+    if (typeof claseId !== 'string' || !UUID.test(claseId)) throw new BadRequestException('Clase inválida');
+    await this.autorizacion.exigirRol(actor, institucion, 'ADMINISTRADOR', 'PROFESOR', 'AYUDANTE', 'ALUMNO');
+    return this.ejecutar(institucion, async db => {
+      const clase = await db.query('SELECT id FROM clase WHERE id=$1 AND seccion_id=$2', [claseId, seccion]);
+      if (!clase.rowCount) throw new NotFoundException('Clase no encontrada');
+      const alumnos = await db.query(`SELECT u.id,u.nombre,u.email,COALESCE(a.presente,false) AS presente,
+        a.autor_id AS "autorId",a.actualizado_en AS "actualizadoEn"
+        FROM matricula m JOIN usuario u ON u.id=m.usuario_id
+        LEFT JOIN asistencia_clase a ON a.clase_id=$1 AND a.alumno_id=m.usuario_id
+        WHERE m.seccion_id=$2 ORDER BY u.nombre,u.email`, [claseId, seccion]);
+      return alumnos.rows;
+    });
+  }
+
+  async guardarAsistencia(actor: string, institucion: string, seccionId: string, claseId: string, dto: Record<string, unknown>) {
+    const seccion = this.validarSeccion(seccionId);
+    if (typeof claseId !== 'string' || !UUID.test(claseId)) throw new BadRequestException('Clase inválida');
+    if (!Array.isArray(dto.marcas) || !dto.marcas.length) throw new BadRequestException('Debes enviar una marca por alumno');
+    await this.autorizacion.exigirRol(actor, institucion, 'ADMINISTRADOR', 'PROFESOR');
+    return this.ejecutar(institucion, async db => {
+      await this.exigirAcceso(db, actor, institucion, seccion);
+      const clase = await db.query('SELECT id FROM clase WHERE id=$1 AND seccion_id=$2', [claseId, seccion]);
+      if (!clase.rowCount) throw new NotFoundException('Clase no encontrada');
+      const alumnos = (await db.query('SELECT usuario_id FROM matricula WHERE seccion_id=$1', [seccion])).rows.map(r => r.usuario_id as string);
+      const marcas = dto.marcas as Array<Record<string, unknown>>;
+      if (marcas.length !== alumnos.length || new Set(marcas.map(m => m.alumnoId)).size !== alumnos.length || marcas.some(m => !alumnos.includes(m.alumnoId as string) || typeof m.presente !== 'boolean')) {
+        throw new BadRequestException('La asistencia debe incluir exactamente a cada alumno activo');
+      }
+      for (const marca of marcas) await db.query(`INSERT INTO asistencia_clase(institucion_id,clase_id,alumno_id,presente,autor_id)
+        VALUES ($1,$2,$3,$4,$5) ON CONFLICT (clase_id,alumno_id) DO UPDATE SET presente=EXCLUDED.presente,autor_id=EXCLUDED.autor_id,actualizado_en=now()`,
+        [institucion, claseId, marca.alumnoId, marca.presente, actor]);
+      await db.query(`INSERT INTO evento_academico(institucion_id,recurso_id,actor_id,accion,datos) VALUES ($1,$2,$3,'GUARDAR_ASISTENCIA',$4)`,
+        [institucion, claseId, actor, JSON.stringify({ seccionId: seccion, alumnos: alumnos.length })]);
+      return { mensaje: 'Asistencia guardada', total: alumnos.length };
+    });
+  }
 }
