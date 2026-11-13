@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import type { PoolClient } from 'pg';
 import { ContextoInstitucion } from '../../database/contexto-institucion.js';
 import { AutorizacionService } from '../autorizacion/autorizacion.service.js';
@@ -35,9 +35,17 @@ export class MaterialesService {
         `SELECT m.id,m.titulo,m.nombre_archivo AS "nombreArchivo",m.tipo,octet_length(m.contenido) AS tamano,
            m.publicado_en AS "publicadoEn",COALESCE(NULLIF(u.nombre,''),u.email) AS autor
          FROM material_curso m JOIN usuario u ON u.id=m.publicado_por
-         WHERE m.seccion_id=$1 ORDER BY m.publicado_en DESC,m.id`, [sid],
+         WHERE m.seccion_id=$1 AND m.estado='PUBLICADO' ORDER BY m.publicado_en DESC,m.id`, [sid],
       );
-      return { puedePublicar, materiales: rows };
+      const borradores = puedePublicar ? (await db.query(
+        `SELECT m.id,m.titulo,m.nombre_archivo AS "nombreArchivo",m.tipo,octet_length(m.contenido) AS tamano,
+                m.actualizado_en AS "actualizadoEn",m.origen_material_id AS "origenMaterialId",
+                o.titulo AS "origenTitulo",p.nombre AS "origenPeriodo",c.codigo AS "origenCurso",s.codigo AS "origenSeccion"
+           FROM material_curso m
+           JOIN material_curso o ON o.id=m.origen_material_id
+           JOIN seccion s ON s.id=o.seccion_id JOIN periodo p ON p.id=s.periodo_id JOIN curso c ON c.id=s.curso_id
+          WHERE m.seccion_id=$1 AND m.estado='BORRADOR' ORDER BY m.actualizado_en DESC,m.id`, [sid])).rows : [];
+      return { puedePublicar, materiales: rows, borradores };
     });
   }
 
@@ -56,7 +64,7 @@ export class MaterialesService {
       }
       const { rows } = await db.query(
         `SELECT nombre_archivo AS "nombreArchivo",tipo,contenido FROM material_curso
-         WHERE id=$1 AND seccion_id=$2`, [mid, sid],
+         WHERE id=$1 AND seccion_id=$2 AND estado='PUBLICADO'`, [mid, sid],
       );
       if (!rows.length) throw new NotFoundException('Material no encontrado');
       return { nombreArchivo: rows[0].nombreArchivo as string, tipo: rows[0].tipo as string, contenido: rows[0].contenido as Buffer };
@@ -102,6 +110,94 @@ export class MaterialesService {
         "INSERT INTO evento_academico(institucion_id,actor_id,recurso_id,accion,datos) VALUES ($1,$2,$3,'PUBLICAR_MATERIAL',$4)",
         [institucion,actor,sid,JSON.stringify({materialId:rows[0].id,titulo,nombreArchivo:nombre,tamano:contenido.length})],
       );
+      return rows[0];
+    });
+  }
+
+  async opcionesReutilizacion(actor: string, institucion: string, seccionId: string) {
+    await this.autorizacion.exigirRol(actor,institucion,'PROFESOR');
+    const destino = this.id(seccionId);
+    return this.contexto.ejecutar(institucion, async db => {
+      if (!await this.acceso(db,actor,institucion,destino)) throw new ForbiddenException('Solo el profesor asignado puede reutilizar materiales');
+      const { rows } = await db.query(
+        `SELECT m.id,m.titulo,m.nombre_archivo AS "nombreArchivo",m.tipo,octet_length(m.contenido) AS tamano,
+                s.id AS "seccionId",s.codigo AS seccion,p.nombre AS periodo,c.codigo AS "cursoCodigo",c.nombre AS curso
+           FROM material_curso m
+           JOIN seccion s ON s.id=m.seccion_id JOIN seccion d ON d.id=$2 AND d.periodo_id<>s.periodo_id
+           JOIN periodo p ON p.id=s.periodo_id JOIN curso c ON c.id=s.curso_id
+           JOIN equipo_docente e ON e.seccion_id=s.id AND e.usuario_id=$1 AND e.rol='PROFESOR'
+          WHERE s.id<>$2 AND m.estado='PUBLICADO'
+          ORDER BY p.fecha_inicio DESC,c.codigo,s.codigo,m.titulo`, [actor,destino]);
+      return rows;
+    });
+  }
+
+  async reutilizar(actor: string, institucion: string, seccionId: string, dto: Record<string, unknown>) {
+    await this.autorizacion.exigirRol(actor,institucion,'PROFESOR');
+    const destino = this.id(seccionId);
+    const origen = this.id(typeof dto.materialOrigenId === 'string' ? dto.materialOrigenId : '');
+    return this.contexto.ejecutar(institucion, async db => {
+      if (!await this.acceso(db,actor,institucion,destino)) throw new ForbiddenException('Solo el profesor asignado puede preparar la copia');
+      const fuente = await db.query(
+        `SELECT m.id,m.seccion_id,s.periodo_id,m.titulo,m.nombre_archivo,m.tipo,m.contenido
+           FROM material_curso m
+           JOIN seccion s ON s.id=m.seccion_id
+           JOIN equipo_docente e ON e.seccion_id=m.seccion_id AND e.usuario_id=$2 AND e.rol='PROFESOR'
+          WHERE m.id=$1 AND m.estado='PUBLICADO' FOR SHARE OF m`, [origen,actor]);
+      if (!fuente.rowCount) throw new NotFoundException('Material de origen no encontrado entre tus secciones autorizadas');
+      if (fuente.rows[0].seccion_id === destino) throw new BadRequestException('La sección de origen y destino deben ser distintas');
+      const original = fuente.rows[0];
+      const periodoDestino = await db.query('SELECT periodo_id FROM seccion WHERE id=$1',[destino]);
+      if (original.periodo_id === periodoDestino.rows[0].periodo_id) {
+        throw new BadRequestException('El material de origen debe pertenecer a otro período');
+      }
+      const { rows } = await db.query(
+        `INSERT INTO material_curso(institucion_id,seccion_id,titulo,nombre_archivo,tipo,contenido,publicado_por,publicado_en,estado,origen_material_id)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,NULL,'BORRADOR',$8)
+         RETURNING id,titulo,nombre_archivo AS "nombreArchivo",tipo,octet_length(contenido) AS tamano,
+                   actualizado_en AS "actualizadoEn",origen_material_id AS "origenMaterialId"`,
+        [institucion,destino,original.titulo,original.nombre_archivo,original.tipo,original.contenido,actor,origen]);
+      await db.query(
+        "INSERT INTO evento_academico(institucion_id,actor_id,recurso_id,accion,datos) VALUES ($1,$2,$3,'PREPARAR_COPIA_MATERIAL',$4)",
+        [institucion,actor,destino,JSON.stringify({borradorId:rows[0].id,materialOrigenId:origen})]);
+      return rows[0];
+    });
+  }
+
+  async editarBorrador(actor: string, institucion: string, seccionId: string, materialId: string, dto: Record<string, unknown>) {
+    await this.autorizacion.exigirRol(actor,institucion,'PROFESOR');
+    const destino = this.id(seccionId), material = this.id(materialId);
+    const titulo = typeof dto.titulo === 'string' ? dto.titulo.trim() : '';
+    if (!titulo || titulo.length > 200) throw new BadRequestException('Título obligatorio, máximo 200 caracteres');
+    return this.contexto.ejecutar(institucion, async db => {
+      if (!await this.acceso(db,actor,institucion,destino)) throw new ForbiddenException('Solo el profesor asignado puede editar la copia');
+      const actual = await db.query("SELECT titulo FROM material_curso WHERE id=$1 AND seccion_id=$2 AND estado='BORRADOR' FOR UPDATE",[material,destino]);
+      if (!actual.rowCount) throw new NotFoundException('Borrador no encontrado');
+      const { rows } = await db.query(
+        `UPDATE material_curso SET titulo=$3,actualizado_en=clock_timestamp() WHERE id=$1 AND seccion_id=$2
+         RETURNING id,titulo,actualizado_en AS "actualizadoEn"`,[material,destino,titulo]);
+      await db.query(
+        "INSERT INTO evento_academico(institucion_id,actor_id,recurso_id,accion,datos) VALUES ($1,$2,$3,'EDITAR_COPIA_MATERIAL',$4)",
+        [institucion,actor,destino,JSON.stringify({borradorId:material,tituloPrevio:actual.rows[0].titulo,tituloNuevo:titulo})]);
+      return rows[0];
+    });
+  }
+
+  async publicarBorrador(actor: string, institucion: string, seccionId: string, materialId: string) {
+    await this.autorizacion.exigirRol(actor,institucion,'PROFESOR');
+    const destino = this.id(seccionId), material = this.id(materialId);
+    return this.contexto.ejecutar(institucion, async db => {
+      if (!await this.acceso(db,actor,institucion,destino)) throw new ForbiddenException('Solo el profesor asignado puede publicar la copia');
+      const borrador = await db.query(
+        "SELECT titulo,origen_material_id FROM material_curso WHERE id=$1 AND seccion_id=$2 AND estado='BORRADOR' FOR UPDATE",[material,destino]);
+      if (!borrador.rowCount) throw new ConflictException('La copia ya no está disponible como borrador');
+      const { rows } = await db.query(
+        `UPDATE material_curso SET estado='PUBLICADO',publicado_en=clock_timestamp(),actualizado_en=clock_timestamp(),publicado_por=$3
+          WHERE id=$1 AND seccion_id=$2 RETURNING id,titulo,nombre_archivo AS "nombreArchivo",tipo,
+          octet_length(contenido) AS tamano,publicado_en AS "publicadoEn"`,[material,destino,actor]);
+      await db.query(
+        "INSERT INTO evento_academico(institucion_id,actor_id,recurso_id,accion,datos) VALUES ($1,$2,$3,'PUBLICAR_COPIA_MATERIAL',$4)",
+        [institucion,actor,destino,JSON.stringify({materialId:material,materialOrigenId:borrador.rows[0].origen_material_id,titulo:borrador.rows[0].titulo})]);
       return rows[0];
     });
   }
