@@ -12,6 +12,7 @@ const campos: Record<string, string> = {
   nombre: 'Evaluación', fecha: 'Fecha de evaluación', ponderacion: 'Ponderación',
   totalGuardadas: 'Filas guardadas', totalAusentes: 'Ausencias', observacion: 'Observación',
   valorPrevio: 'Valor previo', valorAnterior: 'Valor anterior', valorNuevo: 'Valor nuevo',
+  alumnoId: 'Identificador del alumno', ausentePrevio: 'Ausencia previa', ausenteNuevo: 'Ausencia nueva',
   motivo: 'Motivo', referencia: 'Referencia de solicitud', referenciaSolicitud: 'Referencia de solicitud',
 };
 
