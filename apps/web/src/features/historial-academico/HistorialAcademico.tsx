@@ -26,6 +26,7 @@ type Periodo = {
   fechaFin: string;
   asignaturas: Asignatura[];
 };
+type Importada = { fila?: number; curso?: string; escala?: string; nota?: string; origen: string; confirmadoEn: string; loteId: string };
 
 /** H39: vista histórica de toda la institución activa, no solo del período seleccionado. */
 export function HistorialAcademico() {
@@ -33,14 +34,15 @@ export function HistorialAcademico() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [version, setVersion] = useState(0);
+  const [importadas, setImportadas] = useState<Importada[]>([]);
 
   useEffect(() => {
     let vigente = true;
     setCargando(true);
     setError('');
     setPeriodos([]);
-    api<Periodo[]>('/historial-academico/propio')
-      .then(datos => { if (vigente) setPeriodos(datos); })
+    Promise.all([api<Periodo[]>('/historial-academico/propio'), api<Importada[]>('/historial-academico/importadas')])
+      .then(([datos, historicas]) => { if (vigente) { setPeriodos(datos); setImportadas(historicas); } })
       .catch(e => { if (vigente) setError(e instanceof Error ? e.message : 'No se pudo cargar el historial.'); })
       .finally(() => { if (vigente) setCargando(false); });
     return () => { vigente = false; };
@@ -80,5 +82,6 @@ export function HistorialAcademico() {
             </div>)}
         </div>;
       })}
+    {!cargando && importadas.length > 0 && <div className="detalle-seccion"><h3>Notas históricas importadas</h3><div className="tabla-contenedor"><table><thead><tr><th>Curso</th><th>Nota</th><th>Origen</th><th>Confirmación</th></tr></thead><tbody>{importadas.map((nota, indice) => <tr key={nota.loteId+'-'+indice}><td>{nota.curso || '—'}</td><td>{nota.nota || '—'}</td><td>{nota.origen}</td><td>{new Date(nota.confirmadoEn).toLocaleString('es-CL')}</td></tr>)}</tbody></table></div></div>}
   </section>;
 }

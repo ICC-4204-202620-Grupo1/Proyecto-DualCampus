@@ -17,6 +17,14 @@ export class HistorialAcademicoController {
     return this.historial.consultar(usuario.usuarioId, institucionId);
   }
 
+  @Get('importadas')
+  importadas(
+    @UsuarioActual() usuario: UsuarioSesion,
+    @InstitucionActiva() institucionId: string,
+  ) {
+    return this.historial.importadas(usuario.usuarioId, institucionId);
+  }
+
   @Post('lotes/confirmar')
   confirmar(
     @UsuarioActual() usuario: UsuarioSesion,
