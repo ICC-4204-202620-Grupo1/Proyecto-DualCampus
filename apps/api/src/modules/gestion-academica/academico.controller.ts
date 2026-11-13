@@ -36,4 +36,6 @@ export class AcademicoController {
   guardarAsistencia(@UsuarioActual() u: UsuarioSesion,@InstitucionActiva() i: string,@Param('id') s: string,@Param('claseId') c: string,@Body() d: Record<string,unknown>) { return this.clases.guardarAsistencia(u.usuarioId,i,s,c,d ?? {}); }
   @Get('secciones/:id/mi-asistencia')
   miAsistencia(@UsuarioActual() u: UsuarioSesion,@InstitucionActiva() i: string,@Param('id') s: string) { return this.clases.miAsistencia(u.usuarioId,i,s); }
+  @Put('secciones/:id/clases/:claseId/asistencia/:alumnoId')
+  corregirAsistencia(@UsuarioActual() u: UsuarioSesion,@InstitucionActiva() i: string,@Param('id') s: string,@Param('claseId') c: string,@Param('alumnoId') a: string,@Body() d: Record<string,unknown>) { return this.clases.corregirAsistencia(u.usuarioId,i,s,c,a,d ?? {}); }
 }

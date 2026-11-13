@@ -118,4 +118,25 @@ export class ClasesService {
       return { presentes, consideradas, totalClases: filas.length, clases: filas.map(f => ({ id:f.id, fecha:f.fecha, estado:f.presente === true ? 'Presente' : f.presente === false ? 'Ausente' : 'Sin marca', actualizadoEn:f.actualizadoEn })) };
     });
   }
+
+  async corregirAsistencia(actor: string, institucion: string, seccionId: string, claseId: string, alumnoId: string, dto: Record<string, unknown>) {
+    const seccion = this.validarSeccion(seccionId);
+    if (!UUID.test(claseId) || !UUID.test(alumnoId)) throw new BadRequestException('Identificador inválido');
+    if (typeof dto.presente !== 'boolean') throw new BadRequestException('El nuevo estado es obligatorio');
+    if (typeof dto.motivo !== 'string' || !dto.motivo.trim() || dto.motivo.trim().length > 500) throw new BadRequestException('Debes indicar un motivo de hasta 500 caracteres');
+    await this.autorizacion.exigirRol(actor, institucion, 'ADMINISTRADOR', 'PROFESOR');
+    return this.ejecutar(institucion, async db => {
+      await this.exigirAcceso(db, actor, institucion, seccion);
+      const actual = await db.query(`SELECT a.presente FROM asistencia_clase a JOIN clase c ON c.id=a.clase_id
+        JOIN matricula m ON m.seccion_id=c.seccion_id AND m.usuario_id=a.alumno_id
+        WHERE a.clase_id=$1 AND c.seccion_id=$2 AND a.alumno_id=$3 FOR UPDATE`, [claseId, seccion, alumnoId]);
+      if (!actual.rowCount) throw new NotFoundException('No existe una marca para ese alumno y clase');
+      if (actual.rows[0].presente === dto.presente) throw new ConflictException('La marca ya tiene ese estado');
+      const motivo = (dto.motivo as string).trim();
+      await db.query(`INSERT INTO asistencia_correccion(institucion_id,clase_id,alumno_id,estado_anterior,estado_nuevo,motivo,autor_id)
+        VALUES ($1,$2,$3,$4,$5,$6,$7)`, [institucion, claseId, alumnoId, actual.rows[0].presente, dto.presente, motivo, actor]);
+      await db.query(`UPDATE asistencia_clase SET presente=$1,autor_id=$2,actualizado_en=now() WHERE clase_id=$3 AND alumno_id=$4`, [dto.presente, actor, claseId, alumnoId]);
+      return { mensaje:'Marca corregida' };
+    });
+  }
 }
