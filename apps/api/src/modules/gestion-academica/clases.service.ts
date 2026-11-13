@@ -115,7 +115,7 @@ export class ClasesService {
         WHERE c.seccion_id=$1 ORDER BY c.fecha DESC`, [seccion, actor])).rows;
       const consideradas = filas.filter(f => f.presente !== null).length;
       const presentes = filas.filter(f => f.presente === true).length;
-      return { presentes, consideradas, totalClases: filas.length, clases: filas.map(f => ({ id:f.id, fecha:f.fecha, estado:f.presente === true ? 'Presente' : f.presente === false ? 'Ausente' : 'Sin marca', actualizadoEn:f.actualizadoEn })) };
+      return { presentes, consideradas, proporcion: consideradas ? Math.round((presentes / consideradas) * 10000) / 100 : null, totalClases: filas.length, clases: filas.map(f => ({ id:f.id, fecha:f.fecha, estado:f.presente === true ? 'Presente' : f.presente === false ? 'Ausente' : 'Sin marca', actualizadoEn:f.actualizadoEn })) };
     });
   }
 
