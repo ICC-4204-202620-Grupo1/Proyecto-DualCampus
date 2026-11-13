@@ -1,4 +1,5 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
 import type { PoolClient } from 'pg';
 import { ContextoInstitucion } from '../../database/contexto-institucion.js';
 import { AutorizacionService } from '../autorizacion/autorizacion.service.js';
@@ -110,9 +111,10 @@ export class ActividadesService {
   }
 
   async entregar(actor: string, institucion: string, seccion: string, actividad: string,
-    archivo?: { originalname: string; mimetype: string; buffer: Buffer; size: number }) {
+    archivo?: { originalname: string; mimetype: string; buffer: Buffer; size: number }, claveIdempotencia?: string) {
     await this.autorizacion.exigirRol(actor, institucion, 'ALUMNO');
     const sid = this.seccionId(seccion), aid = this.seccionId(actividad);
+    const clave = claveIdempotencia ? this.seccionId(claveIdempotencia) : randomUUID();
     if (!archivo?.buffer?.length || !archivo.originalname || !archivo.size) {
       throw new BadRequestException('Selecciona un archivo no vacío');
     }
@@ -154,15 +156,23 @@ export class ActividadesService {
       if (!(cfg.formatos_permitidos as string[]).includes(extension)) throw new BadRequestException('Formato no admitido para esta actividad');
       if (archivo.size > Number(cfg.tamano_maximo_mb) * 1024 * 1024)
         throw new BadRequestException('Archivo supera el tamaño máximo permitido');
+      const anterior = await db.query(`SELECT id,nombre_archivo AS "nombreArchivo",tamano_bytes AS "tamanoBytes",
+        recibido_en AS "recibidoEn",clave_idempotencia AS "claveIdempotencia"
+        FROM entrega_archivo WHERE institucion_id=$1 AND actividad_id=$2 AND alumno_id=$3 FOR UPDATE`,
+        [institucion,aid,actor]);
+      if (anterior.rows[0]?.claveIdempotencia === clave) {
+        return { ...anterior.rows[0], actividad: cfg.titulo, reintento: true };
+      }
       const guardado = await db.query(`INSERT INTO entrega_archivo
-        (institucion_id,actividad_id,alumno_id,nombre_archivo,extension,tipo,contenido,tamano_bytes)
-        VALUES($1,$2,$3,$4,$5,$6,$7,$8)
+        (institucion_id,actividad_id,alumno_id,nombre_archivo,extension,tipo,contenido,tamano_bytes,clave_idempotencia)
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)
         ON CONFLICT(actividad_id,alumno_id) DO UPDATE SET
           nombre_archivo=EXCLUDED.nombre_archivo, extension=EXCLUDED.extension,
-          tipo=EXCLUDED.tipo,contenido=EXCLUDED.contenido,tamano_bytes=EXCLUDED.tamano_bytes,recibido_en=now()
+          tipo=EXCLUDED.tipo,contenido=EXCLUDED.contenido,tamano_bytes=EXCLUDED.tamano_bytes,
+          clave_idempotencia=EXCLUDED.clave_idempotencia,recibido_en=clock_timestamp()
         RETURNING id,nombre_archivo AS "nombreArchivo",tamano_bytes AS "tamanoBytes",recibido_en AS "recibidoEn"`,
-        [institucion,aid,actor,nombre,extension,archivo.mimetype,b,archivo.size]);
-      return { ...guardado.rows[0], actividad: cfg.titulo };
+        [institucion,aid,actor,nombre,extension,archivo.mimetype,b,archivo.size,clave]);
+      return { ...guardado.rows[0], actividad: cfg.titulo, reintento: false };
     });
   }
 
