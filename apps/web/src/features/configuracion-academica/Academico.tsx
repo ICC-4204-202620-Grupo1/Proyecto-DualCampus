@@ -4,6 +4,7 @@ import { Materiales } from '../materiales/Materiales';
 import { ActividadesEntrega } from '../materiales/ActividadesEntrega';
 import { MisNotas } from '../calificaciones/MisNotas';
 import { Evaluaciones } from '../calificaciones/Evaluaciones';
+import { Clases } from './Clases';
 type Curso = {id:string;codigo:string;nombre:string};
 type Seccion = {id:string;codigo:string;periodo:string;curso:string;cursoCodigo:string;totalAlumnos:number};
 type Persona = {id:string;nombre:string|null;email:string;rol?:string};
@@ -136,6 +137,7 @@ function GestionSeccion({id,nombre,admin,docentes,roles,actualizar}:{id:string;n
       <Evaluaciones seccionId={id} roles={roles} />
       <Materiales key={id} seccionId={id} />
       <ActividadesEntrega key={id} seccionId={id} />
+      <Clases seccionId={id} roles={roles} />
       <details style={{ marginTop: '1.5rem' }}><summary>Actividad de la sección</summary><ul>{detalle.eventos.map(a=><li key={a.id}>{new Date(a.fecha).toLocaleString('es-CL')} · {a.autor} · {a.accion.replaceAll('_',' ').toLowerCase()}</li>)}</ul></details>
     </>}
   </div>;

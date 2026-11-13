@@ -3,10 +3,11 @@ import { UsuarioActual } from '../../common/decorators/usuario-actual.decorator.
 import { InstitucionActiva } from '../../common/decorators/institucion-activa.decorator.js';
 import type { UsuarioSesion } from '../autenticacion/usuario-sesion.js';
 import { AcademicoService } from './academico.service.js';
+import { ClasesService } from './clases.service.js';
 
 @Controller('academico')
 export class AcademicoController {
-  constructor(private readonly servicio: AcademicoService) {}
+  constructor(private readonly servicio: AcademicoService, private readonly clases: ClasesService) {}
   @Get('cursos')
   cursos(@UsuarioActual() u: UsuarioSesion,@InstitucionActiva() i: string,@Query('periodoId') p: string) { return this.servicio.cursos(u.usuarioId,i,p); }
   @Post('cursos')
@@ -25,4 +26,8 @@ export class AcademicoController {
   validar(@UsuarioActual() u: UsuarioSesion,@InstitucionActiva() i: string,@Param('id') s: string,@Body() d: Record<string,unknown>) { return this.servicio.nomina(u.usuarioId,i,s,d ?? {},false); }
   @Post('secciones/:id/nomina')
   nomina(@UsuarioActual() u: UsuarioSesion,@InstitucionActiva() i: string,@Param('id') s: string,@Body() d: Record<string,unknown>) { return this.servicio.nomina(u.usuarioId,i,s,d ?? {},true); }
+  @Get('secciones/:id/clases')
+  clasesDeSeccion(@UsuarioActual() u: UsuarioSesion,@InstitucionActiva() i: string,@Param('id') s: string) { return this.clases.listar(u.usuarioId,i,s); }
+  @Post('secciones/:id/clases')
+  crearClase(@UsuarioActual() u: UsuarioSesion,@InstitucionActiva() i: string,@Param('id') s: string,@Body() d: Record<string,unknown>) { return this.clases.crear(u.usuarioId,i,s,d ?? {}); }
 }
