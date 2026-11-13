@@ -22,6 +22,8 @@ type Listado = { puedeCrear: boolean; puedeEntregar: boolean; puedeVerInformes?:
 export function ActividadesEntrega({ seccionId }: { seccionId: string }) {
   const [datos, setDatos] = useState<Listado | null>(null);
   const [archivos, setArchivos] = useState<Record<string, File | null>>({});
+  const [clavesIntento, setClavesIntento] = useState<Record<string, string>>({});
+  const [fallosEnvio, setFallosEnvio] = useState<Record<string, string>>({});
   const [enviando, setEnviando] = useState<string | null>(null);
   const [titulo, setTitulo] = useState('');
   const [instrucciones, setInstrucciones] = useState('');
@@ -123,18 +125,25 @@ export function ActividadesEntrega({ seccionId }: { seccionId: string }) {
   async function enviarArchivo(actividadId: string) {
     const archivo = archivos[actividadId];
     if (!archivo) return;
+    const clave = clavesIntento[actividadId] ?? crypto.randomUUID();
+    if (!clavesIntento[actividadId]) setClavesIntento(prev => ({...prev,[actividadId]:clave}));
     setError(''); setAviso(''); setEnviando(actividadId);
     try {
       const form = new FormData(); form.append('archivo', archivo);
       const res = await fetch(`${API_URL}/actividades/secciones/${seccionId}/actividades/${actividadId}/entrega`, {
-        method: 'POST', credentials: 'include', body: form,
+        method: 'POST', credentials: 'include', headers: {'X-Idempotency-Key': clave}, body: form,
       });
       const respuesta = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(Array.isArray(respuesta.message) ? respuesta.message.join(', ') : respuesta.message ?? `Error ${res.status}`);
       setAviso(`Archivo recibido para "${respuesta.actividad}": ${respuesta.nombreArchivo}. Fecha: ${new Date(respuesta.recibidoEn).toLocaleString('es-CL')}`);
       setArchivos(prev => ({...prev, [actividadId]: null}));
+      setClavesIntento(prev => { const siguiente={...prev}; delete siguiente[actividadId]; return siguiente; });
+      setFallosEnvio(prev => { const siguiente={...prev}; delete siguiente[actividadId]; return siguiente; });
       setVersion(v => v + 1);
-    } catch (err) { setError(err instanceof Error ? err.message : 'No se pudo enviar el archivo'); }
+    } catch (err) {
+      const mensaje = err instanceof Error ? err.message : 'No se pudo enviar el archivo';
+      setFallosEnvio(prev => ({...prev,[actividadId]:mensaje}));
+    }
     finally { setEnviando(null); }
   }
 
@@ -237,10 +246,16 @@ export function ActividadesEntrega({ seccionId }: { seccionId: string }) {
         {datos.puedeEntregar && a.aperturaEn && a.cierreEn && a.formatosPermitidos && a.tamanoMaximoMb && <div>
           <label>Archivo para entregar
             <input type="file" accept={a.formatosPermitidos.map(f => '.' + f).join(',')}
-              onChange={e => setArchivos(prev => ({...prev, [a.id]: e.target.files?.[0] ?? null}))} />
+              onChange={e => {
+                setArchivos(prev => ({...prev, [a.id]: e.target.files?.[0] ?? null}));
+                setClavesIntento(prev => ({...prev,[a.id]:crypto.randomUUID()}));
+                setFallosEnvio(prev => { const siguiente={...prev}; delete siguiente[a.id]; return siguiente; });
+              }} />
           </label>
+          {fallosEnvio[a.id] && <p className="alerta" role="alert"><strong>El envío no fue confirmado:</strong> {fallosEnvio[a.id]}<br/>
+            Conservamos el archivo seleccionado para que puedas reintentar sin crear una entrega duplicada.</p>}
           <button type="button" disabled={!archivos[a.id] || enviando !== null}
-            onClick={() => void enviarArchivo(a.id)}>{enviando === a.id ? 'Enviando…' : a.comprobante ? 'Reemplazar archivo' : 'Enviar archivo'}</button>
+            onClick={() => void enviarArchivo(a.id)}>{enviando === a.id ? 'Enviando…' : fallosEnvio[a.id] ? 'Reintentar envío' : a.comprobante ? 'Reemplazar archivo' : 'Enviar archivo'}</button>
         </div>}
         {datos.puedeCrear && <button type="button" onClick={() => editar(a)}>Configurar entrega</button>}
         {(datos.puedeVerInformes || datos.puedeCrear) && <button type="button" className="boton-secundario" style={{ marginLeft: '0.5rem' }} onClick={() => void toggleInformes(a.id)}>
