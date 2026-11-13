@@ -11,6 +11,7 @@ type Seccion = {id:string;codigo:string;periodo:string;curso:string;cursoCodigo:
 type Persona = {id:string;nombre:string|null;email:string;rol?:string};
 type Detalle = {equipo:Persona[];nomina:Persona[];eventos:{id:string;accion:string;fecha:string;autor:string}[]};
 type VistaPrevia = {valida:boolean;filas:{fila:number;email:string;motivo:string|null}[]};
+type FilaHistorica = {fila:number; identidad:string; curso:string; escala:string; nota:string; motivo:string|null};
 const mensaje = (e:unknown) => e instanceof Error ? e.message : 'No se pudo completar la operación';
 
 export function Academico({periodoId,roles}:{periodoId:string;roles:Rol[]}) {
@@ -26,6 +27,8 @@ export function Academico({periodoId,roles}:{periodoId:string;roles:Rol[]}) {
   const [ocupado,setOcupado]=useState(false);
   const [cargando,setCargando]=useState(true);
   const [version,setVersion]=useState(0);
+  const [historicoEntrada,setHistoricoEntrada]=useState('');
+  const [historicoPrevia,setHistoricoPrevia]=useState<FilaHistorica[]|null>(null);
   useEffect(()=>{
     let vigente=true;
     setCargando(true); setError('');
@@ -46,6 +49,20 @@ export function Academico({periodoId,roles}:{periodoId:string;roles:Rol[]}) {
       setVersion(v=>v+1);
     }catch(e){setError(mensaje(e));}finally{setOcupado(false);}
   }
+  function validarHistorico(e:FormEvent) {
+    e.preventDefault();
+    const filas: FilaHistorica[] = historicoEntrada.split(/\r?\n/).slice(1).map((linea, indice) => {
+      const [identidad='', curso='', escala='', nota=''] = linea.split(',').map(v => v.trim());
+      let motivo: string | null = null;
+      if (!identidad || !/^\S+@\S+\.\S+$/.test(identidad)) motivo = 'Identidad inválida: usa un correo institucional.';
+      else if (!curso) motivo = 'Curso obligatorio.';
+      else if (!/^\d+(\.\d+)?$/.test(escala)) motivo = 'Escala inválida: indica un número entre 1 y 7.';
+      else if (Number(escala) < 1 || Number(escala) > 7) motivo = 'Escala fuera de rango (1 a 7).';
+      else if (nota && (!/^\d+(\.\d+)?$/.test(nota) || Number(nota) < 1 || Number(nota) > 7)) motivo = 'Nota fuera de rango (1 a 7).';
+      return {fila: indice + 2, identidad, curso, escala, nota, motivo};
+    }).filter(f => f.identidad || f.curso || f.escala || f.nota);
+    setHistoricoPrevia(filas);
+  }
   return <section className="panel">
     <div className="encabezado-seccion"><div><p className="etiqueta">02 · Oferta académica</p><h2>{admin?'Cursos y secciones':'Mis secciones'}</h2></div>
       <span className="insignia">{secciones.length} secciones</span></div>
@@ -62,9 +79,21 @@ export function Academico({periodoId,roles}:{periodoId:string;roles:Rol[]}) {
         <label>Código de sección<input required maxLength={30} placeholder="01" value={seccion.codigo} onChange={e=>setSeccion({...seccion,codigo:e.target.value})}/></label>
         <button disabled={ocupado || !cursos.length}>Crear sección</button>
       </form>
+      <form onSubmit={validarHistorico}><h3>Validar lote histórico</h3>
+        <p className="texto-suave">Pega CSV sin guardar registros. Encabezado requerido: identidad,curso,escala,nota.</p>
+        <label>Registros históricos<textarea required rows={5} value={historicoEntrada} onChange={e=>{setHistoricoEntrada(e.target.value);setHistoricoPrevia(null);}} placeholder={'identidad,curso,escala,nota\nalumno@institucion.cl,ICC-4204,7,6.2'}/></label>
+        <button disabled={ocupado}>Previsualizar lote</button>
+      </form>
     </div>}
     {error && <p className="alerta" role="alert">{error} <button type="button" onClick={()=>setVersion(v=>v+1)}>Reintentar carga</button></p>}
     {aviso && <p className="exito" role="status">{aviso}</p>}
+    {historicoPrevia && <div className="preview" aria-label="Vista previa del lote histórico">
+      <h3>Vista previa del lote histórico</h3>
+      <p>{historicoPrevia.length} filas · {historicoPrevia.filter(f=>!f.motivo).length} válidas · {historicoPrevia.filter(f=>f.motivo).length} rechazadas</p>
+      <div className="tabla-contenedor"><table><thead><tr><th>Fila</th><th>Identidad</th><th>Curso</th><th>Escala</th><th>Nota</th><th>Resultado</th></tr></thead><tbody>
+        {historicoPrevia.map(f=><tr key={f.fila}><td>{f.fila}</td><td>{f.identidad}</td><td>{f.curso}</td><td>{f.escala}</td><td>{f.nota || '—'}</td><td>{f.motivo || 'Válida'}</td></tr>)}
+      </tbody></table></div>
+    </div>}
     {cargando?<p role="status">Cargando secciones…</p>:!error && !secciones.length?<p className="vacio">No hay secciones disponibles en este período.</p>:
       <div className="tarjetas-secciones">{secciones.map(s=><button type="button" className={'tarjeta-seccion '+(s.id===seleccion?'seleccionada':'')} key={s.id} onClick={()=>setSeleccion(s.id)}>
         <span className="etiqueta">{s.cursoCodigo} · Sección {s.codigo}</span><strong>{s.curso}</strong><span>{s.totalAlumnos} alumnos · {s.periodo}</span>
