@@ -1,0 +1,51 @@
+[id="periodos-academicos"], [id="oferta-academica"], [id="detalle-seccion"],
+[id^="modulo-"], [id="historial-academico"] { scroll-margin-top: 1.25rem; }
+.estructura-app { min-height: calc(100vh - 150px); }
+.estructura-app.con-menu-lateral { display: flex; align-items: stretch; }
+.estructura-app.con-menu-lateral .contenido { flex: 1; min-width: 0; max-width: 1240px; margin: 0 auto; }
+.menu-lateral {
+  width: 246px; flex: 0 0 246px; background: #fff; border-right: 1px solid var(--borde);
+  position: sticky; top: 0; align-self: flex-start; height: calc(100vh - 52px);
+  min-height: 440px; overflow-y: auto; padding: 1.1rem .65rem;
+  transition: width .2s ease, flex-basis .2s ease; z-index: 12;
+}
+.menu-lateral.menu-contraido { width: 68px; flex-basis: 68px; }
+.menu-cabecera { display: flex; align-items: center; gap: .6rem; padding: .45rem .5rem 1.2rem; flex-wrap: wrap; }
+.menu-cabecera strong { display: block; width: 100%; font-size: .87rem; line-height: 1.4; overflow-wrap: anywhere; }
+.menu-sobretitulo { display: block; width: 100%; font-size: .68rem; letter-spacing: .07em; text-transform: uppercase; color: var(--suave); }
+.menu-contraer { padding: .2rem .5rem; background: #eef2fb; color: var(--azul); font-size: 1.3rem; min-width: 36px; }
+.menu-contraido .menu-cabecera { justify-content: center; }
+.menu-enlace { display: flex; align-items: center; gap: .75rem; color: #39465d; padding: .69rem .65rem;
+  border-radius: 8px; margin-bottom: .16rem; font-weight: 550; text-decoration: none; font-size: .85rem; min-height: 43px; }
+.menu-enlace:hover { background: #f0f3fc; color: var(--azul); }
+.menu-enlace-activo { background: #e8eefe; color: var(--azul); font-weight: 700; box-shadow: inset 3px 0 var(--azul-boton); }
+.menu-sigla { display: grid; place-items: center; flex: 0 0 31px; height: 31px; background: #f0f3fb;
+  color: #3d5290; border-radius: 7px; font-size: .69rem; font-weight: 800; }
+.menu-enlace-activo .menu-sigla { background: #d5e0ff; }
+.menu-contraido .menu-enlace { justify-content: center; padding-inline: .35rem; }
+.menu-contraido .menu-texto, .menu-contraido .menu-ayuda { display: none; }
+.menu-ayuda { color: var(--suave); font-size: .73rem; line-height: 1.5; border-top: 1px solid var(--borde); padding: 1rem .65rem; }
+.menu-fondo-movil, .menu-abrir-movil, .menu-cerrar-movil { display: none; }
+@media (max-width: 950px) {
+  .estructura-app.con-menu-lateral .contenido { padding: 1.5rem 1rem; }
+  .menu-lateral { width: 206px; flex-basis: 206px; }
+}
+@media (max-width: 700px) {
+  .menu-abrir-movil { display: inline-flex; align-items: center; justify-content: center; background: transparent;
+    color: #fff; border: 1px solid #ffffff70; padding: .35rem .6rem; font-size: 1.15rem; }
+  .menu-fondo-movil { display: block; position: fixed; inset: 0; background: #0f172a99; z-index: 20;
+    width: 100%; height: 100%; border: 0; border-radius: 0; }
+  .menu-lateral, .menu-lateral.menu-contraido { display: none; }
+  .menu-lateral.menu-abierto, .menu-lateral.menu-abierto.menu-contraido {
+    display: block; position: fixed; inset: 0 auto 0 0; width: min(300px, 86vw); height: 100vh;
+    min-height: 0; overflow: auto; z-index: 21; box-shadow: 8px 0 32px #101a3d33; }
+  .menu-abierto .menu-cabecera { display: flex; }
+  .menu-cerrar-movil { display: inline-block; background: #eef2fb; color: var(--azul); margin-left: auto; }
+  .menu-abierto .menu-contraer { display: none; }
+  .menu-abierto .menu-texto, .menu-abierto .menu-ayuda { display: initial; }
+  .estructura-app.con-menu-lateral .contenido { padding: 1.5rem .8rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .menu-lateral { transition: none; }
+}

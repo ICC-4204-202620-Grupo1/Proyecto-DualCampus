@@ -81,7 +81,7 @@ export function Evaluaciones({ seccionId, roles }: { seccionId: string; roles: R
   }
 
   return (
-    <div className="evaluaciones-panel" style={{ marginTop: '2rem', borderTop: '1px solid var(--borde)', paddingTop: '1.5rem' }}>
+    <div id="modulo-notas" className="evaluaciones-panel" style={{ marginTop: '2rem', borderTop: '1px solid var(--borde)', paddingTop: '1.5rem' }}>
       <div className="encabezado-seccion" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <p className="etiqueta" style={{ fontSize: '0.8rem', color: 'var(--suave)', margin: 0 }}>H14 · Épica 3: Calificaciones</p>

@@ -46,7 +46,7 @@ export function HistorialAcademico() {
     return () => { vigente = false; };
   }, [version]);
 
-  return <section className="panel" aria-label="Mi historial académico">
+  return <section id="historial-academico" className="panel" aria-label="Mi historial académico">
     <div className="encabezado-seccion">
       <div><p className="etiqueta">03 · Historial académico</p><h2>Mi historial académico</h2></div>
       <button type="button" className="boton-secundario" disabled={cargando} onClick={() => setVersion(v => v + 1)}>

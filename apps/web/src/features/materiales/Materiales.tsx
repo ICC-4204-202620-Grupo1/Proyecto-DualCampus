@@ -81,7 +81,7 @@ export function Materiales({ seccionId }: { seccionId: string }) {
     finally { setCopiando(false); }
   }
   const elegido = opciones.find(o => o.id === origen);
-  return <section className="panel" aria-label="Materiales de la sección">
+  return <section id="modulo-materiales" className="panel" aria-label="Materiales de la sección">
     <h3>Materiales del curso</h3>
     {error && <p className="alerta" role="alert">{error}</p>}
     {aviso && <p className="exito" role="status">{aviso}</p>}
