@@ -14,6 +14,7 @@ export interface UsuarioSesion {
   nombre: string;
   institucionActivaId: string | null;
   roles: { institucionId: string; institucion: string; rol: Rol }[];
+  esSuperadministrador?: boolean;
 }
 
 /** Devuelve la sesión actual, o null si no hay sesión o venció (401). */
@@ -173,4 +174,13 @@ export async function descargarEntrega(seccionId: string, actividadId: string, e
   } finally {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
+}
+
+/** H57: listado global y alta, solo para el superadministrador. */
+export interface InstitucionGlobal { id: string; nombre: string; activa: boolean; creadoEn: string }
+export function listarInstitucionesGlobales(): Promise<InstitucionGlobal[]> {
+  return api<InstitucionGlobal[]>('/superadmin/instituciones');
+}
+export function crearInstitucionGlobal(nombre: string): Promise<InstitucionGlobal> {
+  return api<InstitucionGlobal>('/superadmin/instituciones', 'POST', { nombre });
 }

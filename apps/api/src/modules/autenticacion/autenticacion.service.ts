@@ -76,5 +76,6 @@ function construirSesion(u: UsuarioRegistrado, institucionActivaId: string | nul
     nombre: u.nombre || nombreGoogle || u.email,
     institucionActivaId,
     roles: u.roles,
+    esSuperadministrador: u.esSuperadministrador,
   };
 }

@@ -15,7 +15,7 @@
 .menu-sobretitulo { display: block; width: 100%; font-size: .68rem; letter-spacing: .07em; text-transform: uppercase; color: var(--suave); }
 .menu-contraer { padding: .2rem .5rem; background: #eef2fb; color: var(--azul); font-size: 1.3rem; min-width: 36px; }
 .menu-contraido .menu-cabecera { justify-content: center; }
-.menu-enlace { display: flex; align-items: center; gap: .75rem; color: #39465d; padding: .69rem .65rem;
+.menu-enlace { display: flex; width: 100%; text-align: left; border: 0; cursor: pointer; background: transparent; align-items: center; gap: .75rem; color: #39465d; padding: .69rem .65rem;
   border-radius: 8px; margin-bottom: .16rem; font-weight: 550; text-decoration: none; font-size: .85rem; min-height: 43px; }
 .menu-enlace:hover { background: #f0f3fc; color: var(--azul); }
 .menu-enlace-activo { background: #e8eefe; color: var(--azul); font-weight: 700; box-shadow: inset 3px 0 var(--azul-boton); }

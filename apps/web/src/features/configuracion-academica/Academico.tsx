@@ -70,10 +70,19 @@ export function Academico({periodoId,roles,navegacionDestino}:{periodoId:string;
     }).filter(f => f.identidad || f.curso || f.escala || f.nota);
     setHistoricoPrevia(filas);
   }
+  const vistaOferta = navegacionDestino === 'oferta-academica';
+  const tituloModulo: Record<string, string> = {
+    'detalle-seccion': 'Equipo y nómina',
+    'modulo-notas': roles.every(r=>r==='ALUMNO') ? 'Mis calificaciones' : 'Evaluaciones y notas',
+    'modulo-materiales': 'Materiales de clase',
+    'modulo-entregas': 'Actividades y entregas',
+    'modulo-asistencia': roles.every(r=>r==='ALUMNO') ? 'Mi asistencia' : 'Asistencia',
+  };
   return <section id="oferta-academica" className="panel">
-    <div className="encabezado-seccion"><div><p className="etiqueta">02 · Oferta académica</p><h2>{admin?'Cursos y secciones':'Mis secciones'}</h2></div>
-      <span className="insignia">{secciones.length} secciones</span></div>
-    {admin && <div className="dos-columnas">
+    {!vistaOferta && <div className="encabezado-seccion"><div><p className="etiqueta">Módulo académico</p><h2>{tituloModulo[navegacionDestino] ?? 'Sección'}</h2></div></div>}
+    {vistaOferta && <div className="encabezado-seccion"><div><p className="etiqueta">02 · Oferta académica</p><h2>{admin?'Cursos y secciones':'Mis secciones'}</h2></div>
+      <span className="insignia">{secciones.length} secciones</span></div>}
+    {vistaOferta && admin && <div className="dos-columnas">
       <form onSubmit={e=>crear(e,'cursos')}><h3>Registrar curso</h3>
         <label>Código del curso<input required maxLength={30} placeholder="ICC-4204" value={curso.codigo} onChange={e=>setCurso({...curso,codigo:e.target.value})}/></label>
         <label>Nombre<input required maxLength={150} placeholder="Introducción al software" value={curso.nombre} onChange={e=>setCurso({...curso,nombre:e.target.value})}/></label>
@@ -94,7 +103,7 @@ export function Academico({periodoId,roles,navegacionDestino}:{periodoId:string;
     </div>}
     {error && <p className="alerta" role="alert">{error} <button type="button" onClick={()=>setVersion(v=>v+1)}>Reintentar carga</button></p>}
     {aviso && <p className="exito" role="status">{aviso}</p>}
-    {historicoPrevia && <div className="preview" aria-label="Vista previa del lote histórico">
+    {vistaOferta && historicoPrevia && <div className="preview" aria-label="Vista previa del lote histórico">
       <h3>Vista previa del lote histórico</h3>
       <p>{historicoPrevia.length} filas · {historicoPrevia.filter(f=>!f.motivo).length} válidas · {historicoPrevia.filter(f=>f.motivo).length} rechazadas</p>
       <div className="tabla-contenedor"><table><thead><tr><th>Fila</th><th>Identidad</th><th>Curso</th><th>Escala</th><th>Nota</th><th>Resultado</th></tr></thead><tbody>
@@ -102,15 +111,22 @@ export function Academico({periodoId,roles,navegacionDestino}:{periodoId:string;
       </tbody></table></div>
     </div>}
     {cargando?<p role="status">Cargando secciones…</p>:!error && !secciones.length?<p className="vacio">No hay secciones disponibles en este período.</p>:
-      <div className="tarjetas-secciones">{secciones.map(s=><button type="button" className={'tarjeta-seccion '+(s.id===seleccion?'seleccionada':'')} key={s.id} onClick={()=>setSeleccion(s.id)}>
+      vistaOferta ? <div className="tarjetas-secciones">{secciones.map(s=><button type="button" className={'tarjeta-seccion '+(s.id===seleccion?'seleccionada':'')} key={s.id} onClick={()=>setSeleccion(s.id)}>
         <span className="etiqueta">{s.cursoCodigo} · Sección {s.codigo}</span><strong>{s.curso}</strong><span>{s.totalAlumnos} alumnos · {s.periodo}</span>
-      </button>)}</div>}
-    {seleccion && !roles.every(r=>r==='ALUMNO') && <GestionSeccion key={seleccion} id={seleccion} nombre={secciones.find(s=>s.id===seleccion)?.curso+' · Sección '+secciones.find(s=>s.id===seleccion)?.codigo} admin={admin} docentes={docentes} roles={roles} actualizar={()=>setVersion(v=>v+1)}/>}
-    {seleccion && roles.every(r=>r==='ALUMNO') && <div id="detalle-seccion" className="detalle-seccion"><p className="exito">Estás en la nómina de esta sección.</p><MisNotas key={'notas-'+seleccion} seccionId={seleccion} /><Materiales key={'materiales-'+seleccion} seccionId={seleccion} /><ActividadesEntrega key={'actividades-'+seleccion} seccionId={seleccion} /><MiAsistencia seccionId={seleccion} /></div>}
+      </button>)}</div> : <label className="selector-periodo">Sección de trabajo<select value={seleccion} onChange={e=>setSeleccion(e.target.value)}>
+        <option value="">Selecciona una sección</option>
+        {secciones.map(s=><option key={s.id} value={s.id}>{s.cursoCodigo} · {s.curso} · Sección {s.codigo}</option>)}
+      </select></label>}
+    {seleccion && !secciones.some(s=>s.id===seleccion) && <p className="alerta">Esta sección ya no está disponible en el período seleccionado.</p>}
+    {seleccion && secciones.some(s=>s.id===seleccion) && navegacionDestino === 'detalle-seccion' && admin && <GestionSeccion key={seleccion} id={seleccion} nombre={secciones.find(s=>s.id===seleccion)?.curso+' · Sección '+secciones.find(s=>s.id===seleccion)?.codigo} admin={admin} docentes={docentes} actualizar={()=>setVersion(v=>v+1)}/>}
+    {seleccion && secciones.some(s=>s.id===seleccion) && navegacionDestino === 'modulo-notas' && (roles.every(r=>r==='ALUMNO') ? <MisNotas key={seleccion} seccionId={seleccion} /> : <Evaluaciones key={seleccion} seccionId={seleccion} roles={roles} />)}
+    {seleccion && secciones.some(s=>s.id===seleccion) && navegacionDestino === 'modulo-materiales' && <Materiales key={seleccion} seccionId={seleccion} />}
+    {seleccion && secciones.some(s=>s.id===seleccion) && navegacionDestino === 'modulo-entregas' && <ActividadesEntrega key={seleccion} seccionId={seleccion} />}
+    {seleccion && secciones.some(s=>s.id===seleccion) && navegacionDestino === 'modulo-asistencia' && (roles.every(r=>r==='ALUMNO') ? <MiAsistencia key={seleccion} seccionId={seleccion} /> : <Clases key={seleccion} seccionId={seleccion} roles={roles} />)}
   </section>;
 }
 
-function GestionSeccion({id,nombre,admin,docentes,roles,actualizar}:{id:string;nombre:string;admin:boolean;docentes:Persona[];roles:Rol[];actualizar:()=>void}) {
+function GestionSeccion({id,nombre,admin,docentes,actualizar}:{id:string;nombre:string;admin:boolean;docentes:Persona[];actualizar:()=>void}) {
   const [detalle,setDetalle]=useState<Detalle|null>(null);
   const [profesor,setProfesor]=useState('');
   const [ayudantes,setAyudantes]=useState<string[]>([]);
@@ -171,10 +187,6 @@ function GestionSeccion({id,nombre,admin,docentes,roles,actualizar}:{id:string;n
       {!detalle.nomina.length?<p className="vacio">Todavía no hay alumnos en la nómina.</p>:<div className="tabla-contenedor"><table><thead><tr><th>Nombre</th><th>Correo institucional</th></tr></thead><tbody>
         {detalle.nomina.map(a=><tr key={a.id}><td>{a.nombre || 'Sin nombre'}</td><td>{a.email}</td></tr>)}
       </tbody></table></div>}
-      <Evaluaciones seccionId={id} roles={roles} />
-      <Materiales key={id} seccionId={id} />
-      <ActividadesEntrega key={id} seccionId={id} />
-      <Clases seccionId={id} roles={roles} />
       <details style={{ marginTop: '1.5rem' }}><summary>Actividad de la sección</summary><ul>{detalle.eventos.map(a=><li key={a.id}>{new Date(a.fecha).toLocaleString('es-CL')} · {a.autor} · {a.accion.replaceAll('_',' ').toLowerCase()}</li>)}</ul></details>
     </>}
   </div>;

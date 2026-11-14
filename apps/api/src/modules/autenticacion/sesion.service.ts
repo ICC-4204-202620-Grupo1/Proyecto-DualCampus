@@ -42,8 +42,9 @@ export class SesionService {
         usuarioId: p.usuarioId,
         email: p.email,
         nombre: p.nombre,
-        institucionActivaId: p.institucionActivaId ?? null,
-        roles: p.roles ?? [],
+        institucionActivaId: p.institucionActivaId,
+        roles: p.roles,
+        esSuperadministrador: p.esSuperadministrador === true,
       };
     } catch {
       return null; // firma inválida, alterado o vencido
