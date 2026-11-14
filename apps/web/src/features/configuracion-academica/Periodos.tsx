@@ -1,9 +1,10 @@
 import { type FormEvent, useEffect, useState } from 'react';
 import { crearPeriodo, listarPeriodos, type Periodo, type Rol } from '../../lib/api';
 import { Academico } from './Academico';
+import type { DestinoNavegacion } from '../acceso/MenuLateral';
 import { HistorialAcademico } from '../historial-academico/HistorialAcademico';
 
-export function Periodos({roles}:{roles:Rol[]}) {
+export function Periodos({roles,navegacionDestino}:{roles:Rol[];navegacionDestino:DestinoNavegacion}) {
   const [periodos,setPeriodos]=useState<Periodo[]>([]);
   const [activo,setActivo]=useState('');
   const [form,setForm]=useState({nombre:'',fechaInicio:'',fechaFin:''});
@@ -26,7 +27,7 @@ export function Periodos({roles}:{roles:Rol[]}) {
   }
   const seleccionado=periodos.find(p=>p.id===activo);
   return <>
-    <section className="panel"><p className="etiqueta">01 · Calendario académico</p><h2>Períodos académicos</h2>
+    <section id="periodos-academicos" className="panel"><p className="etiqueta">01 · Calendario académico</p><h2>Períodos académicos</h2>
       {roles.includes('ADMINISTRADOR') && <form className="formulario-fila" onSubmit={enviar}>
         <label>Nombre<input required maxLength={100} placeholder="2026 · Segundo semestre" value={form.nombre} onChange={e=>setForm({...form,nombre:e.target.value})}/></label>
         <label>Inicio<input required type="date" value={form.fechaInicio} onChange={e=>setForm({...form,fechaInicio:e.target.value})}/></label>
@@ -39,7 +40,7 @@ export function Periodos({roles}:{roles:Rol[]}) {
       {seleccionado && <p className="texto-suave">Del {seleccionado.fechaInicio} al {seleccionado.fechaFin}. Registrado por {seleccionado.creadoPor.nombre || seleccionado.creadoPor.email} · {new Date(seleccionado.creadoEn).toLocaleString('es-CL')}.</p>}
     </section>
     {roles.includes('ALUMNO') && <HistorialAcademico />}
-    {activo && roles.some(r=>['ADMINISTRADOR','PROFESOR','AYUDANTE','ALUMNO'].includes(r)) && <Academico key={activo} periodoId={activo} roles={roles}/>}
+    {activo && roles.some(r=>['ADMINISTRADOR','PROFESOR','AYUDANTE','ALUMNO'].includes(r)) && <Academico key={activo} periodoId={activo} roles={roles} navegacionDestino={navegacionDestino}/>}
     {roles.every(r=>r==='DIRECTOR') && <section className="panel"><h2>Consulta institucional</h2><p>Puedes consultar el calendario académico. La reportería agregada se incorporará en una próxima iteración.</p></section>}
   </>;
 }

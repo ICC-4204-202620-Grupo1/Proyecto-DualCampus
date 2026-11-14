@@ -168,7 +168,7 @@ export function ActividadesEntrega({ seccionId }: { seccionId: string }) {
     finally { setGuardando(false); }
   }
 
-  return <section className="panel" aria-label="Actividades de entrega">
+  return <section id="modulo-entregas" className="panel" aria-label="Actividades de entrega">
     <h3>Actividades de entrega</h3>
     {error && <p className="alerta" role="alert">{error}</p>}
     {aviso && <p className="exito" role="status">{aviso}</p>}

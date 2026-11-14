@@ -6,6 +6,7 @@ import { MisNotas } from '../calificaciones/MisNotas';
 import { Evaluaciones } from '../calificaciones/Evaluaciones';
 import { Clases } from './Clases';
 import { MiAsistencia } from './MiAsistencia';
+import type { DestinoNavegacion } from '../acceso/MenuLateral';
 type Curso = {id:string;codigo:string;nombre:string};
 type Seccion = {id:string;codigo:string;periodo:string;curso:string;cursoCodigo:string;totalAlumnos:number};
 type Persona = {id:string;nombre:string|null;email:string;rol?:string};
@@ -14,7 +15,7 @@ type VistaPrevia = {valida:boolean;filas:{fila:number;email:string;motivo:string
 type FilaHistorica = {fila:number; identidad:string; curso:string; escala:string; nota:string; motivo:string|null};
 const mensaje = (e:unknown) => e instanceof Error ? e.message : 'No se pudo completar la operación';
 
-export function Academico({periodoId,roles}:{periodoId:string;roles:Rol[]}) {
+export function Academico({periodoId,roles,navegacionDestino}:{periodoId:string;roles:Rol[];navegacionDestino:DestinoNavegacion}) {
   const admin=roles.includes('ADMINISTRADOR');
   const [cursos,setCursos]=useState<Curso[]>([]);
   const [secciones,setSecciones]=useState<Seccion[]>([]);
@@ -40,6 +41,12 @@ export function Academico({periodoId,roles}:{periodoId:string;roles:Rol[]}) {
       .catch(e=>{if(vigente)setError(mensaje(e));}).finally(()=>{if(vigente)setCargando(false);});
     return ()=>{vigente=false;};
   },[periodoId,admin,version]);
+  useEffect(() => {
+    // Al abrir un módulo desde el lateral, se muestra la primera sección disponible
+    // si todavía no se eligió una. El usuario siempre puede cambiarla después.
+    const requiereSeccion = ['detalle-seccion', 'modulo-notas', 'modulo-materiales', 'modulo-entregas', 'modulo-asistencia'].includes(navegacionDestino);
+    if (requiereSeccion && !seleccion && secciones.length) setSeleccion(secciones[0].id);
+  }, [navegacionDestino, secciones, seleccion]);
   async function crear(e:FormEvent,tipo:'cursos'|'secciones') {
     e.preventDefault();setOcupado(true);setError('');setAviso('');
     try {
@@ -63,7 +70,7 @@ export function Academico({periodoId,roles}:{periodoId:string;roles:Rol[]}) {
     }).filter(f => f.identidad || f.curso || f.escala || f.nota);
     setHistoricoPrevia(filas);
   }
-  return <section className="panel">
+  return <section id="oferta-academica" className="panel">
     <div className="encabezado-seccion"><div><p className="etiqueta">02 · Oferta académica</p><h2>{admin?'Cursos y secciones':'Mis secciones'}</h2></div>
       <span className="insignia">{secciones.length} secciones</span></div>
     {admin && <div className="dos-columnas">
@@ -99,7 +106,7 @@ export function Academico({periodoId,roles}:{periodoId:string;roles:Rol[]}) {
         <span className="etiqueta">{s.cursoCodigo} · Sección {s.codigo}</span><strong>{s.curso}</strong><span>{s.totalAlumnos} alumnos · {s.periodo}</span>
       </button>)}</div>}
     {seleccion && !roles.every(r=>r==='ALUMNO') && <GestionSeccion key={seleccion} id={seleccion} nombre={secciones.find(s=>s.id===seleccion)?.curso+' · Sección '+secciones.find(s=>s.id===seleccion)?.codigo} admin={admin} docentes={docentes} roles={roles} actualizar={()=>setVersion(v=>v+1)}/>}
-    {seleccion && roles.every(r=>r==='ALUMNO') && <div className="detalle-seccion"><p className="exito">Estás en la nómina de esta sección.</p><MisNotas key={'notas-'+seleccion} seccionId={seleccion} /><Materiales key={'materiales-'+seleccion} seccionId={seleccion} /><ActividadesEntrega key={'actividades-'+seleccion} seccionId={seleccion} /><MiAsistencia seccionId={seleccion} /></div>}
+    {seleccion && roles.every(r=>r==='ALUMNO') && <div id="detalle-seccion" className="detalle-seccion"><p className="exito">Estás en la nómina de esta sección.</p><MisNotas key={'notas-'+seleccion} seccionId={seleccion} /><Materiales key={'materiales-'+seleccion} seccionId={seleccion} /><ActividadesEntrega key={'actividades-'+seleccion} seccionId={seleccion} /><MiAsistencia seccionId={seleccion} /></div>}
   </section>;
 }
 
@@ -137,7 +144,7 @@ function GestionSeccion({id,nombre,admin,docentes,roles,actualizar}:{id:string;n
     }catch(e){setError(mensaje(e));if(accion!=='equipo')setPrevia(null);}
     finally{setOcupado(false);}
   }
-  return <div className="detalle-seccion">
+  return <div id="detalle-seccion" className="detalle-seccion">
     <p className="etiqueta">03 · Equipo y nómina</p><h2>{nombre}</h2>
     {error && <p role="alert" className="alerta">{error}</p>}
     {aviso && <p role="status" className="exito">{aviso}</p>}
