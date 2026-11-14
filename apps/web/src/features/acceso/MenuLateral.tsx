@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import type { Rol } from '../../lib/api';
 
 export type DestinoNavegacion =
+  | 'instituciones'
   | 'periodos-academicos'
   | 'oferta-academica'
   | 'detalle-seccion'
@@ -15,8 +16,9 @@ export type DestinoNavegacion =
 type Enlace = { id: DestinoNavegacion; etiqueta: string; sigla: string };
 
 /** Los enlaces del menú no autorizan acciones: las reglas siguen verificándose en la API. */
-function enlacesPara(roles: Rol[]): Enlace[] {
-  const enlaces: Enlace[] = [{ id: 'periodos-academicos', etiqueta: 'Períodos académicos', sigla: 'PA' }];
+function enlacesPara(roles: Rol[], esSuperadministrador: boolean): Enlace[] {
+  const enlaces: Enlace[] = roles.length ? [{ id: 'periodos-academicos', etiqueta: 'Períodos académicos', sigla: 'PA' }] : [];
+  if (esSuperadministrador) enlaces.unshift({ id: 'instituciones', etiqueta: 'Universidades', sigla: 'UN' });
   const esAdmin = roles.includes('ADMINISTRADOR');
   const esDocente = roles.some(r => r === 'PROFESOR' || r === 'AYUDANTE');
   const esAlumno = roles.includes('ALUMNO') && !esAdmin && !esDocente;
@@ -34,8 +36,9 @@ function enlacesPara(roles: Rol[]): Enlace[] {
   return enlaces;
 }
 
-export function MenuLateral({ roles, institucion, destino, onNavegar, abiertoMovil, onCerrarMovil }: {
+export function MenuLateral({ roles, institucion, destino, onNavegar, abiertoMovil, onCerrarMovil, esSuperadministrador = false }: {
   roles: Rol[];
+  esSuperadministrador?: boolean;
   institucion: string;
   destino: DestinoNavegacion;
   onNavegar: (destino: DestinoNavegacion) => void;
@@ -52,7 +55,7 @@ export function MenuLateral({ roles, institucion, destino, onNavegar, abiertoMov
     window.addEventListener('keydown', manejarTecla);
     return () => window.removeEventListener('keydown', manejarTecla);
   }, [abiertoMovil, onCerrarMovil]);
-  const enlaces = enlacesPara(roles);
+  const enlaces = enlacesPara(roles, esSuperadministrador);
   return <>
     {abiertoMovil && <button className="menu-fondo-movil" type="button" aria-label="Cerrar menú" onClick={onCerrarMovil} />}
     <aside className={'menu-lateral' + (contraido ? ' menu-contraido' : '') + (abiertoMovil ? ' menu-abierto' : '')} aria-label="Navegación de DualCampus">
@@ -64,13 +67,13 @@ export function MenuLateral({ roles, institucion, destino, onNavegar, abiertoMov
         <button type="button" className="menu-cerrar-movil" onClick={onCerrarMovil} aria-label="Cerrar menú lateral">Cerrar</button>
       </div>
       <nav aria-label="Secciones disponibles">
-        {enlaces.map(enlace => <a key={enlace.id} href={'#' + enlace.id}
+        {enlaces.map(enlace => <button key={enlace.id} type="button"
           className={'menu-enlace' + (destino === enlace.id ? ' menu-enlace-activo' : '')}
           aria-current={destino === enlace.id ? 'location' : undefined}
           title={contraido ? enlace.etiqueta : undefined}
-          onClick={evento => { evento.preventDefault(); onNavegar(enlace.id); onCerrarMovil(); }}>
+          onClick={() => { onNavegar(enlace.id); onCerrarMovil(); }}>
           <span className="menu-sigla" aria-hidden="true">{enlace.sigla}</span><span className="menu-texto">{enlace.etiqueta}</span>
-        </a>)}
+        </button>)}
       </nav>
       {!contraido && <p className="menu-ayuda">Para cambiar de curso, selecciona su sección en la vista principal.</p>}
     </aside>

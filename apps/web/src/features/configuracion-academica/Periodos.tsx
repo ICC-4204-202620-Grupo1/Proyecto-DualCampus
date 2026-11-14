@@ -26,9 +26,11 @@ export function Periodos({roles,navegacionDestino}:{roles:Rol[];navegacionDestin
     finally{setGuardando(false);}
   }
   const seleccionado=periodos.find(p=>p.id===activo);
+  const vistaPeriodos = navegacionDestino === 'periodos-academicos';
+  const vistaHistorial = navegacionDestino === 'historial-academico';
   return <>
-    <section id="periodos-academicos" className="panel"><p className="etiqueta">01 · Calendario académico</p><h2>Períodos académicos</h2>
-      {roles.includes('ADMINISTRADOR') && <form className="formulario-fila" onSubmit={enviar}>
+    {!vistaHistorial && <section id="periodos-academicos" className="panel"><p className="etiqueta">01 · Calendario académico</p><h2>{vistaPeriodos ? 'Períodos académicos' : 'Período de trabajo'}</h2>
+      {vistaPeriodos && roles.includes('ADMINISTRADOR') && <form className="formulario-fila" onSubmit={enviar}>
         <label>Nombre<input required maxLength={100} placeholder="2026 · Segundo semestre" value={form.nombre} onChange={e=>setForm({...form,nombre:e.target.value})}/></label>
         <label>Inicio<input required type="date" value={form.fechaInicio} onChange={e=>setForm({...form,fechaInicio:e.target.value})}/></label>
         <label>Término<input required type="date" value={form.fechaFin} onChange={e=>setForm({...form,fechaFin:e.target.value})}/></label>
@@ -38,9 +40,9 @@ export function Periodos({roles,navegacionDestino}:{roles:Rol[];navegacionDestin
       {cargando?<p role="status">Cargando períodos…</p>:!periodos.length?<p className="vacio">Sin períodos registrados.</p>:
         <label className="selector-periodo">Período de trabajo<select value={activo} onChange={e=>setActivo(e.target.value)}>{periodos.map(p=><option value={p.id} key={p.id}>{p.nombre}</option>)}</select></label>}
       {seleccionado && <p className="texto-suave">Del {seleccionado.fechaInicio} al {seleccionado.fechaFin}. Registrado por {seleccionado.creadoPor.nombre || seleccionado.creadoPor.email} · {new Date(seleccionado.creadoEn).toLocaleString('es-CL')}.</p>}
-    </section>
-    {roles.includes('ALUMNO') && <HistorialAcademico />}
-    {activo && roles.some(r=>['ADMINISTRADOR','PROFESOR','AYUDANTE','ALUMNO'].includes(r)) && <Academico key={activo} periodoId={activo} roles={roles} navegacionDestino={navegacionDestino}/>}
-    {roles.every(r=>r==='DIRECTOR') && <section className="panel"><h2>Consulta institucional</h2><p>Puedes consultar el calendario académico. La reportería agregada se incorporará en una próxima iteración.</p></section>}
+    </section>}
+    {vistaHistorial && roles.includes('ALUMNO') && <HistorialAcademico />}
+    {!vistaPeriodos && !vistaHistorial && activo && roles.some(r=>['ADMINISTRADOR','PROFESOR','AYUDANTE','ALUMNO'].includes(r)) && <Academico key={activo} periodoId={activo} roles={roles} navegacionDestino={navegacionDestino}/>}
+    {vistaPeriodos && roles.every(r=>r==='DIRECTOR') && <section className="panel"><h2>Consulta institucional</h2><p>Puedes consultar el calendario académico. La reportería agregada se incorporará en una próxima iteración.</p></section>}
   </>;
 }
