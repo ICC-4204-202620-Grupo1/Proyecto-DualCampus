@@ -40,7 +40,7 @@ export class NotasService {
     await this.autorizacion.exigirRol(actor, institucion, 'ALUMNO');
     const sid = id(seccionId);
     return this.ejecutar(institucion, async (db) => {
-      const matricula = await db.query('SELECT 1 FROM matricula WHERE seccion_id=$1 AND usuario_id=$2', [sid, actor]);
+      const matricula = await db.query("SELECT 1 FROM matricula WHERE seccion_id=$1 AND usuario_id=$2 AND estado='ACTIVA'", [sid, actor]);
       if (!matricula.rowCount) throw new ForbiddenException('No estás inscrito en esta sección');
       const { rows } = await db.query(
         `SELECT e.id, e.nombre, e.fecha, e.ponderacion, e.publicado_en AS "publicadoEn",
@@ -91,7 +91,7 @@ export class NotasService {
       const esDocente = (equipoRes.rowCount ?? 0) > 0;
 
       const matriculaRes = await db.query(
-        `SELECT 1 FROM matricula WHERE seccion_id = $1 AND usuario_id = $2`,
+        `SELECT 1 FROM matricula WHERE seccion_id = $1 AND usuario_id = $2 AND estado='ACTIVA'`,
         [evaluacion.seccionId, actor],
       );
       const esAlumno = (matriculaRes.rowCount ?? 0) > 0;
@@ -115,7 +115,7 @@ export class NotasService {
          FROM matricula m
          JOIN usuario u ON u.id = m.usuario_id
          LEFT JOIN nota n ON n.evaluacion_id = $1 AND n.usuario_id = u.id
-         WHERE m.seccion_id = $2 AND ($3::uuid IS NULL OR u.id = $3)
+         WHERE m.seccion_id = $2 AND m.estado='ACTIVA' AND ($3::uuid IS NULL OR u.id = $3)
          ORDER BY u.nombre ASC, u.email ASC`,
         [eid, evaluacion.seccionId, !esAdmin && !esDocente ? actor : null],
       );
@@ -206,7 +206,7 @@ export class NotasService {
 
         // Verificar que el alumno esté matriculado en la sección
         const matriculaRes = await db.query(
-          `SELECT 1 FROM matricula WHERE seccion_id = $1 AND usuario_id = $2`,
+          `SELECT 1 FROM matricula WHERE seccion_id = $1 AND usuario_id = $2 AND estado='ACTIVA'`,
           [evaluacion.seccionId, alumnoId],
         );
         if (!matriculaRes.rowCount) {

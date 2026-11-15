@@ -19,7 +19,7 @@ export class MaterialesService {
     const res = await db.query(
       `SELECT r.rol, EXISTS(SELECT 1 FROM equipo_docente e WHERE e.seccion_id=$3 AND e.usuario_id=$1 AND e.rol='PROFESOR') AS profesor,
          EXISTS(SELECT 1 FROM equipo_docente e WHERE e.seccion_id=$3 AND e.usuario_id=$1) AS docente,
-         EXISTS(SELECT 1 FROM matricula m WHERE m.seccion_id=$3 AND m.usuario_id=$1) AS alumno
+         EXISTS(SELECT 1 FROM matricula m WHERE m.seccion_id=$3 AND m.usuario_id=$1 AND m.estado='ACTIVA') AS alumno
        FROM rol_en_institucion r WHERE r.usuario_id=$1 AND r.institucion_id=$2`, [actor,institucion,seccion],
     );
     if (!res.rows.some(r => r.rol === 'ADMINISTRADOR' || r.docente || r.alumno)) throw new ForbiddenException('No tienes acceso a esta sección');
@@ -56,7 +56,7 @@ export class MaterialesService {
     return this.contexto.ejecutar(institucion, async db => {
       const acceso = await db.query(
         `SELECT EXISTS(SELECT 1 FROM equipo_docente e WHERE e.seccion_id=$2 AND e.usuario_id=$1) AS docente,
-                EXISTS(SELECT 1 FROM matricula m WHERE m.seccion_id=$2 AND m.usuario_id=$1) AS alumno`,
+                EXISTS(SELECT 1 FROM matricula m WHERE m.seccion_id=$2 AND m.usuario_id=$1 AND m.estado='ACTIVA') AS alumno`,
         [actor, sid],
       );
       if (!acceso.rows[0]?.docente && !acceso.rows[0]?.alumno) {

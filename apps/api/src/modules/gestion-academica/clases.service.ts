@@ -44,7 +44,7 @@ export class ClasesService {
       const acceso = await db.query(`SELECT 1 FROM seccion s WHERE s.id=$1 AND (
         EXISTS (SELECT 1 FROM rol_en_institucion r WHERE r.usuario_id=$2 AND r.institucion_id=$3 AND r.rol='ADMINISTRADOR')
         OR EXISTS (SELECT 1 FROM equipo_docente e WHERE e.seccion_id=s.id AND e.usuario_id=$2)
-        OR EXISTS (SELECT 1 FROM matricula m WHERE m.seccion_id=s.id AND m.usuario_id=$2))`, [seccion, actor, institucion]);
+        OR EXISTS (SELECT 1 FROM matricula m WHERE m.seccion_id=s.id AND m.usuario_id=$2 AND m.estado='ACTIVA'))`, [seccion, actor, institucion]);
       if (!acceso.rowCount) throw new ForbiddenException('No tienes acceso a esta sección');
       return (await db.query(`SELECT id,fecha,creado_por AS "creadoPor",creado_en AS "creadoEn"
         FROM clase WHERE seccion_id=$1 ORDER BY fecha DESC`, [seccion])).rows;
@@ -76,7 +76,7 @@ export class ClasesService {
         a.autor_id AS "autorId",a.actualizado_en AS "actualizadoEn"
         FROM matricula m JOIN usuario u ON u.id=m.usuario_id
         LEFT JOIN asistencia_clase a ON a.clase_id=$1 AND a.alumno_id=m.usuario_id
-        WHERE m.seccion_id=$2 ORDER BY u.nombre,u.email`, [claseId, seccion]);
+        WHERE m.seccion_id=$2 AND m.estado='ACTIVA' ORDER BY u.nombre,u.email`, [claseId, seccion]);
       return alumnos.rows;
     });
   }
@@ -90,7 +90,7 @@ export class ClasesService {
       await this.exigirAcceso(db, actor, institucion, seccion);
       const clase = await db.query('SELECT id FROM clase WHERE id=$1 AND seccion_id=$2', [claseId, seccion]);
       if (!clase.rowCount) throw new NotFoundException('Clase no encontrada');
-      const alumnos = (await db.query('SELECT usuario_id FROM matricula WHERE seccion_id=$1', [seccion])).rows.map(r => r.usuario_id as string);
+      const alumnos = (await db.query("SELECT usuario_id FROM matricula WHERE seccion_id=$1 AND estado='ACTIVA'", [seccion])).rows.map(r => r.usuario_id as string);
       const marcas = dto.marcas as Array<Record<string, unknown>>;
       if (marcas.length !== alumnos.length || new Set(marcas.map(m => m.alumnoId)).size !== alumnos.length || marcas.some(m => !alumnos.includes(m.alumnoId as string) || typeof m.presente !== 'boolean')) {
         throw new BadRequestException('La asistencia debe incluir exactamente a cada alumno activo');
@@ -108,7 +108,7 @@ export class ClasesService {
     const seccion = this.validarSeccion(seccionId);
     await this.autorizacion.exigirRol(actor, institucion, 'ALUMNO');
     return this.ejecutar(institucion, async db => {
-      const matriculado = await db.query('SELECT 1 FROM matricula WHERE seccion_id=$1 AND usuario_id=$2', [seccion, actor]);
+      const matriculado = await db.query("SELECT 1 FROM matricula WHERE seccion_id=$1 AND usuario_id=$2 AND estado='ACTIVA'", [seccion, actor]);
       if (!matriculado.rowCount) throw new ForbiddenException('No estás matriculado en esta sección');
       const filas = (await db.query(`SELECT c.id,c.fecha,a.presente,a.actualizado_en AS "actualizadoEn"
         FROM clase c LEFT JOIN asistencia_clase a ON a.clase_id=c.id AND a.alumno_id=$2
