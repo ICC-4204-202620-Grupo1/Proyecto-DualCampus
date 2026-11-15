@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { api, descargarMaterial } from '../../lib/api';
-type Material = { id: string; titulo: string; nombreArchivo: string; tamano: number; publicadoEn: string; autor?: string };
+import { api, descargarMaterial, obtenerVistaPreviaMaterial } from '../../lib/api';
+type Material = { id: string; titulo: string; nombreArchivo: string; tipo: string; tamano: number; publicadoEn: string; autor?: string };
 type Borrador = { id:string; titulo:string; nombreArchivo:string; tamano:number; actualizadoEn:string; origenMaterialId:string;
   origenTitulo:string; origenPeriodo:string; origenCurso:string; origenSeccion:string };
 type Opcion = { id:string; titulo:string; nombreArchivo:string; tamano:number; seccionId:string; seccion:string;
@@ -24,11 +24,15 @@ export function Materiales({ seccionId }: { seccionId: string }) {
   const [cargando,setCargando] = useState(true);
   const [guardando,setGuardando] = useState(false);
   const [descargando,setDescargando] = useState<string | null>(null);
+  const [vista,setVista] = useState<{url:string;tipo:string;nombre:string}|null>(null);
+  const [abriendo,setAbriendo] = useState<string|null>(null);
   const [opciones,setOpciones] = useState<Opcion[]>([]);
   const [origen,setOrigen] = useState('');
   const [copiando,setCopiando] = useState(false);
   const [version,setVersion] = useState(0);
   const entrada = useRef<HTMLInputElement>(null);
+  useEffect(()=>()=>{ if (vista) URL.revokeObjectURL(vista.url); },[vista]);
+  useEffect(()=>{setVista(null);},[seccionId]);
   useEffect(() => {
     let vigente = true;
     setCargando(true); setError('');
@@ -71,6 +75,14 @@ export function Materiales({ seccionId }: { seccionId: string }) {
       setError(e instanceof Error ? e.message : 'No se pudo descargar el material');
     } finally { setDescargando(null); }
   }
+  async function previsualizar(material: Material) {
+    setError('');setAbriendo(material.id);
+    try {
+      const blob=await obtenerVistaPreviaMaterial(seccionId,material.id);
+      setVista({url:URL.createObjectURL(blob),tipo:blob.type,nombre:material.nombreArchivo});
+    }catch(e){setError(e instanceof Error?e.message:'No fue posible previsualizar el material');}
+    finally{setAbriendo(null);}
+  }
   async function copiar() {
     if (!origen) return;
     setCopiando(true); setError(''); setAviso('');
@@ -111,13 +123,35 @@ export function Materiales({ seccionId }: { seccionId: string }) {
       {datos.borradores.map(b => <BorradorMaterial key={b.id} seccionId={seccionId} borrador={b}
         ocupado={guardando || copiando} alCambiar={() => setVersion(v => v + 1)} informar={setAviso} fallar={setError} />)}
     </div>}
+    {vista && <div className="preview" role="region" aria-label="Vista previa del documento" style={{marginBlock:'1rem'}}>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:'1rem'}}><strong>{vista.nombre}</strong><button type="button" onClick={()=>setVista(null)}>Cerrar vista previa</button></div>
+      {vista.tipo === 'application/pdf' ? (
+        <object
+          key={vista.url}
+          data={vista.url}
+          type="application/pdf"
+          aria-label={'Vista previa de ' + vista.nombre}
+          style={{ width: '100%', height: 'min(70vh, 680px)', border: '1px solid #ddd' }}
+        >
+          <p>No se pudo mostrar el PDF en el navegador. Utiliza el botón Descargar material.</p>
+        </object>
+      ) : (
+        <iframe
+          key={vista.url}
+          src={vista.url}
+          title={'Vista previa de ' + vista.nombre}
+          sandbox=""
+          style={{ width: '100%', height: 'min(50vh, 450px)', border: '1px solid #ddd' }}
+        />
+      )}
+    </div>}
     {cargando ? <p role="status">Cargando materiales…</p> : !datos ?
       <button type="button" onClick={() => setVersion(v => v + 1)}>Reintentar</button> : !datos.materiales.length ?
       <p className="vacio">Todavía no hay materiales publicados en esta sección.</p> :
       <ul>{datos.materiales.map(m => <li key={m.id} style={{marginBlock:'1rem'}}>
         <strong>{m.titulo}</strong><p>{m.nombreArchivo} · {Math.ceil(m.tamano / 1024)} KB</p>
         <small>{m.autor} · {new Date(m.publicadoEn).toLocaleString()}</small>
-        <p><button type="button" className="boton" disabled={descargando !== null} onClick={() => void descargar(m)}>{descargando === m.id ? 'Descargando…' : 'Descargar material'}</button></p>
+        <p>{['application/pdf','text/plain'].includes(m.tipo) ? <button type="button" className="boton-secundario" disabled={abriendo !== null} onClick={()=>void previsualizar(m)}>{abriendo===m.id?'Abriendo…':'Vista previa'}</button> : <span>Formato no compatible. Descarga el archivo. </span>} <button type="button" className="boton" disabled={descargando !== null} onClick={() => void descargar(m)}>{descargando === m.id ? 'Descargando…' : 'Descargar material'}</button></p>
       </li>)}</ul>}
   </section>;
 }

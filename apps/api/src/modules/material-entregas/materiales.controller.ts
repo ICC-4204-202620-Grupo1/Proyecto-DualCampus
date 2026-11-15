@@ -47,6 +47,23 @@ export class MaterialesController {
     return new StreamableFile(archivo.contenido, { type: archivo.tipo, length: archivo.contenido.length });
   }
 
+  /** H59: misma comprobación institucional que la descarga; apertura integrada en navegador. */
+  @Get(':id/materiales/:materialId/previsualizar')
+  async previsualizar(@UsuarioActual() u: UsuarioSesion, @InstitucionActiva() i: string,
+    @Param('id') id: string, @Param('materialId') materialId: string,
+    @Res({ passthrough: true }) respuesta: Response) {
+    const archivo = await this.servicio.descargar(u.usuarioId, i, id, materialId);
+    if (!['application/pdf','text/plain'].includes(archivo.tipo)) {
+      respuesta.status(415);
+      return { message: 'Formato no compatible con vista previa. Descarga el archivo.' };
+    }
+    respuesta.setHeader('Content-Disposition','inline');
+    respuesta.setHeader('Cache-Control','private, no-store');
+    respuesta.setHeader('X-Content-Type-Options','nosniff');
+    respuesta.setHeader('Content-Security-Policy',"default-src 'none'; sandbox");
+    return new StreamableFile(archivo.contenido, { type: archivo.tipo, length: archivo.contenido.length });
+  }
+
   @Post(':id')
   publicar(@UsuarioActual() u: UsuarioSesion, @InstitucionActiva() i: string, @Param('id') id: string, @Body() datos: Record<string,unknown>) {
     return this.servicio.publicar(u.usuarioId,i,id,datos ?? {});
