@@ -185,6 +185,14 @@ export function crearInstitucionGlobal(nombre: string): Promise<InstitucionGloba
   return api<InstitucionGlobal>('/superadmin/instituciones', 'POST', { nombre });
 }
 
+/** H59: obtiene un Blob desde API protegida y permite previsualizarlo sin exponer URL pública. */
+export async function obtenerVistaPreviaMaterial(seccionId:string,materialId:string):Promise<Blob> {
+  const ruta=`${API_URL}/materiales/secciones/${encodeURIComponent(seccionId)}/materiales/${encodeURIComponent(materialId)}/previsualizar`;
+  const res=await fetch(ruta,{credentials:'include',headers:contextoHeaders()});
+  if(!res.ok){await cuerpoOError(res);throw new Error('No se pudo abrir la vista previa');}
+  return res.blob();
+}
+
 /** H58: gestión global de usuarios y asignaciones por institución. */
 export interface RolGlobal { institucionId: string; institucion: string; rol: Rol }
 export interface UsuarioGlobal { id: string; email: string; nombre: string | null; activo: boolean; roles: RolGlobal[] }
