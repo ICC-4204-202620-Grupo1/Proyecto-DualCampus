@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import type { Rol } from '../../lib/api';
 
 export type DestinoNavegacion =
+  | 'usuarios-globales'
   | 'instituciones'
   | 'periodos-academicos'
   | 'oferta-academica'
@@ -18,7 +19,7 @@ type Enlace = { id: DestinoNavegacion; etiqueta: string; sigla: string };
 /** Los enlaces del menú no autorizan acciones: las reglas siguen verificándose en la API. */
 function enlacesPara(roles: Rol[], esSuperadministrador: boolean): Enlace[] {
   const enlaces: Enlace[] = roles.length ? [{ id: 'periodos-academicos', etiqueta: 'Períodos académicos', sigla: 'PA' }] : [];
-  if (esSuperadministrador) enlaces.unshift({ id: 'instituciones', etiqueta: 'Universidades', sigla: 'UN' });
+  if (esSuperadministrador) enlaces.unshift({ id: 'instituciones', etiqueta: 'Universidades', sigla: 'UN' }, { id: 'usuarios-globales', etiqueta: 'Usuarios y roles', sigla: 'UR' });
   const esAdmin = roles.includes('ADMINISTRADOR');
   const esDocente = roles.some(r => r === 'PROFESOR' || r === 'AYUDANTE');
   const esAlumno = roles.includes('ALUMNO') && !esAdmin && !esDocente;

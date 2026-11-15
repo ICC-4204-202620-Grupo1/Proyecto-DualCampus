@@ -4,6 +4,7 @@ import { Periodos } from '../configuracion-academica/Periodos';
 import { MenuLateral, type DestinoNavegacion } from './MenuLateral';
 import { SelectorInstitucion } from './SelectorInstitucion';
 import { Instituciones } from '../superadministracion/Instituciones';
+import { Usuarios } from '../superadministracion/Usuarios';
 
 export function Inicio({usuario,onSalir,onCambio}:{usuario:UsuarioSesion;onSalir:()=>void;onCambio:(u:UsuarioSesion)=>void}) {
   const [contexto,setContexto]=useState<ContextoInstitucion|null>(null);
@@ -40,9 +41,10 @@ export function Inicio({usuario,onSalir,onCambio}:{usuario:UsuarioSesion;onSalir
           {(usuario.roles.length > 0) && <SelectorInstitucion usuario={usuario} onCambio={onCambio} onPendiente={setCambiando}/>}</div>
         {!usuario.institucionActivaId && !usuario.esSuperadministrador && <section className="panel vacio">Selecciona una institución para comenzar.</section>}
         {usuario.esSuperadministrador && destino === 'instituciones' && <Instituciones />}
+        {usuario.esSuperadministrador && destino === 'usuarios-globales' && <Usuarios />}
         {error && <p className="alerta" role="alert">{error} <button onClick={()=>setVersion(v=>v+1)}>Reintentar</button></p>}
         {usuario.institucionActivaId && (!visible || !contexto) && !error && <p role="status">Cargando institución…</p>}
-        {visible && contexto && destino !== 'instituciones' && <><div className="contexto"><strong>{contexto.institucion}</strong><span>{contexto.roles.map(r=>r.toLowerCase()).join(' · ')}</span></div>
+        {visible && contexto && destino !== 'instituciones' && destino !== 'usuarios-globales' && <><div className="contexto"><strong>{contexto.institucion}</strong><span>{contexto.roles.map(r=>r.toLowerCase()).join(' · ')}</span></div>
           <Periodos key={contexto.institucionActivaId} roles={contexto.roles} navegacionDestino={destino}/></>}
       </main>
     </div>
