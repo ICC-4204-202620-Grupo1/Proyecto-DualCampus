@@ -27,7 +27,7 @@ export class AutenticacionService {
     if (dominios.length > 0 && !dominios.includes(identidad.dominio ?? '')) return null;
 
     const usuario = await this.usuarios.buscarPorEmail(identidad.email);
-    if (!usuario || !usuario.activo || usuario.roles.length === 0) return null;
+    if (!usuario || !usuario.activo || (usuario.roles.length === 0 && !usuario.esSuperadministrador)) return null;
 
     // La cuenta queda ligada al primer identificador de Google con que ingresó
     if (usuario.googleSub && usuario.googleSub !== identidad.sub) return null;

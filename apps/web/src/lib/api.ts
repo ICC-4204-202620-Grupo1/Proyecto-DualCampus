@@ -184,3 +184,17 @@ export function listarInstitucionesGlobales(): Promise<InstitucionGlobal[]> {
 export function crearInstitucionGlobal(nombre: string): Promise<InstitucionGlobal> {
   return api<InstitucionGlobal>('/superadmin/instituciones', 'POST', { nombre });
 }
+
+/** H58: gestión global de usuarios y asignaciones por institución. */
+export interface RolGlobal { institucionId: string; institucion: string; rol: Rol }
+export interface UsuarioGlobal { id: string; email: string; nombre: string | null; activo: boolean; roles: RolGlobal[] }
+export function listarUsuariosGlobales() { return api<UsuarioGlobal[]>('/superadmin/usuarios'); }
+export function crearUsuarioGlobal(datos: { nombre: string; email: string; institucionId: string; rol: Rol }) {
+  return api<UsuarioGlobal>('/superadmin/usuarios','POST',datos);
+}
+export function asignarRolGlobal(id: string, institucionId: string, rol: Rol) {
+  return api(`/superadmin/usuarios/${encodeURIComponent(id)}/roles`,'POST',{institucionId,rol});
+}
+export function quitarRolGlobal(id: string, institucionId: string, rol: Rol) {
+  return api(`/superadmin/usuarios/${encodeURIComponent(id)}/roles`,'DELETE',{institucionId,rol});
+}
