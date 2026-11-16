@@ -103,3 +103,10 @@ footer { text-align:center; padding:1rem 1rem 2rem; font-size:.78rem; color:var(
   .barra { gap:1rem; flex-wrap:wrap; }
   .barra-usuario { gap:.5rem; font-size:.85rem; }
 }
+
+/* H13: consulta de fechas del calendario institucional. */
+.calendario-fechas { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; margin:1.4rem 0; }
+.calendario-fecha { display:flex; flex-direction:column; gap:.55rem; padding:1.3rem; border:1px solid var(--borde); border-radius:12px; background:#f8f9fc; }
+.calendario-fecha strong { font-size:clamp(1rem,2vw,1.25rem); line-height:1.4; text-transform:capitalize; }
+.calendario-fecha time { color:var(--suave); font-size:.84rem; }
+@media (max-width:600px) { .calendario-fechas { grid-template-columns:1fr; } }

@@ -6,6 +6,7 @@ export type DestinoNavegacion =
   | 'usuarios-globales'
   | 'instituciones'
   | 'periodos-academicos'
+  | 'calendario-periodo'
   | 'oferta-academica'
   | 'detalle-seccion'
   | 'modulo-notas'
@@ -19,6 +20,7 @@ type Enlace = { id: DestinoNavegacion; etiqueta: string; sigla: string };
 /** Los enlaces del menú no autorizan acciones: las reglas siguen verificándose en la API. */
 function enlacesPara(roles: Rol[], esSuperadministrador: boolean): Enlace[] {
   const enlaces: Enlace[] = roles.length ? [{ id: 'periodos-academicos', etiqueta: 'Períodos académicos', sigla: 'PA' }] : [];
+  if (roles.length) enlaces.push({ id: 'calendario-periodo', etiqueta: 'Calendario académico', sigla: 'CA' });
   if (esSuperadministrador) enlaces.unshift({ id: 'instituciones', etiqueta: 'Universidades', sigla: 'UN' }, { id: 'usuarios-globales', etiqueta: 'Usuarios y roles', sigla: 'UR' });
   const esAdmin = roles.includes('ADMINISTRADOR');
   const esDocente = roles.some(r => r === 'PROFESOR' || r === 'AYUDANTE');
