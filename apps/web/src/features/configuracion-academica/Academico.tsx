@@ -4,12 +4,13 @@ import { Materiales } from '../materiales/Materiales';
 import { ActividadesEntrega } from '../materiales/ActividadesEntrega';
 import { MisNotas } from '../calificaciones/MisNotas';
 import { Evaluaciones } from '../calificaciones/Evaluaciones';
+import { DistribucionNotas } from '../calificaciones/DistribucionNotas';
 import { Clases } from './Clases';
 import { MiAsistencia } from './MiAsistencia';
 import type { DestinoNavegacion } from '../acceso/MenuLateral';
 type Curso = {id:string;codigo:string;nombre:string};
 type Seccion = {id:string;codigo:string;periodo:string;curso:string;cursoCodigo:string;totalAlumnos:number};
-type Persona = {id:string;nombre:string|null;email:string;rol?:string;estado?:'ACTIVA'|'RETIRADA';retiradoFecha?:string|null;retiradoReferencia?:string|null;retiradoPor?:string|null;retiradoEn?:string|null};
+type Persona = {id:string;nombre:string|null;email:string;rol?:string};
 type Detalle = {equipo:Persona[];nomina:Persona[];eventos:{id:string;accion:string;fecha:string;autor:string}[]};
 type VistaPrevia = {valida:boolean;filas:{fila:number;email:string;motivo:string|null}[]};
 type FilaHistorica = {fila:number; identidad:string; curso:string; escala:string; nota:string; motivo:string|null};
@@ -44,7 +45,7 @@ export function Academico({periodoId,roles,navegacionDestino}:{periodoId:string;
   useEffect(() => {
     // Al abrir un módulo desde el lateral, se muestra la primera sección disponible
     // si todavía no se eligió una. El usuario siempre puede cambiarla después.
-    const requiereSeccion = ['detalle-seccion', 'modulo-notas', 'modulo-materiales', 'modulo-entregas', 'modulo-asistencia'].includes(navegacionDestino);
+    const requiereSeccion = ['detalle-seccion', 'modulo-notas', 'distribucion-notas', 'modulo-materiales', 'modulo-entregas', 'modulo-asistencia'].includes(navegacionDestino);
     if (requiereSeccion && !seleccion && secciones.length) setSeleccion(secciones[0].id);
   }, [navegacionDestino, secciones, seleccion]);
   async function crear(e:FormEvent,tipo:'cursos'|'secciones') {
@@ -74,6 +75,7 @@ export function Academico({periodoId,roles,navegacionDestino}:{periodoId:string;
   const tituloModulo: Record<string, string> = {
     'detalle-seccion': 'Equipo y nómina',
     'modulo-notas': roles.every(r=>r==='ALUMNO') ? 'Mis calificaciones' : 'Evaluaciones y notas',
+    'distribucion-notas': 'Distribución de notas',
     'modulo-materiales': 'Materiales de clase',
     'modulo-entregas': 'Actividades y entregas',
     'modulo-asistencia': roles.every(r=>r==='ALUMNO') ? 'Mi asistencia' : 'Asistencia',
@@ -120,6 +122,7 @@ export function Academico({periodoId,roles,navegacionDestino}:{periodoId:string;
     {seleccion && !secciones.some(s=>s.id===seleccion) && <p className="alerta">Esta sección ya no está disponible en el período seleccionado.</p>}
     {seleccion && secciones.some(s=>s.id===seleccion) && navegacionDestino === 'detalle-seccion' && admin && <GestionSeccion key={seleccion} id={seleccion} nombre={secciones.find(s=>s.id===seleccion)?.curso+' · Sección '+secciones.find(s=>s.id===seleccion)?.codigo} admin={admin} docentes={docentes} actualizar={()=>setVersion(v=>v+1)}/>}
     {seleccion && secciones.some(s=>s.id===seleccion) && navegacionDestino === 'modulo-notas' && (roles.every(r=>r==='ALUMNO') ? <MisNotas key={seleccion} seccionId={seleccion} /> : <Evaluaciones key={seleccion} seccionId={seleccion} roles={roles} />)}
+    {seleccion && secciones.some(s=>s.id===seleccion) && navegacionDestino === 'distribucion-notas' && roles.includes('PROFESOR') && <DistribucionNotas key={seleccion} seccionId={seleccion} />}
     {seleccion && secciones.some(s=>s.id===seleccion) && navegacionDestino === 'modulo-materiales' && <Materiales key={seleccion} seccionId={seleccion} />}
     {seleccion && secciones.some(s=>s.id===seleccion) && navegacionDestino === 'modulo-entregas' && <ActividadesEntrega key={seleccion} seccionId={seleccion} />}
     {seleccion && secciones.some(s=>s.id===seleccion) && navegacionDestino === 'modulo-asistencia' && (roles.every(r=>r==='ALUMNO') ? <MiAsistencia key={seleccion} seccionId={seleccion} /> : <Clases key={seleccion} seccionId={seleccion} roles={roles} />)}
@@ -136,9 +139,6 @@ function GestionSeccion({id,nombre,admin,docentes,actualizar}:{id:string;nombre:
   const [aviso,setAviso]=useState('');
   const [ocupado,setOcupado]=useState(false);
   const [version,setVersion]=useState(0);
-  const [retiroAlumno,setRetiroAlumno]=useState('');
-  const [retiroFecha,setRetiroFecha]=useState('');
-  const [retiroReferencia,setRetiroReferencia]=useState('');
   const url='/academico/secciones/'+id;
   useEffect(()=>{
     let vigente=true;
@@ -163,18 +163,6 @@ function GestionSeccion({id,nombre,admin,docentes,actualizar}:{id:string;nombre:
     }catch(e){setError(mensaje(e));if(accion!=='equipo')setPrevia(null);}
     finally{setOcupado(false);}
   }
-  async function registrarRetiro(e:FormEvent) {
-    e.preventDefault();
-    if (!retiroAlumno || !retiroFecha || !retiroReferencia.trim()) return;
-    if (!window.confirm('¿Confirmar el retiro oficial de este alumno? Sus notas y asistencia se conservarán.')) return;
-    setOcupado(true);setError('');setAviso('');
-    try {
-      await api(url+'/nomina/'+retiroAlumno+'/retiro','POST',{fecha:retiroFecha,referencia:retiroReferencia});
-      setRetiroAlumno('');setRetiroFecha('');setRetiroReferencia('');
-      setAviso('Retiro oficial registrado. Se conservan los antecedentes del alumno.');
-      setVersion(v=>v+1);actualizar();
-    }catch(e){setError(mensaje(e));}finally{setOcupado(false);}
-  }
   return <div id="detalle-seccion" className="detalle-seccion">
     <p className="etiqueta">03 · Equipo y nómina</p><h2>{nombre}</h2>
     {error && <p role="alert" className="alerta">{error}</p>}
@@ -198,21 +186,10 @@ function GestionSeccion({id,nombre,admin,docentes,actualizar}:{id:string;nombre:
       {previa && <div className="preview"><h3>Vista previa de la carga</h3><p>{nombre} · {previa.filas.length} filas</p><div className="tabla-contenedor"><table><thead><tr><th>Fila</th><th>Correo</th><th>Resultado</th></tr></thead><tbody>
         {previa.filas.map(f=><tr key={f.fila}><td>{f.fila}</td><td>{f.email}</td><td>{f.motivo || 'Válido'}</td></tr>)}
       </tbody></table></div><button type="button" disabled={!previa.valida || ocupado} onClick={()=>operar('confirmar')}>Confirmar carga</button></div>}
-      <h3>Nómina de la sección <span className="insignia">{detalle.nomina.filter(a=>a.estado!=='RETIRADA').length} activos</span></h3>
-      {!detalle.nomina.length?<p className="vacio">Todavía no hay alumnos en la nómina.</p>:<div className="tabla-contenedor"><table><thead><tr><th>Nombre</th><th>Correo institucional</th><th>Estado</th><th>Antecedentes del retiro</th></tr></thead><tbody>
-        {detalle.nomina.map(a=><tr key={a.id}><td>{a.nombre || 'Sin nombre'}</td><td>{a.email}</td><td>{a.estado==='RETIRADA'?'Retirado':'Activo'}</td><td>{a.estado==='RETIRADA' ? <span>{a.retiradoFecha ? String(a.retiradoFecha).slice(0,10) : '—'} · {a.retiradoReferencia} · Registrado por {a.retiradoPor || '—'} el {a.retiradoEn ? new Date(a.retiradoEn).toLocaleString('es-CL') : '—'}</span> : '—'}</td></tr>)}
+      <h3>Nómina de la sección <span className="insignia">{detalle.nomina.length}</span></h3>
+      {!detalle.nomina.length?<p className="vacio">Todavía no hay alumnos en la nómina.</p>:<div className="tabla-contenedor"><table><thead><tr><th>Nombre</th><th>Correo institucional</th></tr></thead><tbody>
+        {detalle.nomina.map(a=><tr key={a.id}><td>{a.nombre || 'Sin nombre'}</td><td>{a.email}</td></tr>)}
       </tbody></table></div>}
-      {admin && detalle.nomina.some(a=>a.estado!=='RETIRADA') && <form onSubmit={registrarRetiro} style={{marginTop:'1.5rem'}}>
-        <h3>Registrar retiro oficial (H12)</h3>
-        <p className="texto-suave">El alumno deja la nómina activa. Sus notas, asistencias y antecedentes históricos no se eliminan.</p>
-        <label>Alumno a retirar<select required value={retiroAlumno} onChange={e=>setRetiroAlumno(e.target.value)}>
-          <option value="">Selecciona un alumno activo</option>
-          {detalle.nomina.filter(a=>a.estado!=='RETIRADA').map(a=><option key={a.id} value={a.id}>{a.nombre || a.email} · {a.email}</option>)}
-        </select></label>
-        <label>Fecha oficial del retiro<input type="date" required value={retiroFecha} onChange={e=>setRetiroFecha(e.target.value)}/></label>
-        <label>Referencia de comunicación oficial<input required minLength={1} maxLength={300} value={retiroReferencia} onChange={e=>setRetiroReferencia(e.target.value)} placeholder="Oficio, folio o comunicación institucional"/></label>
-        <button type="submit" disabled={ocupado || !retiroAlumno}>Registrar retiro oficial</button>
-      </form>}
       <details style={{ marginTop: '1.5rem' }}><summary>Actividad de la sección</summary><ul>{detalle.eventos.map(a=><li key={a.id}>{new Date(a.fecha).toLocaleString('es-CL')} · {a.autor} · {a.accion.replaceAll('_',' ').toLowerCase()}</li>)}</ul></details>
     </>}
   </div>;

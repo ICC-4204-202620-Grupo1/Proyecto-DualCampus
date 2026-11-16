@@ -4,13 +4,20 @@ import { UsuarioActual } from '../../common/decorators/usuario-actual.decorator.
 import type { UsuarioSesion } from '../autenticacion/usuario-sesion.js';
 import { EvaluacionesService } from './evaluaciones.service.js';
 import { NotasService } from './notas.service.js';
+import { DistribucionNotasService } from './distribucion-notas.service.js';
 
 @Controller('calificaciones')
 export class EvaluacionesController {
   constructor(
     private readonly servicio: EvaluacionesService,
     private readonly notasServicio: NotasService,
+    private readonly distribucionServicio: DistribucionNotasService,
   ) {}
+
+  @Get('secciones/:id/distribucion-notas')
+  distribucionNotas(@UsuarioActual() u: UsuarioSesion, @InstitucionActiva() i: string, @Param('id') id: string) {
+    return this.distribucionServicio.consultar(u.usuarioId, i, id);
+  }
 
   @Get('secciones/:id/mis-notas')
   propias(
