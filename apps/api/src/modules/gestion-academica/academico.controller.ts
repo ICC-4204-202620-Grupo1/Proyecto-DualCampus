@@ -24,6 +24,8 @@ export class AcademicoController {
   equipo(@UsuarioActual() u: UsuarioSesion,@InstitucionActiva() i: string,@Param('id') s: string,@Body() d: Record<string,unknown>) { return this.servicio.asignar(u.usuarioId,i,s,d ?? {}); }
   @Post('secciones/:id/nomina/validar')
   validar(@UsuarioActual() u: UsuarioSesion,@InstitucionActiva() i: string,@Param('id') s: string,@Body() d: Record<string,unknown>) { return this.servicio.nomina(u.usuarioId,i,s,d ?? {},false); }
+  @Post('secciones/:id/nomina/:alumnoId/retiro')
+  retirarAlumno(@UsuarioActual() u: UsuarioSesion,@InstitucionActiva() i: string,@Param('id') s: string,@Param('alumnoId') a: string,@Body() d: Record<string,unknown>) { return this.servicio.retirarAlumno(u.usuarioId,i,s,a,d ?? {}); }
   @Post('secciones/:id/nomina')
   nomina(@UsuarioActual() u: UsuarioSesion,@InstitucionActiva() i: string,@Param('id') s: string,@Body() d: Record<string,unknown>) { return this.servicio.nomina(u.usuarioId,i,s,d ?? {},true); }
   @Get('secciones/:id/clases')

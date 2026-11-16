@@ -21,7 +21,7 @@ export class ActividadesService {
     const { rows } = await db.query(`SELECT
       EXISTS(SELECT 1 FROM equipo_docente WHERE institucion_id=$2 AND seccion_id=$3 AND usuario_id=$1 AND rol='PROFESOR') AS profesor,
       EXISTS(SELECT 1 FROM equipo_docente WHERE institucion_id=$2 AND seccion_id=$3 AND usuario_id=$1) AS equipo,
-      EXISTS(SELECT 1 FROM matricula WHERE institucion_id=$2 AND seccion_id=$3 AND usuario_id=$1) AS alumno`,
+      EXISTS(SELECT 1 FROM matricula WHERE institucion_id=$2 AND seccion_id=$3 AND usuario_id=$1 AND estado='ACTIVA') AS alumno`,
       [actor, institucion, seccion]);
     return rows[0] as { profesor: boolean; equipo: boolean; alumno: boolean };
   }

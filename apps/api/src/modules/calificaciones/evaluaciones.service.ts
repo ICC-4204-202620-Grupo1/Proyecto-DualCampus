@@ -68,7 +68,7 @@ export class EvaluacionesService {
            AND (
              r.rol = 'ADMINISTRADOR'
              OR EXISTS (SELECT 1 FROM equipo_docente e WHERE e.seccion_id = $3 AND e.usuario_id = $1)
-             OR EXISTS (SELECT 1 FROM matricula m WHERE m.seccion_id = $3 AND m.usuario_id = $1)
+             OR EXISTS (SELECT 1 FROM matricula m WHERE m.seccion_id = $3 AND m.usuario_id = $1 AND m.estado='ACTIVA')
            )`,
         [actor, institucion, sid],
       );
@@ -221,7 +221,7 @@ export class EvaluacionesService {
          FROM matricula m
          JOIN usuario u ON u.id = m.usuario_id
          LEFT JOIN nota n ON n.evaluacion_id = $1 AND n.usuario_id = u.id
-         WHERE m.seccion_id = $2
+         WHERE m.seccion_id = $2 AND m.estado='ACTIVA'
            AND (n.id IS NULL OR NOT (
              (n.es_ausente = true AND n.valor IS NULL)
              OR (n.es_ausente = false AND n.valor BETWEEN 1.0 AND 7.0)
@@ -325,7 +325,7 @@ export class EvaluacionesService {
       const pendientes = await db.query(
         `SELECT 1 FROM matricula m LEFT JOIN nota n ON n.evaluacion_id=$1 AND n.usuario_id=m.usuario_id
          JOIN evaluacion e ON e.id=$1
-         WHERE m.seccion_id=$2 AND (n.id IS NULL OR
+         WHERE m.seccion_id=$2 AND m.estado='ACTIVA' AND (n.id IS NULL OR
            NOT COALESCE((n.es_ausente AND n.valor IS NULL) OR
              (NOT n.es_ausente AND n.valor BETWEEN e.escala_minima AND e.escala_maxima), false)) LIMIT 1`,
         [eid, evaluacion.seccion_id],
