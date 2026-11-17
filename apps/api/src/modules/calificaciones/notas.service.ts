@@ -2,6 +2,7 @@ import { BadRequestException, ConflictException, ForbiddenException, Injectable,
 import type { PoolClient } from 'pg';
 import { ContextoInstitucion } from '../../database/contexto-institucion.js';
 import { AutorizacionService } from '../autorizacion/autorizacion.service.js';
+import { AvisosCorreccionService } from './avisos-correccion.service.js';
 
 type Datos = Record<string, unknown>;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -22,6 +23,7 @@ export class NotasService {
   constructor(
     private readonly contexto: ContextoInstitucion,
     private readonly autorizacion: AutorizacionService,
+    private readonly avisosCorreccion: AvisosCorreccionService,
   ) {}
 
   private async ejecutar<T>(institucion: string, fn: (db: PoolClient) => Promise<T>): Promise<T> {
@@ -276,7 +278,7 @@ export class NotasService {
       throw new BadRequestException('La nota debe ser un número válido con un máximo de un decimal');
     }
     const valorNuevo = dto.valor;
-    return this.ejecutar(institucion, async db => {
+    const resultado = await this.ejecutar(institucion, async db => {
       const ev = await db.query('SELECT estado, seccion_id, escala_minima, escala_maxima FROM evaluacion WHERE id=$1 FOR UPDATE',[eid]);
       if (!ev.rowCount) throw new NotFoundException('Evaluación no encontrada');
       const evaluacion = ev.rows[0];
@@ -301,12 +303,28 @@ export class NotasService {
         `UPDATE nota SET valor=$2, es_ausente=false, modificado_por=$3, actualizado_en=clock_timestamp()
          WHERE id=$1 RETURNING valor, actualizado_en AS "actualizadoEn"`, [nota.id,valorNuevo,actor],
       );
-      await this.registrar(db,institucion,actor,eid,'CORREGIR_NOTA_PUBLICADA',{
-        alumnoId:aid, notaId:nota.id, valorPrevio:previo, valorNuevo,
-        ausentePrevio:nota.es_ausente, ausenteNuevo:false, motivo, referencia,
-      });
-      return { alumnoId:aid, valor:valorNuevo, esAusente:false, actualizadoEn:rows[0].actualizadoEn };
+      // H55: el evento y el aviso quedan en la misma transacción que la corrección.
+      // Si falla cualquiera de estas escrituras, no se confirma una corrección parcial.
+      const evento = await db.query<{ id: string }>(
+        `INSERT INTO evento_academico(institucion_id,actor_id,recurso_id,accion,datos)
+         VALUES ($1,$2,$3,'CORREGIR_NOTA_PUBLICADA',$4) RETURNING id`,
+        [institucion,actor,eid,JSON.stringify({
+          alumnoId:aid, notaId:nota.id, valorPrevio:previo, valorNuevo,
+          ausentePrevio:nota.es_ausente, ausenteNuevo:false, motivo, referencia,
+        })],
+      );
+      const correo = await db.query<{ email: string }>(
+        `SELECT email FROM usuario WHERE id=$1`, [aid]);
+      const aviso = await db.query<{ id: string }>(
+        `INSERT INTO aviso_correo(institucion_id,evento_id,destinatario_id,destinatario_email,tipo)
+         VALUES($1,$2,$3,$4,'CORRECCION_NOTA') RETURNING id`,
+        [institucion,evento.rows[0].id,aid,correo.rows[0].email],
+      );
+      return { nota: { alumnoId:aid, valor:valorNuevo, esAusente:false, actualizadoEn:rows[0].actualizadoEn }, avisoId: aviso.rows[0].id };
     });
+    // CA3: después del COMMIT; un fallo de correo no revierte ni oculta la nota.
+    await this.avisosCorreccion.despachar(institucion, resultado.avisoId);
+    return resultado.nota;
   }
 
 }
