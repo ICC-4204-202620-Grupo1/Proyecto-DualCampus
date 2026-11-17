@@ -4,6 +4,7 @@ import { Academico } from './Academico';
 import type { DestinoNavegacion } from '../acceso/MenuLateral';
 import { HistorialAcademico } from '../historial-academico/HistorialAcademico';
 import { CalendarioPeriodo } from './CalendarioPeriodo';
+import { IndicadoresInstitucionales } from '../reporteria/IndicadoresInstitucionales';
 
 export function Periodos({roles,navegacionDestino}:{roles:Rol[];navegacionDestino:DestinoNavegacion}) {
   const [periodos,setPeriodos]=useState<Periodo[]>([]);
@@ -30,6 +31,7 @@ export function Periodos({roles,navegacionDestino}:{roles:Rol[];navegacionDestin
   const vistaPeriodos = navegacionDestino === 'periodos-academicos';
   const vistaCalendario = navegacionDestino === 'calendario-periodo';
   const vistaHistorial = navegacionDestino === 'historial-academico';
+  const vistaIndicadores = navegacionDestino === 'indicadores-institucionales';
   return <>
     {!vistaHistorial && !vistaCalendario && <section id="periodos-academicos" className="panel"><p className="etiqueta">01 · Calendario académico</p><h2>{vistaPeriodos ? 'Períodos académicos' : 'Período de trabajo'}</h2>
       {vistaPeriodos && roles.includes('ADMINISTRADOR') && <form className="formulario-fila" onSubmit={enviar}>
@@ -45,7 +47,8 @@ export function Periodos({roles,navegacionDestino}:{roles:Rol[];navegacionDestin
     </section>}
     {vistaCalendario && <CalendarioPeriodo periodos={periodos} seleccionado={seleccionado} cargando={cargando} error={error} onSeleccionar={setActivo} onReintentar={()=>setVersion(v=>v+1)} />}
     {vistaHistorial && roles.includes('ALUMNO') && <HistorialAcademico />}
-    {!vistaPeriodos && !vistaHistorial && !vistaCalendario && activo && roles.some(r=>['ADMINISTRADOR','PROFESOR','AYUDANTE','ALUMNO'].includes(r)) && <Academico key={activo} periodoId={activo} roles={roles} navegacionDestino={navegacionDestino}/>}
-    {vistaPeriodos && roles.every(r=>r==='DIRECTOR') && <section className="panel"><h2>Consulta institucional</h2><p>Puedes consultar el calendario académico. La reportería agregada se incorporará en una próxima iteración.</p></section>}
+    {vistaIndicadores && activo && roles.includes('DIRECTOR') && <IndicadoresInstitucionales key={activo} periodoId={activo} />}
+    {!vistaPeriodos && !vistaHistorial && !vistaCalendario && !vistaIndicadores && activo && roles.some(r=>['ADMINISTRADOR','PROFESOR','AYUDANTE','ALUMNO'].includes(r)) && <Academico key={activo} periodoId={activo} roles={roles} navegacionDestino={navegacionDestino}/>}
+    {vistaPeriodos && roles.every(r=>r==='DIRECTOR') && <section className="panel"><h2>Consulta institucional</h2><p>Puedes consultar el calendario académico y, en «Indicadores institucionales», las cifras agregadas de cada período.</p></section>}
   </>;
 }
