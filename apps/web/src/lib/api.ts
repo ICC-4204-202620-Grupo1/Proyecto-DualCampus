@@ -119,7 +119,11 @@ export async function crearPeriodo(datos: { nombre: string; fechaInicio: string;
 
 /** Operaciones del recorrido académico; todos los datos se validan nuevamente en la API. */
 export async function api<T>(ruta:string,method='GET',datos?:unknown):Promise<T> {
-  const res=await fetch(API_URL+ruta,{
+  const rutaFinal = ruta.replace(
+  /^\/academico\/secciones\/([^/]+)\/asistencia-agregada$/,
+  '/reporteria/secciones/$1/asistencia-agregada',
+  );
+  const res = await fetch(API_URL + rutaFinal, {
     method,credentials:'include',
     headers:{...contextoHeaders(),...(datos===undefined?{}:{'Content-Type':'application/json'})},
     ...(datos===undefined?{}:{body:JSON.stringify(datos)}),
