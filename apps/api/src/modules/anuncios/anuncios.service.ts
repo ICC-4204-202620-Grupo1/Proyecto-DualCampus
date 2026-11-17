@@ -25,10 +25,18 @@ export class AnunciosService {
   }
 
   async listar(actor: string, institucion: string, seccionId: string) {
-    await this.autorizacion.exigirRol(actor, institucion, 'PROFESOR');
+    await this.autorizacion.exigirRol(actor, institucion, 'PROFESOR', 'ALUMNO');
     const sid = this.validarSeccion(seccionId);
     return this.contexto.ejecutar(institucion, async db => {
-      await this.exigirProfesor(db, actor, sid);
+      const existe = await db.query('SELECT 1 FROM seccion WHERE id=$1', [sid]);
+      if (!existe.rowCount) throw new NotFoundException('Sección no encontrada');
+      const acceso = await db.query(
+        `SELECT 1 FROM equipo_docente WHERE seccion_id=$1 AND usuario_id=$2 AND rol='PROFESOR'
+         UNION ALL
+         SELECT 1 FROM matricula WHERE seccion_id=$1 AND usuario_id=$2 AND estado='ACTIVA'
+         LIMIT 1`, [sid, actor],
+      );
+      if (!acceso.rowCount) throw new ForbiddenException('No tienes acceso a los anuncios de esta sección');
       const { rows } = await db.query(
         `SELECT a.id,a.titulo,a.mensaje,a.publicado_en AS "publicadoEn",
                 COALESCE(NULLIF(u.nombre,''),u.email) AS autor

@@ -3,7 +3,7 @@ import { api } from '../../lib/api';
 
 type Anuncio = { id: string; titulo: string; mensaje: string; autor: string; publicadoEn: string };
 
-export function AnunciosSeccion({ seccionId }: { seccionId: string }) {
+export function AnunciosSeccion({ seccionId, puedePublicar }: { seccionId: string; puedePublicar: boolean }) {
   const [anuncios, setAnuncios] = useState<Anuncio[]>([]);
   const [titulo, setTitulo] = useState('');
   const [mensaje, setMensaje] = useState('');
@@ -34,12 +34,12 @@ export function AnunciosSeccion({ seccionId }: { seccionId: string }) {
   }
 
   return <section id="modulo-anuncios" aria-label="Anuncios de la sección">
-    <form onSubmit={publicar}>
+    {puedePublicar && <form onSubmit={publicar}>
       <h3>Publicar anuncio</h3>
       <label>Título<input required maxLength={200} value={titulo} onChange={e => setTitulo(e.target.value)} /></label>
       <label>Mensaje<textarea required maxLength={5000} rows={5} value={mensaje} onChange={e => setMensaje(e.target.value)} /></label>
       <button disabled={guardando}>{guardando ? 'Publicando…' : 'Publicar anuncio'}</button>
-    </form>
+    </form>}
     {error && <p className="alerta" role="alert">{error}</p>}
     {aviso && <p className="exito" role="status">{aviso}</p>}
     <h3>Anuncios publicados</h3>

@@ -39,9 +39,9 @@ function enlacesPara(roles: Rol[], esSuperadministrador: boolean): Enlace[] {
       { id: 'modulo-entregas', etiqueta: 'Actividades y entregas', sigla: 'AE' },
       { id: 'modulo-asistencia', etiqueta: esAlumno ? 'Mi asistencia' : 'Asistencia', sigla: 'AS' },
     );
+    if (roles.includes('PROFESOR') || esAlumno) enlaces.push({ id: 'modulo-anuncios', etiqueta: 'Anuncios de sección', sigla: 'AN' });
     if (roles.includes('PROFESOR')) {
       enlaces.push(
-        { id: 'modulo-anuncios', etiqueta: 'Anuncios de sección', sigla: 'AN' },
         {
           id: 'distribucion-notas',
           etiqueta: 'Distribución de notas',
