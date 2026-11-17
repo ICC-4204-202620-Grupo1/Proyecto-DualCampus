@@ -10,6 +10,7 @@ import { MiAsistencia } from './MiAsistencia';
 import type { DestinoNavegacion } from '../acceso/MenuLateral';
 import { AsistenciaAgregada } from './AsistenciaAgregada';
 import { AnunciosSeccion } from '../anuncios/AnunciosSeccion';
+import { leerPreferencia, guardarPreferencia } from '../acceso/preferencias';
 type Curso = {id:string;codigo:string;nombre:string};
 type Seccion = {id:string;codigo:string;periodo:string;curso:string;cursoCodigo:string;totalAlumnos:number};
 type Persona = {id:string;nombre:string|null;email:string;rol?:string};
@@ -18,12 +19,13 @@ type VistaPrevia = {valida:boolean;filas:{fila:number;email:string;motivo:string
 type FilaHistorica = {fila:number; identidad:string; curso:string; escala:string; nota:string; motivo:string|null};
 const mensaje = (e:unknown) => e instanceof Error ? e.message : 'No se pudo completar la operación';
 
-export function Academico({periodoId,roles,navegacionDestino}:{periodoId:string;roles:Rol[];navegacionDestino:DestinoNavegacion}) {
+export function Academico({periodoId,roles,navegacionDestino,usuarioId,institucionId,onNavegar}:{periodoId:string;roles:Rol[];navegacionDestino:DestinoNavegacion;usuarioId:string;institucionId:string;onNavegar:(destino:DestinoNavegacion)=>void}) {
+  const claveSeccion = usuarioId + ':' + institucionId + ':' + periodoId + ':seccion';
   const admin=roles.includes('ADMINISTRADOR');
   const [cursos,setCursos]=useState<Curso[]>([]);
   const [secciones,setSecciones]=useState<Seccion[]>([]);
   const [docentes,setDocentes]=useState<Persona[]>([]);
-  const [seleccion,setSeleccion]=useState('');
+  const [seleccion,setSeleccion]=useState(()=>leerPreferencia(claveSeccion));
   const [curso,setCurso]=useState({codigo:'',nombre:''});
   const [seccion,setSeccion]=useState({cursoId:'',codigo:''});
   const [error,setError]=useState('');
@@ -44,10 +46,12 @@ export function Academico({periodoId,roles,navegacionDestino}:{periodoId:string;
       .catch(e=>{if(vigente)setError(mensaje(e));}).finally(()=>{if(vigente)setCargando(false);});
     return ()=>{vigente=false;};
   },[periodoId,admin,version]);
+  useEffect(()=>{ if(seleccion) guardarPreferencia(claveSeccion,seleccion); },[seleccion,claveSeccion]);
+  useEffect(()=>{ if(secciones.length && seleccion && !secciones.some(s=>s.id===seleccion)) setSeleccion(''); },[secciones,seleccion]);
   useEffect(() => {
     // Al abrir un módulo desde el lateral, se muestra la primera sección disponible
     // si todavía no se eligió una. El usuario siempre puede cambiarla después.
-    const requiereSeccion = ['detalle-seccion', 'modulo-notas', 'distribucion-notas', 'modulo-materiales', 'modulo-entregas', 'modulo-asistencia', 'asistencia-agregada', 'modulo-anuncios'].includes(navegacionDestino);
+    const requiereSeccion = ['espacio-seccion', 'detalle-seccion', 'modulo-notas', 'distribucion-notas', 'modulo-materiales', 'modulo-entregas', 'modulo-asistencia', 'asistencia-agregada', 'modulo-anuncios'].includes(navegacionDestino);
     if (requiereSeccion && !seleccion && secciones.length) setSeleccion(secciones[0].id);
   }, [navegacionDestino, secciones, seleccion]);
   async function crear(e:FormEvent,tipo:'cursos'|'secciones') {
@@ -75,6 +79,7 @@ export function Academico({periodoId,roles,navegacionDestino}:{periodoId:string;
   }
   const vistaOferta = navegacionDestino === 'oferta-academica';
   const tituloModulo: Record<string, string> = {
+    'espacio-seccion': 'Sección de trabajo',
     'detalle-seccion': 'Equipo y nómina',
     'modulo-notas': roles.every(r=>r==='ALUMNO') ? 'Mis calificaciones' : 'Evaluaciones y notas',
     'distribucion-notas': 'Distribución de notas',
@@ -117,12 +122,32 @@ export function Academico({periodoId,roles,navegacionDestino}:{periodoId:string;
       </tbody></table></div>
     </div>}
     {cargando?<p role="status">Cargando secciones…</p>:!error && !secciones.length?<p className="vacio">No hay secciones disponibles en este período.</p>:
-      vistaOferta ? <div className="tarjetas-secciones">{secciones.map(s=><button type="button" className={'tarjeta-seccion '+(s.id===seleccion?'seleccionada':'')} key={s.id} onClick={()=>setSeleccion(s.id)}>
+      vistaOferta ? <div className="tarjetas-secciones">{secciones.map(s=><button type="button" className={'tarjeta-seccion '+(s.id===seleccion?'seleccionada':'')} key={s.id} onClick={()=>{setSeleccion(s.id);onNavegar('espacio-seccion');}}>
         <span className="etiqueta">{s.cursoCodigo} · Sección {s.codigo}</span><strong>{s.curso}</strong><span>{s.totalAlumnos} alumnos · {s.periodo}</span>
       </button>)}</div> : <label className="selector-periodo">Sección de trabajo<select value={seleccion} onChange={e=>setSeleccion(e.target.value)}>
         <option value="">Selecciona una sección</option>
         {secciones.map(s=><option key={s.id} value={s.id}>{s.cursoCodigo} · {s.curso} · Sección {s.codigo}</option>)}
       </select></label>}
+    {seleccion && secciones.some(s=>s.id===seleccion) && !vistaOferta && <div className="ux-espacio">
+      <p className="etiqueta">Espacio de trabajo · {secciones.find(s=>s.id===seleccion)?.cursoCodigo}</p>
+      <h3>{secciones.find(s=>s.id===seleccion)?.curso} · Sección {secciones.find(s=>s.id===seleccion)?.codigo}</h3>
+      <div className="ux-pestanas" role="navigation" aria-label="Herramientas de la sección">
+        {([
+          ['espacio-seccion','Resumen'],
+          ['modulo-notas', roles.every(r=>r==='ALUMNO') ? 'Mis notas' : 'Notas'],
+          ['modulo-materiales','Materiales'],
+          ['modulo-entregas','Actividades'],
+          ['modulo-asistencia','Asistencia'],
+          ...(admin ? [['detalle-seccion','Nómina']] : []),
+          ...(roles.includes('PROFESOR') ? [['distribucion-notas','Distribución'], ['modulo-anuncios','Anuncios']] : []),
+        ] as [DestinoNavegacion,string][]).map(([id,etiqueta])=><button key={id} type="button" className={'ux-pestana'+(navegacionDestino===id?' ux-pestana-activa':'')} aria-current={navegacionDestino===id?'page':undefined} onClick={()=>onNavegar(id)}>{etiqueta}</button>)}
+      </div>
+    </div>}
+    {seleccion && secciones.some(s=>s.id===seleccion) && navegacionDestino==='espacio-seccion' && <div className="ux-resumen-seccion">
+      <div className="ux-metricas"><div><span>Estudiantes</span><strong>{secciones.find(s=>s.id===seleccion)?.totalAlumnos ?? 0}</strong></div><div><span>Período</span><strong>{secciones.find(s=>s.id===seleccion)?.periodo}</strong></div></div>
+      <p className="texto-suave">Selecciona una pestaña para trabajar con esta sección. No necesitas volver a elegir el curso en cada módulo.</p>
+      <div className="ux-acciones"><button type="button" onClick={()=>onNavegar('modulo-notas')}>Ver calificaciones</button><button type="button" className="ux-boton-secundario" onClick={()=>onNavegar('modulo-materiales')}>Consultar materiales</button></div>
+    </div>}
     {seleccion && !secciones.some(s=>s.id===seleccion) && <p className="alerta">Esta sección ya no está disponible en el período seleccionado.</p>}
     {seleccion && secciones.some(s=>s.id===seleccion) && navegacionDestino === 'detalle-seccion' && admin && <GestionSeccion key={seleccion} id={seleccion} nombre={secciones.find(s=>s.id===seleccion)?.curso+' · Sección '+secciones.find(s=>s.id===seleccion)?.codigo} admin={admin} docentes={docentes} actualizar={()=>setVersion(v=>v+1)}/>}
     {seleccion && secciones.some(s=>s.id===seleccion) && navegacionDestino === 'modulo-notas' && (roles.every(r=>r==='ALUMNO') ? <MisNotas key={seleccion} seccionId={seleccion} /> : <Evaluaciones key={seleccion} seccionId={seleccion} roles={roles} />)}

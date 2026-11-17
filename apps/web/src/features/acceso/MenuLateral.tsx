@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import type { Rol } from '../../lib/api';
 
 export type DestinoNavegacion =
+  | 'inicio'
+  | 'espacio-seccion'
   | 'usuarios-globales'
   | 'instituciones'
   | 'periodos-academicos'
@@ -17,21 +19,21 @@ export type DestinoNavegacion =
   | 'modulo-asistencia'
   | 'modulo-anuncios'
   | 'historial-academico'
-  | 'indicadores-institucionales'
   | 'mi-perfil';
 
-type Enlace = { id: DestinoNavegacion; etiqueta: string; sigla: string };
+type Enlace = { id: DestinoNavegacion; etiqueta: string; sigla: string; grupo?: string };
 
 /** Los enlaces del menú no autorizan acciones: las reglas siguen verificándose en la API. */
 function enlacesPara(roles: Rol[], esSuperadministrador: boolean): Enlace[] {
-  const enlaces: Enlace[] = roles.length ? [{ id: 'periodos-academicos', etiqueta: 'Períodos académicos', sigla: 'PA' }] : [];
-  if (roles.length) enlaces.push({ id: 'calendario-periodo', etiqueta: 'Calendario académico', sigla: 'CA' });
-  if (esSuperadministrador) enlaces.unshift({ id: 'instituciones', etiqueta: 'Universidades', sigla: 'UN' }, { id: 'usuarios-globales', etiqueta: 'Usuarios y roles', sigla: 'UR' });
+  const enlaces: Enlace[] = roles.length ? [{ id: 'inicio', etiqueta: 'Inicio', sigla: 'IN', grupo: 'Principal' }, { id: 'periodos-academicos', etiqueta: 'Períodos académicos', sigla: 'PA', grupo: 'Calendario' }] : [];
+  if (roles.length) enlaces.push({ id: 'calendario-periodo', etiqueta: 'Calendario académico', sigla: 'CA', grupo: 'Calendario' });
+  if (esSuperadministrador) enlaces.unshift({ id: 'instituciones', etiqueta: 'Universidades', sigla: 'UN', grupo: 'Administración global' }, { id: 'usuarios-globales', etiqueta: 'Usuarios y roles', sigla: 'UR' });
   const esAdmin = roles.includes('ADMINISTRADOR');
   const esDocente = roles.some(r => r === 'PROFESOR' || r === 'AYUDANTE');
   const esAlumno = roles.includes('ALUMNO') && !esAdmin && !esDocente;
   if (esAdmin || esDocente || esAlumno) {
-    enlaces.push({ id: 'oferta-academica', etiqueta: esAdmin ? 'Cursos y secciones' : 'Mis secciones', sigla: 'CS' });
+    enlaces.push({ id: 'oferta-academica', etiqueta: esAdmin ? 'Cursos y secciones' : 'Mis secciones', sigla: 'CS', grupo: 'Espacio académico' });
+    enlaces.push({ id: 'espacio-seccion', etiqueta: 'Sección de trabajo', sigla: 'SE' });
     if (esAdmin) enlaces.push({ id: 'detalle-seccion', etiqueta: 'Equipo y nómina', sigla: 'EN' });
     enlaces.push(
       { id: 'modulo-notas', etiqueta: esAlumno ? 'Mis calificaciones' : 'Evaluaciones y notas', sigla: 'NO' },
@@ -56,8 +58,6 @@ function enlacesPara(roles: Rol[], esSuperadministrador: boolean): Enlace[] {
     }
     if (esAlumno) enlaces.push({ id: 'historial-academico', etiqueta: 'Historial académico', sigla: 'HI' });
   }
-  // H48: reportería agregada de la institución, solo para el director.
-  if (roles.includes('DIRECTOR')) enlaces.push({ id: 'indicadores-institucionales', etiqueta: 'Indicadores institucionales', sigla: 'II' });
   // H43: la cuenta personal pertenece a la persona y se consulta desde su perfil.
   if (roles.includes('ALUMNO')) enlaces.push({ id: 'mi-perfil', etiqueta: 'Mi perfil', sigla: 'MP' });
   return enlaces;
@@ -94,15 +94,18 @@ export function MenuLateral({ roles, institucion, destino, onNavegar, abiertoMov
         <button type="button" className="menu-cerrar-movil" onClick={onCerrarMovil} aria-label="Cerrar menú lateral">Cerrar</button>
       </div>
       <nav aria-label="Secciones disponibles">
-        {enlaces.map(enlace => <button key={enlace.id} type="button"
-          className={'menu-enlace' + (destino === enlace.id ? ' menu-enlace-activo' : '')}
-          aria-current={destino === enlace.id ? 'location' : undefined}
-          title={contraido ? enlace.etiqueta : undefined}
-          onClick={() => { onNavegar(enlace.id); onCerrarMovil(); }}>
-          <span className="menu-sigla" aria-hidden="true">{enlace.sigla}</span><span className="menu-texto">{enlace.etiqueta}</span>
-        </button>)}
+        {enlaces.map(enlace => <div key={enlace.id}>
+          {enlace.grupo && <p className="menu-grupo">{enlace.grupo}</p>}
+          <button type="button"
+            className={'menu-enlace' + (destino === enlace.id ? ' menu-enlace-activo' : '')}
+            aria-current={destino === enlace.id ? 'page' : undefined}
+            title={contraido ? enlace.etiqueta : undefined}
+            onClick={() => { onNavegar(enlace.id); onCerrarMovil(); }}>
+            <span className="menu-sigla" aria-hidden="true">{enlace.sigla}</span><span className="menu-texto">{enlace.etiqueta}</span>
+          </button>
+        </div>)}
       </nav>
-      {!contraido && <p className="menu-ayuda">Para cambiar de curso, selecciona su sección en la vista principal.</p>}
+      {!contraido && <p className="menu-ayuda">El período y la sección se conservan mientras navegas por la institución.</p>}
     </aside>
   </>;
 }
