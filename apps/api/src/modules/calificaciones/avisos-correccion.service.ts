@@ -16,7 +16,11 @@ export class AvisosCorreccionService {
           `SELECT destinatario_email, estado FROM aviso_correo WHERE id=$1 FOR UPDATE`, [avisoId]);
         return r.rows[0];
       });
-      if (!aviso || aviso.estado !== 'PENDIENTE') return;
+      if (!aviso) {
+        this.logger.warn(`H55: aviso ${avisoId} no encontrado para la institucion activa`);
+        return;
+      }
+      if (aviso.estado !== 'PENDIENTE') return;
 
       const apiKey = process.env.AVISOS_BREVO_API_KEY?.trim();
       const remitenteEmail = process.env.AVISOS_CORREO_REMITENTE?.trim();
@@ -43,18 +47,33 @@ export class AvisosCorreccionService {
             signal: AbortSignal.timeout(5000),
           });
           enviado = respuesta.ok;
-          if (!respuesta.ok) error = `Brevo: HTTP ${respuesta.status}`;
+          if (!respuesta.ok) {
+            // La API responde con un JSON que contiene el motivo del rechazo.
+            // Registrar solo codigo/mensaje, nunca credenciales ni cabeceras.
+            let detalle = '';
+            try {
+              const cuerpo: unknown = await respuesta.json();
+              if (cuerpo && typeof cuerpo === 'object') {
+                const dato = cuerpo as { code?: unknown; message?: unknown };
+                const codigo = typeof dato.code === 'string' ? dato.code : '';
+                const mensaje = typeof dato.message === 'string' ? dato.message : '';
+                detalle = [codigo, mensaje].filter(Boolean).join(': ');
+              }
+            } catch { /* La respuesta puede no contener JSON. */ }
+            error = `Brevo: HTTP ${respuesta.status}${detalle ? ' - ' + detalle : ''}`;
+          }
         } catch (e) {
           error = e instanceof Error ? e.message : 'Error de transporte';
         }
       }
-      await this.contexto.ejecutar(institucion, async db => {
-        await db.query(`UPDATE aviso_correo
+      const actualizados = await this.contexto.ejecutar(institucion, async db => {
+        return db.query(`UPDATE aviso_correo
           SET estado=$2, intentos=intentos+1, ultimo_intento_en=now(),
               enviado_en=CASE WHEN $2='ENVIADO' THEN now() ELSE enviado_en END,
               ultimo_error=$3 WHERE id=$1 AND estado='PENDIENTE'`,
           [avisoId, enviado ? 'ENVIADO' : 'FALLIDO', enviado ? null : error.slice(0, 250)]);
       });
+      if (!actualizados.rowCount) this.logger.warn(`H55: aviso ${avisoId} sin actualizacion de estado`);
       if (!enviado) this.logger.warn(`H55: aviso ${avisoId} no enviado: ${error}`);
     } catch (e) {
       this.logger.error('H55: no fue posible procesar el aviso', e instanceof Error ? e.stack : String(e));
