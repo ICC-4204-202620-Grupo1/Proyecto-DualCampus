@@ -9,6 +9,7 @@ import { Clases } from './Clases';
 import { MiAsistencia } from './MiAsistencia';
 import type { DestinoNavegacion } from '../acceso/MenuLateral';
 import { AsistenciaAgregada } from './AsistenciaAgregada';
+import { AnunciosSeccion } from '../anuncios/AnunciosSeccion';
 type Curso = {id:string;codigo:string;nombre:string};
 type Seccion = {id:string;codigo:string;periodo:string;curso:string;cursoCodigo:string;totalAlumnos:number};
 type Persona = {id:string;nombre:string|null;email:string;rol?:string};
@@ -46,7 +47,7 @@ export function Academico({periodoId,roles,navegacionDestino}:{periodoId:string;
   useEffect(() => {
     // Al abrir un módulo desde el lateral, se muestra la primera sección disponible
     // si todavía no se eligió una. El usuario siempre puede cambiarla después.
-    const requiereSeccion = ['detalle-seccion', 'modulo-notas', 'distribucion-notas', 'modulo-materiales', 'modulo-entregas', 'modulo-asistencia', 'asistencia-agregada'].includes(navegacionDestino);
+    const requiereSeccion = ['detalle-seccion', 'modulo-notas', 'distribucion-notas', 'modulo-materiales', 'modulo-entregas', 'modulo-asistencia', 'asistencia-agregada', 'modulo-anuncios'].includes(navegacionDestino);
     if (requiereSeccion && !seleccion && secciones.length) setSeleccion(secciones[0].id);
   }, [navegacionDestino, secciones, seleccion]);
   async function crear(e:FormEvent,tipo:'cursos'|'secciones') {
@@ -81,6 +82,7 @@ export function Academico({periodoId,roles,navegacionDestino}:{periodoId:string;
     'modulo-entregas': 'Actividades y entregas',
     'asistencia-agregada': 'Asistencia agregada por sección',
     'modulo-asistencia': roles.every(r=>r==='ALUMNO') ? 'Mi asistencia' : 'Asistencia',
+    'modulo-anuncios': 'Anuncios de sección',
   };
   return <section id="oferta-academica" className="panel">
     {!vistaOferta && <div className="encabezado-seccion"><div><p className="etiqueta">Módulo académico</p><h2>{tituloModulo[navegacionDestino] ?? 'Sección'}</h2></div></div>}
@@ -128,6 +130,7 @@ export function Academico({periodoId,roles,navegacionDestino}:{periodoId:string;
     {seleccion && secciones.some(s=>s.id===seleccion) && navegacionDestino === 'modulo-materiales' && <Materiales key={seleccion} seccionId={seleccion} />}
     {seleccion && secciones.some(s=>s.id===seleccion) && navegacionDestino === 'modulo-entregas' && <ActividadesEntrega key={seleccion} seccionId={seleccion} />}
     {seleccion && secciones.some(s=>s.id===seleccion) && navegacionDestino === 'modulo-asistencia' && (roles.every(r=>r==='ALUMNO') ? <MiAsistencia key={seleccion} seccionId={seleccion} /> : <Clases key={seleccion} seccionId={seleccion} roles={roles} />)}
+    {seleccion && secciones.some(s=>s.id===seleccion) && navegacionDestino === 'modulo-anuncios' && roles.includes('PROFESOR') && <AnunciosSeccion key={seleccion} seccionId={seleccion} />}
     {seleccion &&
         secciones.some(s => s.id === seleccion) &&
         navegacionDestino === 'asistencia-agregada' &&
