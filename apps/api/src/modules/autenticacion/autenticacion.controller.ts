@@ -5,6 +5,8 @@ import { Publico } from '../../common/decorators/publico.decorator.js';
 import { UsuarioActual } from '../../common/decorators/usuario-actual.decorator.js';
 import { CONFIG, Config } from '../../config/config.js';
 import { AutenticacionService } from './autenticacion.service.js';
+import { volverAlPerfil } from './cuenta-personal.controller.js';
+import { CuentaPersonalService, ResultadoVinculacionPersonal } from './cuenta-personal.service.js';
 import { GoogleOidcAdapter } from './google-oidc.adapter.js';
 import { COOKIE_OIDC, COOKIE_SESION, SesionService } from './sesion.service.js';
 import type { UsuarioSesion } from './usuario-sesion.js';
@@ -17,6 +19,7 @@ export class AutenticacionController {
     private readonly google: GoogleOidcAdapter,
     private readonly autenticacion: AutenticacionService,
     private readonly sesion: SesionService,
+    private readonly cuentaPersonal: CuentaPersonalService,
     @Inject(CONFIG) private readonly config: Config,
   ) {}
 
@@ -53,7 +56,10 @@ export class AutenticacionController {
     res.redirect(`${this.config.appUrl}/`);
   }
 
-  /** Google vuelve aquí. Solo una cuenta habilitada recibe la cookie de sesión. */
+  /**
+   * Google vuelve aquí. Solo una cuenta habilitada recibe la cookie de sesión.
+   * Si el flujo era una vinculación de cuenta personal (H43), no se emite ni se borra sesión.
+   */
   @Publico()
   @Get('google/callback')
   async callback(
@@ -66,7 +72,11 @@ export class AutenticacionController {
     res.clearCookie(COOKIE_OIDC, this.sesion.opcionesBorrado());
 
     if (!oidc || !code || !state || state !== oidc.state) {
+      if (oidc?.proposito === 'vincular') return volverAlPerfil(res, this.config, 'fallo');
       return this.rechazar(res, 'fallo_login');
+    }
+    if (oidc.proposito === 'vincular') {
+      return volverAlPerfil(res, this.config, await this.completarVinculacion(oidc.usuarioId!, oidc.nonce, code, req));
     }
 
     let usuario: UsuarioSesion | null;
@@ -95,6 +105,26 @@ export class AutenticacionController {
   @HttpCode(204)
   logout(@Res({ passthrough: true }) res: Response) {
     res.clearCookie(COOKIE_SESION, this.sesion.opcionesBorrado());
+  }
+
+  /** H43 · CA1: exige la misma sesión institucional vigente que inició el flujo. */
+  private async completarVinculacion(
+    usuarioId: string,
+    nonce: string,
+    code: string,
+    req: Request,
+  ): Promise<ResultadoVinculacionPersonal> {
+    const sesion = this.sesion.verificar(req.cookies?.[COOKIE_SESION]);
+    if (!sesion || sesion.usuarioId !== usuarioId) return 'sesion_requerida';
+    try {
+      const identidad = await this.google.canjearCodigo(code, nonce);
+      const resultado = await this.cuentaPersonal.vincular(usuarioId, identidad);
+      if (resultado !== 'vinculada') this.log.warn(`Vinculación de cuenta personal rechazada: ${resultado}`);
+      return resultado;
+    } catch (error) {
+      this.log.error(`Fallo al vincular la cuenta personal: ${(error as Error).message}`);
+      return 'fallo';
+    }
   }
 
   private rechazar(res: Response, motivo: 'no_autorizado' | 'fallo_login') {
