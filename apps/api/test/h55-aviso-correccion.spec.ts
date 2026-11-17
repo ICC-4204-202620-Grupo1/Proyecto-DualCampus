@@ -10,7 +10,7 @@ describe('H55 - aviso de corrección de nota', () => {
     vi.unstubAllGlobals();
   });
 
-  function preparar(estado = 'PENDIENTE') {
+  function preparar(estado = 'ENVIANDO') {
     const query = vi.fn()
       .mockResolvedValueOnce({ rows: [{ destinatario_email: 'alumno@example.org', estado }] })
       .mockResolvedValueOnce({ rowCount: 1 });
