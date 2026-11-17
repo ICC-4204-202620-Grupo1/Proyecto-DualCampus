@@ -180,6 +180,28 @@ export async function descargarEntrega(seccionId: string, actividadId: string, e
   }
 }
 
+/** H50: descarga los indicadores actuales con filtros y autorización revalidados por la API. */
+export async function descargarReporteAgregado(periodoId: string, facultad: string | null): Promise<void> {
+  const params = new URLSearchParams({ periodoId });
+  if (facultad) params.set('facultad', facultad);
+  const res = await fetch(`${API_URL}/reporteria/indicadores-institucionales/exportar?${params}`, {
+    credentials: 'include', headers: contextoHeaders(),
+  });
+  if (!res.ok) { await cuerpoOError(res); return; }
+  const archivo = await res.blob();
+  const url = URL.createObjectURL(archivo);
+  try {
+    const enlace = document.createElement('a');
+    enlace.href = url;
+    enlace.download = `reporte-agregado-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(enlace);
+    enlace.click();
+    enlace.remove();
+  } finally {
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+}
+
 /** H57: listado global y alta, solo para el superadministrador. */
 export interface InstitucionGlobal { id: string; nombre: string; activa: boolean; creadoEn: string }
 export function listarInstitucionesGlobales(): Promise<InstitucionGlobal[]> {
