@@ -13,14 +13,14 @@ export class AvisosCorreccionService {
     try {
       const aviso = await this.contexto.ejecutar(institucion, async db => {
         const r = await db.query<{ destinatario_email: string; estado: string; tipo: string }>(
-          `SELECT destinatario_email, estado, tipo FROM aviso_correo WHERE id=$1 FOR UPDATE`, [avisoId]);
+          `UPDATE aviso_correo SET estado='ENVIANDO' WHERE id=$1 AND estado='PENDIENTE'
+           RETURNING destinatario_email, estado, tipo`, [avisoId]);
         return r.rows[0];
       });
       if (!aviso) {
-        this.logger.warn(`H55: aviso ${avisoId} no encontrado para la institucion activa`);
         return;
       }
-      if (aviso.estado !== 'PENDIENTE') return;
+      if (aviso.estado !== 'ENVIANDO') return;
 
       const apiKey = process.env.AVISOS_BREVO_API_KEY?.trim();
       const remitenteEmail = process.env.AVISOS_CORREO_REMITENTE?.trim();
@@ -71,11 +71,15 @@ export class AvisosCorreccionService {
         }
       }
       const actualizados = await this.contexto.ejecutar(institucion, async db => {
-        return db.query(`UPDATE aviso_correo
+        const actualizado = await db.query<{ intentos: number }>(`UPDATE aviso_correo
           SET estado=$2, intentos=intentos+1, ultimo_intento_en=now(),
               enviado_en=CASE WHEN $2='ENVIADO' THEN now() ELSE enviado_en END,
-              ultimo_error=$3 WHERE id=$1 AND estado='PENDIENTE'`,
+              ultimo_error=$3 WHERE id=$1 AND estado='ENVIANDO' RETURNING intentos`,
           [avisoId, enviado ? 'ENVIADO' : 'FALLIDO', enviado ? null : error.slice(0, 250)]);
+        if (actualizado.rows?.[0]) await db.query(`INSERT INTO intento_aviso_correo
+          (institucion_id,aviso_id,numero,resultado,error) VALUES($1,$2,$3,$4,$5)`,
+          [institucion, avisoId, actualizado.rows[0].intentos, enviado ? 'ENVIADO' : 'FALLIDO', enviado ? null : error.slice(0, 250)]);
+        return actualizado;
       });
       if (!actualizados.rowCount) this.logger.warn(`H55: aviso ${avisoId} sin actualizacion de estado`);
       if (!enviado) this.logger.warn(`H55: aviso ${avisoId} no enviado: ${error}`);

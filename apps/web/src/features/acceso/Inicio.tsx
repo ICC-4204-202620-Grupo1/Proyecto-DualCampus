@@ -6,6 +6,7 @@ import { SelectorInstitucion } from './SelectorInstitucion';
 import { Instituciones } from '../superadministracion/Instituciones';
 import { Usuarios } from '../superadministracion/Usuarios';
 import { leerResultadoVinculacion, MiPerfil } from '../perfil/MiPerfil';
+import { EstadoAvisos } from '../calificaciones/EstadoAvisos';
 
 export function Inicio({usuario,onSalir,onCambio}:{usuario:UsuarioSesion;onSalir:()=>void;onCambio:(u:UsuarioSesion)=>void}) {
   const [contexto,setContexto]=useState<ContextoInstitucion|null>(null);
@@ -49,9 +50,10 @@ export function Inicio({usuario,onSalir,onCambio}:{usuario:UsuarioSesion;onSalir
         {usuario.esSuperadministrador && destino === 'instituciones' && <Instituciones />}
         {usuario.esSuperadministrador && destino === 'usuarios-globales' && <Usuarios />}
         {esAlumno && destino === 'mi-perfil' && <MiPerfil usuario={usuario} resultado={resultadoVinculacion} />}
+        {visible && contexto && destino === 'estado-avisos' && contexto.roles.includes('ADMINISTRADOR') && <EstadoAvisos />}
         {error && <p className="alerta" role="alert">{error} <button onClick={()=>setVersion(v=>v+1)}>Reintentar</button></p>}
         {usuario.institucionActivaId && (!visible || !contexto) && !error && <p role="status">Cargando institución…</p>}
-        {visible && contexto && destino !== 'instituciones' && destino !== 'usuarios-globales' && destino !== 'mi-perfil' && <><div className="contexto"><strong>{contexto.institucion}</strong><span>{contexto.roles.map(r=>r.toLowerCase()).join(' · ')}</span></div>
+        {visible && contexto && destino !== 'instituciones' && destino !== 'usuarios-globales' && destino !== 'mi-perfil' && destino !== 'estado-avisos' && <><div className="contexto"><strong>{contexto.institucion}</strong><span>{contexto.roles.map(r=>r.toLowerCase()).join(' · ')}</span></div>
           <Periodos key={contexto.institucionActivaId} roles={contexto.roles} navegacionDestino={destino}/></>}
       </main>
     </div>
