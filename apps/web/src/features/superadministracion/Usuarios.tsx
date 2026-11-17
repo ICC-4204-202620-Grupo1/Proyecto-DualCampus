@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { asignarRolGlobal, crearUsuarioGlobal, listarInstitucionesGlobales, listarUsuariosGlobales, quitarRolGlobal,
   type InstitucionGlobal, type Rol, type UsuarioGlobal } from '../../lib/api';
+import { CargaMasivaUsuarios } from './CargaMasivaUsuarios';
 const roles: Rol[] = ['ADMINISTRADOR','PROFESOR','AYUDANTE','ALUMNO','DIRECTOR'];
 const errorDe = (e:unknown) => e instanceof Error ? e.message : 'Operación fallida';
 
@@ -52,6 +53,7 @@ export function Usuarios() {
         <button disabled={ocupado||!usuarioId||!institucionId}>Asignar rol</button>
       </form>
     </div>
+    <CargaMasivaUsuarios universidades={universidades} onCargado={()=>setVersion(v=>v+1)}/>
     <h3>Usuarios registrados</h3>
     {cargando?<p role="status">Cargando usuarios…</p>:!usuarios.length?<p className="vacio">Todavía no hay usuarios.</p>:
       <div className="tabla-contenedor"><table><thead><tr><th>Nombre</th><th>Correo</th><th>Roles por universidad</th></tr></thead><tbody>
