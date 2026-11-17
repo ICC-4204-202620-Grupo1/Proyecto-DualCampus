@@ -20,6 +20,9 @@ type Respuesta = {
   institucion: Indicadores;
   cursos: (Indicadores & { codigo: string; nombre: string })[];
 };
+type Programacion = { id: string; periodoId: string; periodo: string; facultad: string | null;
+  frecuencia: string; destinoEmail: string; estado: string; proximaEjecucion: string;
+  ultimoEstado: string | null; ultimoIntento: string | null; ultimoError: string | null };
 
 const MOTIVOS: Record<Motivo, string> = {
   grupo_pequeno: 'Oculto: menos de cinco alumnos',
@@ -45,6 +48,17 @@ export function IndicadoresInstitucionales({ periodoId }: { periodoId: string })
   const [version, setVersion] = useState(0);
   const [exportando, setExportando] = useState(false);
   const [errorDescarga, setErrorDescarga] = useState('');
+  const [programaciones, setProgramaciones] = useState<Programacion[]>([]);
+  const [frecuencia, setFrecuencia] = useState('SEMANAL');
+  const [guardando, setGuardando] = useState(false);
+  const [errorProgramacion, setErrorProgramacion] = useState('');
+
+  async function actualizarProgramaciones() {
+    try { setProgramaciones(await api<Programacion[]>('/reporteria/reportes-programados')); }
+    catch (e) { setErrorProgramacion(e instanceof Error ? e.message : 'No se pudieron cargar las programaciones.'); }
+  }
+
+  useEffect(() => { void actualizarProgramaciones(); }, [version]);
 
   useEffect(() => {
     let vigente = true;
@@ -73,6 +87,22 @@ export function IndicadoresInstitucionales({ periodoId }: { periodoId: string })
     } finally {
       setExportando(false);
     }
+  }
+  async function programar() {
+    if (!datos) return;
+    setGuardando(true); setErrorProgramacion('');
+    try {
+      await api('/reporteria/reportes-programados', 'POST', {
+        periodoId: datos.periodo.id, facultad: datos.filtros.facultad, frecuencia,
+      });
+      await actualizarProgramaciones();
+    } catch (e) { setErrorProgramacion(e instanceof Error ? e.message : 'No se pudo programar el reporte.'); }
+    finally { setGuardando(false); }
+  }
+  async function cancelar(id: string) {
+    setErrorProgramacion('');
+    try { await api('/reporteria/reportes-programados/' + encodeURIComponent(id) + '/cancelar', 'POST', {}); await actualizarProgramaciones(); }
+    catch (e) { setErrorProgramacion(e instanceof Error ? e.message : 'No se pudo cancelar la programación.'); }
   }
   return <section id="indicadores-institucionales" className="panel" aria-label="Indicadores institucionales">
     <p className="etiqueta">Reportería institucional</p>
@@ -133,5 +163,26 @@ export function IndicadoresInstitucionales({ periodoId }: { periodoId: string })
         </tr>)}</tbody>
       </table></div>}
     <p className="texto-suave">Pasa el cursor sobre «Oculto» para ver el motivo.</p>
+    <h3>Reportes periódicos</h3>
+    <p className="texto-suave">Se enviarán a tu correo institucional los indicadores actualizados con los filtros seleccionados. Cada envío vuelve a comprobar tu permiso y las reglas de privacidad.</p>
+    <div className="formulario-fila">
+      <label>Frecuencia
+        <select value={frecuencia} onChange={e => setFrecuencia(e.target.value)}>
+          <option value="DIARIA">Diaria</option><option value="SEMANAL">Semanal</option><option value="MENSUAL">Mensual</option>
+        </select>
+      </label>
+      <button type="button" disabled={guardando} onClick={() => void programar()}>{guardando ? 'Guardando…' : 'Programar reporte'}</button>
+    </div>
+    {errorProgramacion && <p className="alerta" role="alert">{errorProgramacion}</p>}
+    {programaciones.length === 0 ? <p className="vacio">No hay reportes programados.</p> :
+      <div className="tabla-contenedor"><table>
+        <thead><tr><th>Período y facultad</th><th>Frecuencia</th><th>Destino</th><th>Próxima ejecución</th><th>Último resultado</th><th>Estado</th><th>Acción</th></tr></thead>
+        <tbody>{programaciones.map(p => <tr key={p.id}>
+          <td>{p.periodo} · {p.facultad ?? 'Todas'}</td><td>{p.frecuencia.toLowerCase()}</td><td>{p.destinoEmail}</td>
+          <td>{p.estado === 'ACTIVO' ? new Date(p.proximaEjecucion).toLocaleString('es-CL') : '—'}</td>
+          <td>{p.ultimoEstado ?? 'Aún no ejecutado'}{p.ultimoError ? `: ${p.ultimoError}` : ''}</td>
+          <td>{p.estado}</td><td>{p.estado === 'ACTIVO' && <button type="button" onClick={() => void cancelar(p.id)}>Cancelar</button>}</td>
+        </tr>)}</tbody>
+      </table></div>}
   </section>;
 }
