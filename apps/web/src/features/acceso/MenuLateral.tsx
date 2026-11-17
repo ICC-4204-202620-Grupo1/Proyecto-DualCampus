@@ -15,6 +15,7 @@ export type DestinoNavegacion =
   | 'modulo-materiales'
   | 'modulo-entregas'
   | 'modulo-asistencia'
+  | 'modulo-anuncios'
   | 'historial-academico'
   | 'mi-perfil';
 
@@ -39,6 +40,7 @@ function enlacesPara(roles: Rol[], esSuperadministrador: boolean): Enlace[] {
     );
     if (roles.includes('PROFESOR')) {
       enlaces.push(
+        { id: 'modulo-anuncios', etiqueta: 'Anuncios de sección', sigla: 'AN' },
         {
           id: 'distribucion-notas',
           etiqueta: 'Distribución de notas',
