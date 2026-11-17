@@ -1,5 +1,7 @@
 # DualCampus — Entrega 5
 
+**Manual actual de acceso y operación para el cliente:** [Manual de inicio de DualCampus](docs/manual-inicio-cliente.md).
+
 Primera iteración funcional del Grupo 1 · presentación del 20 de octubre de 2026.
 
 Incremento: acceso con Google e institución activa, permisos en API, períodos,
