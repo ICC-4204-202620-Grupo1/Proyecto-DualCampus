@@ -25,10 +25,9 @@ export class GoogleOidcAdapter {
     return this.cliente;
   }
 
-  /** Con cuentaPersonal (H43) no se sugiere el dominio institucional: se elige la cuenta propia. */
-  urlAutorizacion(state: string, nonce: string, opciones?: { cuentaPersonal?: boolean }): string {
-    const dominios = opciones?.cuentaPersonal ? [] : this.config.dominiosPermitidos;
-    const parametros: GenerateAuthUrlOpts & { nonce: string } = {
+  urlAutorizacion(state: string, nonce: string): string {
+    const dominios = this.config.dominiosPermitidos;
+    const opciones: GenerateAuthUrlOpts & { nonce: string } = {
       scope: ['openid', 'email', 'profile'],
       state,
       nonce,
@@ -36,7 +35,7 @@ export class GoogleOidcAdapter {
       // Con un solo dominio, Google muestra directamente las cuentas de esa institución
       ...(dominios.length === 1 ? { hd: dominios[0] } : {}),
     };
-    return this.obtenerCliente().generateAuthUrl(parametros);
+    return this.obtenerCliente().generateAuthUrl(opciones);
   }
 
   /** Canjea el código y valida firma, emisor, audiencia, vencimiento y nonce del id_token. */

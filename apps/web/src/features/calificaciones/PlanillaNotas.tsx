@@ -1,5 +1,4 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { CorreccionNota } from './CorreccionNota';
 import { AuditoriaEvaluacion } from './AuditoriaEvaluacion';
 import { api, type Rol } from '../../lib/api';
 
@@ -45,8 +44,6 @@ export function PlanillaNotas({
   onCerrar: () => void;
   onEnviada: () => void;
 }) {
-  const [correccion, setCorreccion] = useState<FilaAlumno | null>(null);
-  const [revisionNotas, setRevisionNotas] = useState(0);
   const [filas, setFilas] = useState<FilaAlumno[]>([]);
   const [valores, setValores] = useState<Record<string, string>>({});
   // H16: estado de ausencias por alumno
@@ -103,7 +100,7 @@ export function PlanillaNotas({
     return () => {
       vigente = false;
     };
-  }, [evaluacionId, revisionNotas]);
+  }, [evaluacionId]);
 
   function cambiarNota(alumnoId: string, texto: string) {
     setPendiente(true);
@@ -303,7 +300,7 @@ export function PlanillaNotas({
       </form>}
       {aviso && <p role="status" className="exito" style={{ marginBottom: '1rem' }}>{aviso}</p>}
 
-      {roles.includes('ADMINISTRADOR') && <AuditoriaEvaluacion key={revisionNotas} evaluacionId={evaluacionId} />}
+      {roles.includes('ADMINISTRADOR') && <AuditoriaEvaluacion evaluacionId={evaluacionId} />}
 
       {cargando ? (
         <p className="texto-suave">Cargando nómina de alumnos…</p>
@@ -323,7 +320,6 @@ export function PlanillaNotas({
                   {/* H16: columna de ausencias */}
                   <th style={{ width: '90px', textAlign: 'center' }}>Ausente</th>
                   <th>Estado</th>
-                  {estado === 'PUBLICADA' && roles.includes('ADMINISTRADOR') && <th>Corrección formal</th>}
                 </tr>
               </thead>
               <tbody>
@@ -400,9 +396,6 @@ export function PlanillaNotas({
                           <span style={{ color: 'var(--suave)', fontSize: '0.85rem' }}>Sin calificar</span>
                         )}
                       </td>
-                      {estado === 'PUBLICADA' && roles.includes('ADMINISTRADOR') && <td>
-                        <button type="button" className="boton-secundario" onClick={() => setCorreccion(f)}>Corregir nota de {f.nombre}</button>
-                      </td>}
                     </tr>
                   );
                 })}
@@ -429,9 +422,6 @@ export function PlanillaNotas({
           </div>
         </form>
       )}
-      {correccion && estado === 'PUBLICADA' && roles.includes('ADMINISTRADOR') &&
-        <CorreccionNota key={correccion.alumnoId + (correccion.actualizadoEn ?? '')} evaluacionId={evaluacionId} nota={correccion}
-          onCerrar={() => setCorreccion(null)} onCorregida={() => setRevisionNotas(v => v + 1)} />}
     </div>
   );
 }

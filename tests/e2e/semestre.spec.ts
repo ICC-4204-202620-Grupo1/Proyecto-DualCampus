@@ -1,4 +1,4 @@
-import { test,expect,type BrowserContext,type Page } from '@playwright/test';
+import { test,expect,type BrowserContext } from '@playwright/test';
 import { createHmac } from 'node:crypto';
 const inst='11111111-1111-4111-8111-111111111111';
 const ids={admin:'33333333-3333-4333-8333-333333333333',prof:'44444444-4444-4444-8444-444444444444',
@@ -11,15 +11,7 @@ async function ingresar(context:BrowserContext,rol:keyof typeof ids){
  await context.clearCookies();
  await context.addCookies([{name:'dc_sesion',value:token,url:'http://localhost:5173',httpOnly:true,sameSite:'Lax'}]);
 }
-async function irAlModulo(page:Page,nombre:string){
- const nav=page.getByRole('navigation',{name:'Secciones disponibles'});
- await expect(nav).toBeVisible();
- const boton=nav.getByRole('button',{name:nombre,exact:true});
- await expect(boton).toBeVisible();
- await boton.click();
-}
 test('configuración persistente, validación y permisos de cuatro roles',async({page,context},testInfo)=>{
- test.setTimeout(120_000);
  const errores:string[]=[];page.on('pageerror',e=>errores.push(e.message));
  await ingresar(context,'admin');await page.goto('/');
  await expect(page.getByRole('heading',{name:'Períodos académicos'})).toBeVisible();
@@ -27,18 +19,14 @@ test('configuración persistente, validación y permisos de cuatro roles',async(
  await page.getByLabel('Inicio',{exact:true}).fill('2026-08-01');
  await page.getByLabel('Término',{exact:true}).fill('2026-12-20');
  await page.getByRole('button',{name:'Crear período',exact:true}).click();
- await expect(page.getByText(/Del 2026-08-01 al 2026-12-20/)).toBeVisible();
- await irAlModulo(page,'Cursos y secciones');
- await expect(page.getByLabel('Código del curso')).toBeVisible();
  await page.getByLabel('Código del curso').fill('ICC-4204');
- await page.getByLabel('Nombre',{exact:true}).fill('Introducción al software');
+ await page.getByLabel('Nombre',{exact:true}).nth(1).fill('Introducción al software');
  await page.getByRole('button',{name:'Crear curso',exact:true}).click();
  await expect(page.getByText('Curso creado. Ahora puedes registrar su sección.',{exact:true})).toBeVisible();
  await page.getByRole('combobox',{name:'Curso',exact:true}).selectOption({label:'ICC-4204 · Introducción al software'});
  await page.getByLabel('Código de sección').fill('01');
  await page.getByRole('button',{name:'Crear sección',exact:true}).click();
- await irAlModulo(page,'Equipo y nómina');
- await page.getByRole('combobox',{name:'Sección de trabajo'}).selectOption({label:'ICC-4204 · Introducción al software · Sección 01'});
+ await page.getByRole('button',{name:/ICC-4204 · Sección 01/}).click();
  await page.getByRole('combobox',{name:'Profesor',exact:true}).selectOption({label:'Profesora Demo'});
  await page.getByLabel('Ayudante Demo',{exact:true}).check();
  await page.getByRole('button',{name:'Guardar equipo'}).click();
@@ -52,36 +40,32 @@ test('configuración persistente, validación y permisos de cuatro roles',async(
  await page.getByRole('button',{name:'Confirmar carga'}).click();
  await expect(page.getByText('Nómina guardada: 1 alumnos nuevos; 1 en total.',{exact:true})).toBeVisible();
  await page.reload();
- await irAlModulo(page,'Equipo y nómina');
+ await page.getByRole('button',{name:/ICC-4204 · Sección 01/}).click();
  await expect(page.getByRole('cell',{name:'Estudiante Demo',exact:true})).toBeVisible();
- await irAlModulo(page,'Períodos académicos');
  await page.getByLabel('Nombre',{exact:true}).first().fill('2027 · Otro período');
  await page.getByLabel('Inicio',{exact:true}).fill('2027-03-01');
  await page.getByLabel('Término',{exact:true}).fill('2027-07-01');
  await page.getByRole('button',{name:'Crear período',exact:true}).click();
  await expect(page.getByText(/Del 2027-03-01 al 2027-07-01/)).toBeVisible();
- await irAlModulo(page,'Equipo y nómina');
- await expect(page.getByRole('combobox',{name:'Sección de trabajo'})).toHaveCount(0);
+ await expect(page.getByRole('button',{name:/ICC-4204 · Sección 01/})).toHaveCount(0);
  await page.getByRole('combobox',{name:'Período de trabajo',exact:true}).selectOption({label:'2026 · Semestre demo'});
  await expect(page.getByText(/Del 2026-08-01 al 2026-12-20/)).toBeVisible();
- await expect(page.getByRole('combobox',{name:'Sección de trabajo'})).toContainText('ICC-4204');
+ await page.getByRole('button',{name:/ICC-4204 · Sección 01/}).click();
  await page.screenshot({path:testInfo.outputPath('01-configuracion.png'),fullPage:true});
  await page.getByLabel('Institución activa').selectOption({label:'Instituto de Ciencias de la Salud'});
  await expect(page.getByText('Sin períodos registrados.',{exact:true})).toBeVisible();
- await expect(page.getByRole('combobox',{name:'Sección de trabajo'})).toHaveCount(0);
+ await expect(page.getByRole('button',{name:/ICC-4204 · Sección 01/})).toHaveCount(0);
  await ingresar(context,'prof');await page.reload();
- await irAlModulo(page,'Mis secciones');
  await page.getByRole('combobox',{name:'Período de trabajo',exact:true}).selectOption({label:'2026 · Semestre demo'});
- await expect(page.getByRole('button',{name:/ICC-4204 · Sección 01/})).toBeVisible();
+ await page.getByRole('button',{name:/ICC-4204 · Sección 01/}).click();
+ await expect(page.getByRole('cell',{name:'Estudiante Demo',exact:true})).toBeVisible();
  await expect(page.getByRole('button',{name:'Crear curso',exact:true})).toHaveCount(0);
  await page.screenshot({path:testInfo.outputPath('02-docente.png'),fullPage:true});
  await ingresar(context,'alumno');await page.reload();
- await irAlModulo(page,'Mis secciones');
  await page.getByRole('combobox',{name:'Período de trabajo',exact:true}).selectOption({label:'2026 · Semestre demo'});
- await expect(page.getByRole('button',{name:/ICC-4204 · Sección 01/})).toBeVisible();
+ await page.getByRole('button',{name:/ICC-4204 · Sección 01/}).click();
+ await expect(page.getByText(/Estás en la nómina de esta sección/)).toBeVisible();
  await expect(page.getByRole('cell',{name:'alumno@example.invalid',exact:true})).toHaveCount(0);
- await irAlModulo(page,'Mis calificaciones');
- await expect(page.getByRole('heading',{name:'Mis calificaciones'})).toBeVisible();
  await page.setViewportSize({width:390,height:844});
  await page.screenshot({path:testInfo.outputPath('03-alumno-movil.png'),fullPage:true});
  await ingresar(context,'director');await page.reload();
@@ -91,26 +75,4 @@ test('configuración persistente, validación y permisos de cuatro roles',async(
  await page.getByRole('button',{name:'Cerrar sesión'}).click();
  await expect(page.getByRole('link',{name:/Google/})).toBeVisible();
  expect(errores).toEqual([]);
-});
-
-// H43: el alumno vincula una cuenta personal desde su perfil y la asociación persiste.
-// La verificación con Google se reemplaza por la vinculación local (no existe en producción).
-test('H43 · vincular una cuenta personal desde el perfil',async({page,context},testInfo)=>{
- await ingresar(context,'prof');await page.goto('/');
- await expect(page.getByRole('navigation',{name:'Secciones disponibles'})).toBeVisible();
- await expect(page.getByRole('button',{name:'Mi perfil',exact:true})).toHaveCount(0);
- await ingresar(context,'alumno');await page.reload();
- await irAlModulo(page,'Mi perfil');
- await expect(page.getByText('Todavía no tienes una cuenta personal vinculada.',{exact:true})).toBeVisible();
- await expect(page.getByRole('link',{name:'Vincular cuenta personal',exact:true})).toHaveAttribute('href','/api/cuenta-personal/vincular');
- await page.getByRole('link',{name:/cuenta personal de prueba/}).click();
- await expect(page.getByText('Cuenta personal verificada y vinculada.',{exact:true})).toBeVisible();
- await expect(page.getByText('personal.demo@example.invalid',{exact:true})).toBeVisible();
- expect(new URL(page.url()).search).toBe('');
- await page.screenshot({path:testInfo.outputPath('04-alumno-perfil.png'),fullPage:true});
- await page.reload();
- await irAlModulo(page,'Mi perfil');
- await expect(page.getByText('personal.demo@example.invalid',{exact:true})).toBeVisible();
- await expect(page.getByText('Cuenta personal verificada y vinculada.',{exact:true})).toHaveCount(0);
- await expect(page.getByRole('link',{name:'Cambiar cuenta personal',exact:true})).toBeVisible();
 });
