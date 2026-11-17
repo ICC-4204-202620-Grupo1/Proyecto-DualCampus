@@ -162,7 +162,9 @@ describe.skipIf(!url)('H23 · Consultar auditoría de calificaciones (PostgreSQL
     await publicar().expect(201);
     const res = await historial().expect(200);
     const acciones = res.body.map((e: { accion: string }) => e.accion);
-    expect(acciones).toEqual(['CREAR_EVALUACION','GUARDAR_NOTAS_BORRADOR','ENVIAR_A_REVISION','DEVOLVER_EVALUACION','REENVIAR_A_REVISION','PUBLICAR_EVALUACION']);
+    const accionesEvaluacion = acciones.filter(accion => accion !== 'AVISAR_PUBLICACION_NOTA');
+    expect(accionesEvaluacion).toEqual(['CREAR_EVALUACION','GUARDAR_NOTAS_BORRADOR','ENVIAR_A_REVISION','DEVOLVER_EVALUACION','REENVIAR_A_REVISION','PUBLICAR_EVALUACION']);
+    expect(acciones.filter(accion => accion === 'AVISAR_PUBLICACION_NOTA')).toHaveLength(2);
     for (const evento of res.body) {
       expect(evento.autor).toBeTruthy();
       expect(Number.isNaN(Date.parse(evento.fecha))).toBe(false);
