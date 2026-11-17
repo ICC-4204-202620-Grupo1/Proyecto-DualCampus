@@ -5,6 +5,16 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   // Las suites HTTP son pequeñas: un worker evita contención al iniciar varias apps Nest.
   // Las pruebas de concurrencia dentro de una suite conservan sus peticiones simultáneas.
-  test: { include: ['test/**/*.spec.ts'], environment: 'node', maxWorkers: 1 },
+  test: {
+    include: ['test/**/*.spec.ts'],
+    environment: 'node',
+    maxWorkers: 1,
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.ts'],
+      exclude: ['src/**/*.spec.ts', 'src/**/*.test.ts'],
+      reporter: ['text', 'html', 'json-summary'],
+    },
+  },
   plugins: [swc.vite({ module: { type: 'es6' } })],
 });
