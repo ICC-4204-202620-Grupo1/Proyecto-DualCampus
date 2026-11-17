@@ -14,6 +14,7 @@ import {
   CuentasPersonalesRepositorio,
   IdentidadPersonal,
   ResultadoVinculacion,
+  TitularCuentaPersonal,
 } from '../src/modules/autenticacion/cuentas-personales.repositorio.js';
 import { GoogleOidcAdapter } from '../src/modules/autenticacion/google-oidc.adapter.js';
 import type { IdentidadGoogle, RolEnInstitucion } from '../src/modules/autenticacion/usuario-sesion.js';
@@ -148,6 +149,10 @@ export class CuentasPersonalesEnMemoria extends CuentasPersonalesRepositorio {
   async obtener(usuarioId: string): Promise<CuentaPersonal | null> {
     const c = this.cuentas.get(usuarioId);
     return c ? { email: c.email, verificadoEn: c.verificadoEn } : null;
+  }
+  async buscarPorSub(sub: string): Promise<TitularCuentaPersonal | null> {
+    for (const [usuarioId, c] of this.cuentas) if (c.sub === sub) return { usuarioId, email: c.email };
+    return null;
   }
   async vincular(usuarioId: string, identidad: IdentidadPersonal): Promise<ResultadoVinculacion> {
     const institucionales = this.usuarios.usuarios.filter((u) => u.email === identidad.email || u.googleSub === identidad.sub);

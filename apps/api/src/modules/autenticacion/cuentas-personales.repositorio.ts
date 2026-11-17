@@ -21,8 +21,16 @@ export interface IdentidadPersonal {
  */
 export type ResultadoVinculacion = 'VINCULADA' | 'OCUPADA' | 'INSTITUCIONAL';
 
+/** H44 · Persona a la que pertenece una cuenta personal vinculada. */
+export interface TitularCuentaPersonal {
+  usuarioId: string;
+  email: string;
+}
+
 export abstract class CuentasPersonalesRepositorio {
   abstract obtener(usuarioId: string): Promise<CuentaPersonal | null>;
+  /** H44 · El google_sub es el identificador estable de la cuenta; el correo puede cambiar. */
+  abstract buscarPorSub(sub: string): Promise<TitularCuentaPersonal | null>;
   abstract vincular(usuarioId: string, identidad: IdentidadPersonal): Promise<ResultadoVinculacion>;
 }
 
@@ -40,6 +48,14 @@ export class PostgresCuentasPersonalesRepositorio extends CuentasPersonalesRepos
       [usuarioId],
     );
     return rows[0] ? { email: rows[0].email, verificadoEn: new Date(rows[0].verificadoEn).toISOString() } : null;
+  }
+
+  async buscarPorSub(sub: string): Promise<TitularCuentaPersonal | null> {
+    const { rows } = await this.pool.query<TitularCuentaPersonal>(
+      `SELECT usuario_id AS "usuarioId", email FROM cuenta_personal WHERE google_sub = $1`,
+      [sub],
+    );
+    return rows[0] ?? null;
   }
 
   async vincular(usuarioId: string, identidad: IdentidadPersonal): Promise<ResultadoVinculacion> {

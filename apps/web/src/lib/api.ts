@@ -214,3 +214,21 @@ export function consultarCuentaPersonal() {
 }
 /** Navegación del navegador: la API redirige a Google y vuelve con ?vinculacion=. */
 export const URL_VINCULAR_CUENTA_PERSONAL = `${API_URL}/cuenta-personal/vincular`;
+
+/** H44: ingreso del egresado con la cuenta personal vinculada; sesión de solo consulta. */
+export const URL_INGRESAR_EGRESADO = `${API_URL}/auth/egresado`;
+export interface SesionEgresado {
+  usuarioId: string;
+  nombre: string;
+  emailInstitucional: string;
+  emailPersonal: string;
+  cuentaInstitucionalActiva: boolean;
+  instituciones: { id: string; nombre: string }[];
+}
+/** Devuelve la sesión de egresado, o null si no hay una vigente (401). */
+export async function obtenerSesionEgresado(): Promise<SesionEgresado | null> {
+  const res = await fetch(`${API_URL}/egresado/sesion`, { credentials: 'include' });
+  if (res.status === 401) return null;
+  if (!res.ok) throw new Error(`Error ${res.status} al consultar la sesión`);
+  return res.json();
+}

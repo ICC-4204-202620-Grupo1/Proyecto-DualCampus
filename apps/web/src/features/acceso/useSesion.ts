@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
-import { cerrarSesion, obtenerSesion, type UsuarioSesion } from '../../lib/api';
+import { cerrarSesion, obtenerSesion, obtenerSesionEgresado, type SesionEgresado, type UsuarioSesion } from '../../lib/api';
 
 type Estado =
   | { tipo: 'cargando' }
   | { tipo: 'anonimo' }
   | { tipo: 'autenticado'; usuario: UsuarioSesion }
+  /** H44: ingreso con la cuenta personal vinculada, solo para consultar el historial. */
+  | { tipo: 'egresado'; egresado: SesionEgresado }
   | { tipo: 'error' };
 
 /** Consulta la sesión al cargar la página: así la identidad se conserva al recargar. */
@@ -13,7 +15,12 @@ export function useSesion() {
 
   useEffect(() => {
     obtenerSesion()
-      .then((usuario) => setEstado(usuario ? { tipo: 'autenticado', usuario } : { tipo: 'anonimo' }))
+      .then(async (usuario): Promise<Estado> => {
+        if (usuario) return { tipo: 'autenticado', usuario };
+        const egresado = await obtenerSesionEgresado();
+        return egresado ? { tipo: 'egresado', egresado } : { tipo: 'anonimo' };
+      })
+      .then(setEstado)
       .catch(() => setEstado({ tipo: 'error' }));
   }, []);
 
