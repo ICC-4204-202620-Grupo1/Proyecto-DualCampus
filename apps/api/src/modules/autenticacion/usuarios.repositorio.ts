@@ -11,6 +11,7 @@ export interface UsuarioRegistrado {
   activo: boolean;
   googleSub: string | null;
   roles: RolEnInstitucion[];
+  esSuperadministrador: boolean;
 }
 
 /** Resultado de una consulta hecha dentro del contexto de la institución activa. */
@@ -33,6 +34,7 @@ export abstract class UsuariosRepositorio {
 
 const SELECT_USUARIO = `
   SELECT u.id, u.email, u.nombre, u.activo, u.google_sub,
+         EXISTS (SELECT 1 FROM superadministrador s WHERE s.usuario_id = u.id) AS es_superadministrador,
          COALESCE(
            json_agg(json_build_object('institucionId', i.id, 'institucion', i.nombre, 'rol', r.rol)
                     ORDER BY i.nombre, r.rol)
@@ -64,7 +66,7 @@ export class PostgresUsuariosRepositorio extends UsuariosRepositorio {
     const { rows } = await this.pool.query(sql, [valor]);
     if (rows.length === 0) return null;
     const f = rows[0];
-    return { id: f.id, email: f.email, nombre: f.nombre, activo: f.activo, googleSub: f.google_sub, roles: f.roles };
+    return { id: f.id, email: f.email, nombre: f.nombre, activo: f.activo, googleSub: f.google_sub, roles: f.roles, esSuperadministrador: f.es_superadministrador };
   }
 
   async registrarAcceso(usuarioId: string, googleSub: string): Promise<void> {

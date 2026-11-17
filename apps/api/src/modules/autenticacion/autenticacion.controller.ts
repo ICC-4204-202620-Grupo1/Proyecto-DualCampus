@@ -4,9 +4,12 @@ import type { Request, Response } from 'express';
 import { Publico } from '../../common/decorators/publico.decorator.js';
 import { UsuarioActual } from '../../common/decorators/usuario-actual.decorator.js';
 import { CONFIG, Config } from '../../config/config.js';
+import { AccesoEgresadoService, RechazoIngresoEgresado } from './acceso-egresado.service.js';
 import { AutenticacionService } from './autenticacion.service.js';
+import { volverAlPerfil } from './cuenta-personal.controller.js';
+import { CuentaPersonalService, ResultadoVinculacionPersonal } from './cuenta-personal.service.js';
 import { GoogleOidcAdapter } from './google-oidc.adapter.js';
-import { COOKIE_OIDC, COOKIE_SESION, SesionService } from './sesion.service.js';
+import { COOKIE_EGRESADO, COOKIE_OIDC, COOKIE_SESION, SesionEgresado, SesionService } from './sesion.service.js';
 import type { UsuarioSesion } from './usuario-sesion.js';
 
 @Controller('auth')
@@ -17,6 +20,8 @@ export class AutenticacionController {
     private readonly google: GoogleOidcAdapter,
     private readonly autenticacion: AutenticacionService,
     private readonly sesion: SesionService,
+    private readonly cuentaPersonal: CuentaPersonalService,
+    private readonly accesoEgresado: AccesoEgresadoService,
     @Inject(CONFIG) private readonly config: Config,
   ) {}
 
@@ -28,6 +33,35 @@ export class AutenticacionController {
     const nonce = randomBytes(24).toString('base64url');
     res.cookie(COOKIE_OIDC, this.sesion.emitirOidc({ state, nonce }), this.sesion.opcionesCookieOidc());
     res.redirect(this.google.urlAutorizacion(state, nonce));
+  }
+
+  /**
+   * H44 · Ingreso del egresado con su cuenta personal vinculada. Usa la misma redirección
+   * registrada en Google y no sugiere el dominio institucional.
+   */
+  @Publico()
+  @Get('egresado')
+  iniciarEgresado(@Res() res: Response) {
+    const state = randomBytes(24).toString('base64url');
+    const nonce = randomBytes(24).toString('base64url');
+    res.cookie(COOKIE_OIDC, this.sesion.emitirOidc({ state, nonce, proposito: 'egresado' }), this.sesion.opcionesCookieOidc());
+    res.redirect(this.google.urlAutorizacion(state, nonce, { cuentaPersonal: true }));
+  }
+
+  /** H44 · Ingreso local del egresado sin Google, con la cuenta creada por dev-vincular. */
+  @Publico()
+  @Get('dev-egresado')
+  async devEgresado(@Query('email') email: string | undefined, @Res() res: Response) {
+    if (this.config.produccion) return res.status(404).send('No disponible en producción');
+    const correo = (email || 'personal.demo@example.invalid').trim().toLowerCase();
+    const resultado = await this.accesoEgresado.identificar({
+      sub: 'dev-personal-' + correo,
+      email: correo,
+      emailVerificado: true,
+      nombre: correo.split('@')[0],
+      dominio: null,
+    });
+    return this.responderEgresado(res, resultado);
   }
 
   /** Acceso rápido para desarrollo local sin depender de credenciales de Google */
@@ -53,7 +87,10 @@ export class AutenticacionController {
     res.redirect(`${this.config.appUrl}/`);
   }
 
-  /** Google vuelve aquí. Solo una cuenta habilitada recibe la cookie de sesión. */
+  /**
+   * Google vuelve aquí. Solo una cuenta habilitada recibe la cookie de sesión.
+   * Si el flujo era una vinculación de cuenta personal (H43), no se emite ni se borra sesión.
+   */
   @Publico()
   @Get('google/callback')
   async callback(
@@ -66,7 +103,21 @@ export class AutenticacionController {
     res.clearCookie(COOKIE_OIDC, this.sesion.opcionesBorrado());
 
     if (!oidc || !code || !state || state !== oidc.state) {
+      if (oidc?.proposito === 'vincular') return volverAlPerfil(res, this.config, 'fallo');
       return this.rechazar(res, 'fallo_login');
+    }
+    if (oidc.proposito === 'vincular') {
+      return volverAlPerfil(res, this.config, await this.completarVinculacion(oidc.usuarioId!, oidc.nonce, code, req));
+    }
+    if (oidc.proposito === 'egresado') {
+      let resultado: SesionEgresado | RechazoIngresoEgresado;
+      try {
+        resultado = await this.accesoEgresado.identificar(await this.google.canjearCodigo(code, oidc.nonce));
+      } catch (error) {
+        this.log.error(`Fallo en el ingreso de egresado: ${(error as Error).message}`);
+        return this.rechazar(res, 'fallo_login');
+      }
+      return this.responderEgresado(res, resultado);
     }
 
     let usuario: UsuarioSesion | null;
@@ -80,6 +131,8 @@ export class AutenticacionController {
     }
     if (!usuario) return this.rechazar(res, 'no_autorizado');
 
+    // Una sesión institucional reemplaza la de consulta de egresado, si la hubiera.
+    res.clearCookie(COOKIE_EGRESADO, this.sesion.opcionesBorrado());
     res.cookie(COOKIE_SESION, this.sesion.emitir(usuario), this.sesion.opcionesCookieSesion());
     res.redirect(`${this.config.appUrl}/`);
   }
@@ -95,9 +148,46 @@ export class AutenticacionController {
   @HttpCode(204)
   logout(@Res({ passthrough: true }) res: Response) {
     res.clearCookie(COOKIE_SESION, this.sesion.opcionesBorrado());
+    res.clearCookie(COOKIE_EGRESADO, this.sesion.opcionesBorrado());
   }
 
-  private rechazar(res: Response, motivo: 'no_autorizado' | 'fallo_login') {
+  /** H43 · CA1: exige la misma sesión institucional vigente que inició el flujo. */
+  private async completarVinculacion(
+    usuarioId: string,
+    nonce: string,
+    code: string,
+    req: Request,
+  ): Promise<ResultadoVinculacionPersonal> {
+    const sesion = this.sesion.verificar(req.cookies?.[COOKIE_SESION]);
+    if (!sesion || sesion.usuarioId !== usuarioId) return 'sesion_requerida';
+    try {
+      const identidad = await this.google.canjearCodigo(code, nonce);
+      const resultado = await this.cuentaPersonal.vincular(usuarioId, identidad);
+      if (resultado !== 'vinculada') this.log.warn(`Vinculación de cuenta personal rechazada: ${resultado}`);
+      return resultado;
+    } catch (error) {
+      this.log.error(`Fallo al vincular la cuenta personal: ${(error as Error).message}`);
+      return 'fallo';
+    }
+  }
+
+  /**
+   * H44 · CA1: con cuenta vinculada se emite solo la sesión de consulta (dc_egresado) y se
+   * descarta cualquier sesión institucional. CA3: sin vinculación vuelve con ?error=sin_vinculacion,
+   * que la interfaz acompaña del canal de asistencia.
+   */
+  private responderEgresado(res: Response, resultado: SesionEgresado | RechazoIngresoEgresado) {
+    if (typeof resultado === 'string') {
+      this.log.warn(`Ingreso de egresado rechazado: ${resultado}`);
+      res.clearCookie(COOKIE_EGRESADO, this.sesion.opcionesBorrado());
+      return this.rechazar(res, resultado);
+    }
+    res.clearCookie(COOKIE_SESION, this.sesion.opcionesBorrado());
+    res.cookie(COOKIE_EGRESADO, this.sesion.emitirEgresado(resultado), this.sesion.opcionesCookieSesion());
+    res.redirect(`${this.config.appUrl}/`);
+  }
+
+  private rechazar(res: Response, motivo: 'no_autorizado' | 'fallo_login' | RechazoIngresoEgresado) {
     res.clearCookie(COOKIE_SESION, this.sesion.opcionesBorrado());
     res.redirect(`${this.config.appUrl}/?error=${motivo}`);
   }

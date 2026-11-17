@@ -2,6 +2,7 @@ import { BadRequestException, ConflictException, ForbiddenException, Injectable,
 import type { PoolClient } from 'pg';
 import { ContextoInstitucion } from '../../database/contexto-institucion.js';
 import { AutorizacionService } from '../autorizacion/autorizacion.service.js';
+import { AvisosCorreccionService } from './avisos-correccion.service.js';
 
 type Datos = Record<string, unknown>;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -22,6 +23,7 @@ export class NotasService {
   constructor(
     private readonly contexto: ContextoInstitucion,
     private readonly autorizacion: AutorizacionService,
+    private readonly avisosCorreccion: AvisosCorreccionService,
   ) {}
 
   private async ejecutar<T>(institucion: string, fn: (db: PoolClient) => Promise<T>): Promise<T> {
@@ -40,7 +42,7 @@ export class NotasService {
     await this.autorizacion.exigirRol(actor, institucion, 'ALUMNO');
     const sid = id(seccionId);
     return this.ejecutar(institucion, async (db) => {
-      const matricula = await db.query('SELECT 1 FROM matricula WHERE seccion_id=$1 AND usuario_id=$2', [sid, actor]);
+      const matricula = await db.query("SELECT 1 FROM matricula WHERE seccion_id=$1 AND usuario_id=$2 AND estado='ACTIVA'", [sid, actor]);
       if (!matricula.rowCount) throw new ForbiddenException('No estás inscrito en esta sección');
       const { rows } = await db.query(
         `SELECT e.id, e.nombre, e.fecha, e.ponderacion, e.publicado_en AS "publicadoEn",
@@ -91,7 +93,7 @@ export class NotasService {
       const esDocente = (equipoRes.rowCount ?? 0) > 0;
 
       const matriculaRes = await db.query(
-        `SELECT 1 FROM matricula WHERE seccion_id = $1 AND usuario_id = $2`,
+        `SELECT 1 FROM matricula WHERE seccion_id = $1 AND usuario_id = $2 AND estado='ACTIVA'`,
         [evaluacion.seccionId, actor],
       );
       const esAlumno = (matriculaRes.rowCount ?? 0) > 0;
@@ -115,7 +117,7 @@ export class NotasService {
          FROM matricula m
          JOIN usuario u ON u.id = m.usuario_id
          LEFT JOIN nota n ON n.evaluacion_id = $1 AND n.usuario_id = u.id
-         WHERE m.seccion_id = $2 AND ($3::uuid IS NULL OR u.id = $3)
+         WHERE m.seccion_id = $2 AND m.estado='ACTIVA' AND ($3::uuid IS NULL OR u.id = $3)
          ORDER BY u.nombre ASC, u.email ASC`,
         [eid, evaluacion.seccionId, !esAdmin && !esDocente ? actor : null],
       );
@@ -206,7 +208,7 @@ export class NotasService {
 
         // Verificar que el alumno esté matriculado en la sección
         const matriculaRes = await db.query(
-          `SELECT 1 FROM matricula WHERE seccion_id = $1 AND usuario_id = $2`,
+          `SELECT 1 FROM matricula WHERE seccion_id = $1 AND usuario_id = $2 AND estado='ACTIVA'`,
           [evaluacion.seccionId, alumnoId],
         );
         if (!matriculaRes.rowCount) {
@@ -263,4 +265,66 @@ export class NotasService {
       };
     });
   }
+
+  /** H22: corrección formal; la nota sigue publicada y el evento conserva el antecedente. */
+  async corregirPublicada(actor: string, institucion: string, evaluacionId: string, alumnoId: string, dto: Datos) {
+    await this.autorizacion.exigirRol(actor, institucion, 'ADMINISTRADOR');
+    const eid = id(evaluacionId), aid = id(alumnoId);
+    const motivo = typeof dto.motivo === 'string' ? dto.motivo.trim() : '';
+    const referencia = typeof dto.referencia === 'string' ? dto.referencia.trim() : '';
+    if (!motivo || motivo.length > 2000) throw new BadRequestException('Motivo obligatorio, máximo 2000 caracteres');
+    if (!referencia || referencia.length > 200) throw new BadRequestException('Referencia de la solicitud obligatoria, máximo 200 caracteres');
+    if (typeof dto.valor !== 'number' || !Number.isFinite(dto.valor) || Math.abs(dto.valor * 10 - Math.round(dto.valor * 10)) > 1e-8) {
+      throw new BadRequestException('La nota debe ser un número válido con un máximo de un decimal');
+    }
+    const valorNuevo = dto.valor;
+    const resultado = await this.ejecutar(institucion, async db => {
+      const ev = await db.query('SELECT estado, seccion_id, escala_minima, escala_maxima FROM evaluacion WHERE id=$1 FOR UPDATE',[eid]);
+      if (!ev.rowCount) throw new NotFoundException('Evaluación no encontrada');
+      const evaluacion = ev.rows[0];
+      if (evaluacion.estado !== 'PUBLICADA') throw new ConflictException('Solo se pueden corregir notas de evaluaciones publicadas');
+      if (valorNuevo < Number(evaluacion.escala_minima) || valorNuevo > Number(evaluacion.escala_maxima)) {
+        throw new BadRequestException('La nota está fuera de la escala de la evaluación');
+      }
+      const anterior = await db.query(
+        `SELECT n.id, n.valor, n.es_ausente, n.actualizado_en FROM nota n
+         JOIN matricula m ON m.seccion_id=$3 AND m.usuario_id=n.usuario_id
+         WHERE n.evaluacion_id=$1 AND n.usuario_id=$2 FOR UPDATE OF n`, [eid,aid,evaluacion.seccion_id],
+      );
+      if (!anterior.rowCount) throw new NotFoundException('Nota del alumno no encontrada en esta sección');
+      const nota = anterior.rows[0];
+      const previo = nota.valor === null ? null : Number(nota.valor);
+      if (dto.valorPrevio !== previo || dto.ausentePrevio !== nota.es_ausente ||
+          typeof dto.actualizadoEn !== 'string' || new Date(dto.actualizadoEn).getTime() !== new Date(nota.actualizado_en).getTime()) {
+        throw new ConflictException('La nota cambió desde que abriste la planilla. Recarga antes de corregir.');
+      }
+      if (previo === valorNuevo && !nota.es_ausente) throw new BadRequestException('La nueva nota debe ser distinta del valor vigente');
+      const { rows } = await db.query(
+        `UPDATE nota SET valor=$2, es_ausente=false, modificado_por=$3, actualizado_en=clock_timestamp()
+         WHERE id=$1 RETURNING valor, actualizado_en AS "actualizadoEn"`, [nota.id,valorNuevo,actor],
+      );
+      // H55: el evento y el aviso quedan en la misma transacción que la corrección.
+      // Si falla cualquiera de estas escrituras, no se confirma una corrección parcial.
+      const evento = await db.query<{ id: string }>(
+        `INSERT INTO evento_academico(institucion_id,actor_id,recurso_id,accion,datos)
+         VALUES ($1,$2,$3,'CORREGIR_NOTA_PUBLICADA',$4) RETURNING id`,
+        [institucion,actor,eid,JSON.stringify({
+          alumnoId:aid, notaId:nota.id, valorPrevio:previo, valorNuevo,
+          ausentePrevio:nota.es_ausente, ausenteNuevo:false, motivo, referencia,
+        })],
+      );
+      const correo = await db.query<{ email: string }>(
+        `SELECT email FROM usuario WHERE id=$1`, [aid]);
+      const aviso = await db.query<{ id: string }>(
+        `INSERT INTO aviso_correo(institucion_id,evento_id,destinatario_id,destinatario_email,tipo)
+         VALUES($1,$2,$3,$4,'CORRECCION_NOTA') RETURNING id`,
+        [institucion,evento.rows[0].id,aid,correo.rows[0].email],
+      );
+      return { nota: { alumnoId:aid, valor:valorNuevo, esAusente:false, actualizadoEn:rows[0].actualizadoEn }, avisoId: aviso.rows[0].id };
+    });
+    // CA3: después del COMMIT; un fallo de correo no revierte ni oculta la nota.
+    await this.avisosCorreccion.despachar(institucion, resultado.avisoId);
+    return resultado.nota;
+  }
+
 }

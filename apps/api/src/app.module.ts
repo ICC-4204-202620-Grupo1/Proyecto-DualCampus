@@ -10,6 +10,8 @@ import { MaterialEntregasModule } from './modules/material-entregas/material-ent
 import { ReporteriaModule } from './modules/reporteria/reporteria.module.js';
 import { AuditoriaModule } from './modules/auditoria/auditoria.module.js';
 import { HistorialAcademicoModule } from './modules/historial-academico/historial-academico.module.js';
+import { SuperadministracionModule } from './modules/superadministracion/superadministracion.module.js';
+import { AnunciosModule } from './modules/anuncios/anuncios.module.js';
 
 // Un módulo por componente del diagrama C4 nivel 3 (Entrega 3)
 @Module({
@@ -24,6 +26,8 @@ import { HistorialAcademicoModule } from './modules/historial-academico/historia
     ReporteriaModule,
     AuditoriaModule,
     HistorialAcademicoModule,
+    SuperadministracionModule,
+    AnunciosModule,
   ],
   controllers: [HealthController],
 })

@@ -61,7 +61,7 @@ export class AcademicoService {
       const { rows } = await db.query(`
         SELECT s.id,s.codigo,s.periodo_id AS "periodoId",p.nombre AS periodo,
                c.codigo AS "cursoCodigo",c.nombre AS curso,
-               (SELECT count(*)::int FROM matricula m WHERE m.seccion_id=s.id) AS "totalAlumnos"
+               (SELECT count(*)::int FROM matricula m WHERE m.seccion_id=s.id AND m.estado='ACTIVA') AS "totalAlumnos"
           FROM seccion s JOIN curso c ON c.id=s.curso_id JOIN periodo p ON p.id=s.periodo_id
          WHERE ($3::uuid IS NULL OR s.periodo_id=$3)
            AND (
@@ -69,7 +69,7 @@ export class AcademicoService {
              OR EXISTS (SELECT 1 FROM equipo_docente e JOIN rol_en_institucion r
                ON (r.usuario_id,r.institucion_id,r.rol)=(e.usuario_id,e.institucion_id,e.rol)
                WHERE e.seccion_id=s.id AND e.usuario_id=$1)
-             OR EXISTS (SELECT 1 FROM matricula m WHERE m.seccion_id=s.id AND m.usuario_id=$1)
+             OR EXISTS (SELECT 1 FROM matricula m WHERE m.seccion_id=s.id AND m.usuario_id=$1 AND m.estado='ACTIVA')
            )
          ORDER BY c.codigo,s.codigo`, [actor,institucion,periodo || null]);
       return rows;
@@ -118,8 +118,11 @@ export class AcademicoService {
       await this.exigirSeccion(db,actor,institucion,seccion);
       const equipo = await db.query(`SELECT u.id,u.nombre,u.email,e.rol FROM equipo_docente e
         JOIN usuario u ON u.id=e.usuario_id WHERE e.seccion_id=$1 ORDER BY e.rol,u.nombre`,[seccion]);
-      const nomina = await db.query(`SELECT u.id,u.nombre,u.email FROM matricula m
-        JOIN usuario u ON u.id=m.usuario_id WHERE m.seccion_id=$1 ORDER BY u.nombre,u.email`,[seccion]);
+      const nomina = await db.query(`SELECT u.id,u.nombre,u.email,m.estado,
+        m.retirado_fecha AS "retiradoFecha",m.retirado_referencia AS "retiradoReferencia",
+        m.retirado_en AS "retiradoEn",autor.nombre AS "retiradoPor"
+        FROM matricula m LEFT JOIN usuario autor ON autor.id=m.retirado_por
+        JOIN usuario u ON u.id=m.usuario_id WHERE m.seccion_id=$1 ORDER BY m.estado,u.nombre,u.email`,[seccion]);
       const eventos = await db.query(`SELECT e.id,e.accion,e.creado_en AS fecha,u.nombre AS autor
         FROM evento_academico e JOIN usuario u ON u.id=e.actor_id
         WHERE e.recurso_id=$1 ORDER BY e.creado_en DESC,e.id DESC LIMIT 50`,[seccion]);
@@ -172,6 +175,32 @@ export class AcademicoService {
     return filas;
   }
 
+  async retirarAlumno(actor: string, institucion: string, seccion: string, alumno: string, dto: Datos) {
+    await this.autorizacion.exigirRol(actor,institucion,'ADMINISTRADOR');
+    id(seccion);
+    id(alumno);
+    const fecha = texto(dto.fecha,'Fecha de retiro',10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha) || Number.isNaN(Date.parse(fecha+'T12:00:00Z')) || new Date(fecha+'T12:00:00Z').toISOString().slice(0,10)!==fecha) {
+      throw new BadRequestException('Indica una fecha válida en formato AAAA-MM-DD');
+    }
+    const referencia = texto(dto.referencia,'Referencia de comunicación oficial',300);
+    return this.ejecutar(institucion, async db => {
+      await this.exigirSeccion(db,actor,institucion,seccion,true);
+      const actual = await db.query('SELECT estado FROM matricula WHERE seccion_id=$1 AND usuario_id=$2 FOR UPDATE',[seccion,alumno]);
+      if (!actual.rowCount) throw new NotFoundException('El alumno no pertenece a la nómina de esta sección');
+      if (actual.rows[0].estado==='RETIRADA') throw new ConflictException('El retiro de este alumno ya fue registrado');
+      const resultado = await db.query(`UPDATE matricula SET estado='RETIRADA',retirado_fecha=$3::date,
+        retirado_referencia=$4,retirado_por=$5,retirado_en=now()
+        WHERE seccion_id=$1 AND usuario_id=$2
+        RETURNING usuario_id AS "alumnoId",estado,retirado_fecha AS "fecha",retirado_en AS "registradoEn"`,
+        [seccion,alumno,fecha,referencia,actor]);
+      await this.registrar(db,institucion,actor,seccion,'RETIRAR_ALUMNO',{
+        alumnoId:alumno,fecha,referencia,estadoAnterior:'ACTIVA',estadoNuevo:'RETIRADA'
+      });
+      return { ...resultado.rows[0], mensaje:'Retiro oficial registrado. Los antecedentes académicos se conservan.' };
+    });
+  }
+
   async nomina(actor: string, institucion: string, seccion: string, dto: Datos, confirmar: boolean) {
     await this.autorizacion.exigirRol(actor,institucion,'ADMINISTRADOR');
     return this.ejecutar(institucion, async db => {
@@ -181,13 +210,15 @@ export class AcademicoService {
       if (!confirmar) return {filas,valida};
       if (!valida) throw new BadRequestException({message:'Corrige las filas inválidas antes de confirmar',filas});
       // Siempre se revalida en el servidor. El resultado de la vista previa no otorga permiso.
+      const retirados = await db.query("SELECT usuario_id FROM matricula WHERE seccion_id=$1 AND estado='RETIRADA' AND usuario_id=ANY($2::uuid[])",[seccion,filas.map(f=>f.usuarioId)]);
+      if (retirados.rowCount) throw new ConflictException('La nómina contiene un alumno retirado oficialmente; no es posible reactivarlo mediante carga masiva');
       let agregados=0;
       for (const f of filas) {
         const r = await db.query('INSERT INTO matricula(institucion_id,seccion_id,usuario_id) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING',
           [institucion,seccion,f.usuarioId]);
         agregados+=r.rowCount ?? 0;
       }
-      const total=(await db.query('SELECT count(*)::int AS total FROM matricula WHERE seccion_id=$1',[seccion])).rows[0].total;
+      const total=(await db.query("SELECT count(*)::int AS total FROM matricula WHERE seccion_id=$1 AND estado='ACTIVA'",[seccion])).rows[0].total;
       await this.registrar(db,institucion,actor,seccion,'CARGAR_NOMINA',{recibidos:filas.length,agregados,total});
       return {agregados,total,mensaje:'Nómina guardada'};
     });
