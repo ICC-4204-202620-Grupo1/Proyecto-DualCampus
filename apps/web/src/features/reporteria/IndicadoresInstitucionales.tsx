@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api } from '../../lib/api';
+import { api, descargarReporteAgregado } from '../../lib/api';
 
 type Motivo = 'grupo_pequeno' | 'unanime' | 'complementaria' | 'sin_datos';
 type Valor = { valor: number | null; motivo: Motivo | null };
@@ -43,6 +43,8 @@ export function IndicadoresInstitucionales({ periodoId }: { periodoId: string })
   const [facultad, setFacultad] = useState('');
   const [error, setError] = useState('');
   const [version, setVersion] = useState(0);
+  const [exportando, setExportando] = useState(false);
+  const [errorDescarga, setErrorDescarga] = useState('');
 
   useEffect(() => {
     let vigente = true;
@@ -60,9 +62,25 @@ export function IndicadoresInstitucionales({ periodoId }: { periodoId: string })
   if (!datos) return <section className="panel"><p role="status">Cargando indicadores…</p></section>;
 
   const inst = datos.institucion;
+  async function exportar() {
+    if (!datos) return;
+    setExportando(true);
+    setErrorDescarga('');
+    try {
+      await descargarReporteAgregado(datos.periodo.id, datos.filtros.facultad);
+    } catch (e) {
+      setErrorDescarga(e instanceof Error ? e.message : 'No se pudo descargar el reporte.');
+    } finally {
+      setExportando(false);
+    }
+  }
   return <section id="indicadores-institucionales" className="panel" aria-label="Indicadores institucionales">
     <p className="etiqueta">Reportería institucional</p>
     <h2>Indicadores del período {datos.periodo.nombre}</h2>
+    <button type="button" className="boton-secundario" disabled={exportando} onClick={() => void exportar()}>
+      {exportando ? 'Preparando CSV…' : 'Descargar reporte CSV'}
+    </button>
+    {errorDescarga && <p className="alerta" role="alert">{errorDescarga}</p>}
     <div className="formulario-fila">
       <label>Facultad
         <select value={facultad} onChange={e => setFacultad(e.target.value)}>
