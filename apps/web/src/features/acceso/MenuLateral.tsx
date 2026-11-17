@@ -11,6 +11,7 @@ export type DestinoNavegacion =
   | 'detalle-seccion'
   | 'modulo-notas'
   | 'distribucion-notas'
+  | 'asistencia-agregada'
   | 'modulo-materiales'
   | 'modulo-entregas'
   | 'modulo-asistencia'
@@ -35,7 +36,20 @@ function enlacesPara(roles: Rol[], esSuperadministrador: boolean): Enlace[] {
       { id: 'modulo-entregas', etiqueta: 'Actividades y entregas', sigla: 'AE' },
       { id: 'modulo-asistencia', etiqueta: esAlumno ? 'Mi asistencia' : 'Asistencia', sigla: 'AS' },
     );
-    if (roles.includes('PROFESOR')) enlaces.push({ id: 'distribucion-notas', etiqueta: 'Distribución de notas', sigla: 'DN' });
+    if (roles.includes('PROFESOR')) {
+      enlaces.push(
+        {
+          id: 'distribucion-notas',
+          etiqueta: 'Distribución de notas',
+          sigla: 'DN',
+        },
+        {
+          id: 'asistencia-agregada',
+          etiqueta: 'Asistencia agregada',
+          sigla: 'AA',
+        },
+      );
+    }
     if (esAlumno) enlaces.push({ id: 'historial-academico', etiqueta: 'Historial académico', sigla: 'HI' });
   }
   return enlaces;
