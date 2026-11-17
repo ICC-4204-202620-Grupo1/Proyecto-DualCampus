@@ -37,7 +37,7 @@ export class AcademicoService {
   async cursos(actor: string, institucion: string, periodo: unknown) {
     await this.autorizacion.exigirRol(actor, institucion, 'ADMINISTRADOR');
     const periodoId = id(periodo);
-    return this.ejecutar(institucion, async db => (await db.query('SELECT id,codigo,nombre FROM curso WHERE periodo_id=$1 ORDER BY codigo',[periodoId])).rows);
+    return this.ejecutar(institucion, async db => (await db.query('SELECT id,codigo,nombre,facultad FROM curso WHERE periodo_id=$1 ORDER BY codigo',[periodoId])).rows);
   }
 
   async crearCurso(actor: string, institucion: string, dto: Datos) {
@@ -45,11 +45,12 @@ export class AcademicoService {
     const periodo = id(dto.periodoId);
     const codigo = texto(dto.codigo, 'Código', 30).toUpperCase();
     const nombre = texto(dto.nombre, 'Nombre', 150);
+    const facultad = dto.facultad === undefined ? 'General' : texto(dto.facultad, 'Facultad', 150);
     return this.ejecutar(institucion, async db => {
       if (!(await db.query('SELECT 1 FROM periodo WHERE id=$1',[periodo])).rowCount) throw new BadRequestException('El período debe pertenecer a la institución activa');
-      const { rows } = await db.query('INSERT INTO curso(institucion_id,periodo_id,codigo,nombre,creado_por) VALUES ($1,$2,$3,$4,$5) RETURNING id,codigo,nombre',
-        [institucion,periodo,codigo,nombre,actor]);
-      await this.registrar(db,institucion,actor,rows[0].id,'CREAR_CURSO',{codigo,nombre});
+      const { rows } = await db.query('INSERT INTO curso(institucion_id,periodo_id,codigo,nombre,facultad,creado_por) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id,codigo,nombre,facultad',
+        [institucion,periodo,codigo,nombre,facultad,actor]);
+      await this.registrar(db,institucion,actor,rows[0].id,'CREAR_CURSO',{codigo,nombre,facultad});
       return rows[0];
     });
   }
