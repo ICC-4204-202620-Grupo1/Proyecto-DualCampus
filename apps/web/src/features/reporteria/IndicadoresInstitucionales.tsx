@@ -13,7 +13,10 @@ type Indicadores = {
 };
 type Respuesta = {
   periodo: { id: string; nombre: string; fechaInicio: string; fechaFin: string };
+  filtros: { facultad: string | null };
+  facultades: string[];
   minimoAlumnos: number;
+  denominadores: { alumnos: number | null; notas: number | null; asistencia: number | null };
   institucion: Indicadores;
   cursos: (Indicadores & { codigo: string; nombre: string })[];
 };
@@ -37,6 +40,7 @@ function Cifra({ v, sufijo = '' }: { v: Valor; sufijo?: string }) {
  */
 export function IndicadoresInstitucionales({ periodoId }: { periodoId: string }) {
   const [datos, setDatos] = useState<Respuesta | null>(null);
+  const [facultad, setFacultad] = useState('');
   const [error, setError] = useState('');
   const [version, setVersion] = useState(0);
 
@@ -44,11 +48,13 @@ export function IndicadoresInstitucionales({ periodoId }: { periodoId: string })
     let vigente = true;
     setDatos(null);
     setError('');
-    api<Respuesta>('/reporteria/indicadores-institucionales?periodoId=' + encodeURIComponent(periodoId))
+    const params = new URLSearchParams({ periodoId });
+    if (facultad) params.set('facultad', facultad);
+    api<Respuesta>('/reporteria/indicadores-institucionales?' + params)
       .then(d => { if (vigente) setDatos(d); })
       .catch(e => { if (vigente) setError(e instanceof Error ? e.message : 'No se pudieron cargar los indicadores.'); });
     return () => { vigente = false; };
-  }, [periodoId, version]);
+  }, [periodoId, facultad, version]);
 
   if (error) return <section className="panel"><p role="alert" className="alerta">{error} <button type="button" onClick={() => setVersion(v => v + 1)}>Reintentar</button></p></section>;
   if (!datos) return <section className="panel"><p role="status">Cargando indicadores…</p></section>;
@@ -57,6 +63,15 @@ export function IndicadoresInstitucionales({ periodoId }: { periodoId: string })
   return <section id="indicadores-institucionales" className="panel" aria-label="Indicadores institucionales">
     <p className="etiqueta">Reportería institucional</p>
     <h2>Indicadores del período {datos.periodo.nombre}</h2>
+    <div className="formulario-fila">
+      <label>Facultad
+        <select value={facultad} onChange={e => setFacultad(e.target.value)}>
+          <option value="">Todas las facultades</option>
+          {datos.facultades.map(f => <option key={f} value={f}>{f}</option>)}
+        </select>
+      </label>
+    </div>
+    <p className="texto-suave">Filtro aplicado: {datos.filtros.facultad ?? 'todas las facultades'} · Período: {datos.periodo.nombre}.</p>
     <p className="texto-suave">
       Cifras agregadas, sin nombres ni identificadores. Se ocultan los grupos con menos de {datos.minimoAlumnos} alumnos
       y los valores que revelarían el resultado de alguien. Los totales consideran solo datos publicables.
@@ -72,6 +87,9 @@ export function IndicadoresInstitucionales({ periodoId }: { periodoId: string })
         <td><Cifra v={inst.asistencia} sufijo="%" /></td>
       </tr></tbody>
     </table></div>
+    <p className="texto-suave">
+      Denominadores del total: {datos.denominadores.alumnos ?? 'oculto'} alumnos, {datos.denominadores.notas ?? 'oculto'} notas y {datos.denominadores.asistencia ?? 'oculto'} marcas de asistencia.
+    </p>
 
     <h3>Distribución de notas publicadas</h3>
     {inst.distribucion.motivo ? <p className="vacio">{MOTIVOS[inst.distribucion.motivo]}.</p> :

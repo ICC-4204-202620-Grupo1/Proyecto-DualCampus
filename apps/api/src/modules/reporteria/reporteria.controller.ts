@@ -19,8 +19,9 @@ export class ReporteriaController {
     @UsuarioActual() usuario: UsuarioSesion,
     @InstitucionActiva() institucion: string,
     @Query('periodoId') periodoId: unknown,
+    @Query('facultad') facultad?: unknown,
   ) {
-    return this.indicadores.consultar(usuario.usuarioId, institucion, periodoId);
+    return this.indicadores.consultar(usuario.usuarioId, institucion, periodoId, facultad);
   }
 
   @Get('secciones/:id/asistencia-agregada')
