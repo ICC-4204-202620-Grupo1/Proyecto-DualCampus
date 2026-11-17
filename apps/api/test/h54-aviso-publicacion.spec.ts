@@ -50,7 +50,7 @@ describe('H54: aviso de publicación de notas', () => {
     const fetch = vi.fn().mockResolvedValue({ ok: true, status: 201 });
     vi.stubGlobal('fetch', fetch);
     const query = vi.fn()
-      .mockResolvedValueOnce({ rows: [{ destinatario_email: 'alumno@example.org', estado: 'PENDIENTE', tipo: 'PUBLICACION_NOTA' }] })
+      .mockResolvedValueOnce({ rows: [{ destinatario_email: 'alumno@example.org', estado: 'ENVIANDO', tipo: 'PUBLICACION_NOTA' }] })
       .mockResolvedValueOnce({ rowCount: 1 });
     const contexto = { ejecutar: vi.fn(async (_institucion, fn) => fn({ query })) };
     const avisos = new AvisosCorreccionService(contexto as never);
