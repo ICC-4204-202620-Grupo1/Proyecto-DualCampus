@@ -11,6 +11,7 @@ import { configurarApp } from '../src/app.setup.js';
 import { CONFIG, cargarConfig } from '../src/config/config.js';
 import { ContextoInstitucion } from '../src/database/contexto-institucion.js';
 import { PG_POOL } from '../src/database/pg-pool.token.js';
+import { AvisosCorreccionService } from '../src/modules/calificaciones/avisos-correccion.service.js';
 import { SesionService } from '../src/modules/autenticacion/sesion.service.js';
 import type { Rol } from '../src/modules/autenticacion/usuario-sesion.js';
 
@@ -61,6 +62,8 @@ describe.skipIf(!url)('H20 · Publicar notas aprobadas (PostgreSQL con RLS)', ()
     }
 
     const modulo = await Test.createTestingModule({ imports: [AppModule] })
+      .overrideProvider(AvisosCorreccionService)
+      .useValue({ despachar: async () => {} })
       .overrideProvider(CONFIG)
       .useValue(
         cargarConfig({
