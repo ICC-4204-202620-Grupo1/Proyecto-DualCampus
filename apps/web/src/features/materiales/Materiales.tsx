@@ -17,6 +17,8 @@ function leer(archivo: File): Promise<string> {
 }
 export function Materiales({ seccionId }: { seccionId: string }) {
   const [datos,setDatos] = useState<Listado | null>(null);
+  const [mostrarPublicar,setMostrarPublicar] = useState(false);
+  const [mostrarReutilizar,setMostrarReutilizar] = useState(false);
   const [titulo,setTitulo] = useState('');
   const [archivo,setArchivo] = useState<File | null>(null);
   const [error,setError] = useState('');
@@ -61,7 +63,7 @@ export function Materiales({ seccionId }: { seccionId: string }) {
     try {
       const contenidoBase64 = await leer(archivo);
       await api(`/materiales/secciones/${seccionId}`,'POST',{titulo,nombreArchivo:archivo.name,tipo,contenidoBase64});
-      setAviso('Material publicado y almacenado correctamente.');
+      setAviso('Material publicado y almacenado correctamente.'); setMostrarPublicar(false);
       setTitulo(''); setArchivo(null); if (entrada.current) entrada.current.value = '';
       setVersion(v => v + 1);
     } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo publicar el material'); }
@@ -88,7 +90,7 @@ export function Materiales({ seccionId }: { seccionId: string }) {
     setCopiando(true); setError(''); setAviso('');
     try {
       await api(`/materiales/secciones/${seccionId}/reutilizaciones`,'POST',{materialOrigenId:origen});
-      setOrigen(''); setAviso('Copia preparada como borrador. Revísala antes de publicarla.'); setVersion(v => v + 1);
+      setOrigen(''); setMostrarReutilizar(false); setAviso('Copia preparada como borrador. Revísala antes de publicarla.'); setVersion(v => v + 1);
     } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo preparar la copia'); }
     finally { setCopiando(false); }
   }
@@ -97,14 +99,15 @@ export function Materiales({ seccionId }: { seccionId: string }) {
     <h3>Materiales del curso</h3>
     {error && <p className="alerta" role="alert">{error}</p>}
     {aviso && <p className="exito" role="status">{aviso}</p>}
-    {datos?.puedePublicar && <form onSubmit={publicar}>
+    {datos?.puedePublicar && <div className="ux-acciones"><button type="button" className="ux-boton-secundario" aria-expanded={mostrarPublicar} onClick={()=>setMostrarPublicar(v=>!v)}>{mostrarPublicar?'Cancelar publicación':'+ Publicar material'}</button><button type="button" className="ux-boton-secundario" aria-expanded={mostrarReutilizar} onClick={()=>setMostrarReutilizar(v=>!v)}>{mostrarReutilizar?'Ocultar reutilización':'Reutilizar material'}</button></div>}
+    {datos?.puedePublicar && mostrarPublicar && <form className="ux-formulario-desplegable" onSubmit={publicar}>
       <p>Publica un documento PDF o TXT de hasta 1 MB.</p>
       <label>Título del material<input required maxLength={200} value={titulo} disabled={guardando} onChange={e => setTitulo(e.target.value)} /></label>
       <label>Documento<input ref={entrada} type="file" accept=".pdf,.txt,application/pdf,text/plain" required disabled={guardando}
         onChange={e => { setArchivo(e.target.files?.[0] ?? null); setError(''); setAviso(''); }} /></label>
       <button type="submit" className="boton" disabled={guardando || !titulo.trim() || !archivo}>{guardando ? 'Publicando…' : 'Publicar material'}</button>
     </form>}
-    {datos?.puedePublicar && <div className="preview" style={{marginBlock:'1rem'}}>
+    {datos?.puedePublicar && mostrarReutilizar && <div className="preview" style={{marginBlock:'1rem'}}>
       <h4>Reutilizar material de otra sección</h4>
       <p className="texto-suave">Selecciona un material de una sección donde eres profesor. La copia quedará como borrador hasta que la revises y la publiques.</p>
       {!opciones.length ? <p className="vacio">No hay materiales publicados en otras secciones autorizadas.</p> : <>

@@ -21,6 +21,7 @@ type Listado = { puedeCrear: boolean; puedeEntregar: boolean; puedeVerInformes?:
 
 export function ActividadesEntrega({ seccionId }: { seccionId: string }) {
   const [datos, setDatos] = useState<Listado | null>(null);
+  const [mostrarCrear, setMostrarCrear] = useState(false);
   const [archivos, setArchivos] = useState<Record<string, File | null>>({});
   const [clavesIntento, setClavesIntento] = useState<Record<string, string>>({});
   const [fallosEnvio, setFallosEnvio] = useState<Record<string, string>>({});
@@ -162,7 +163,7 @@ export function ActividadesEntrega({ seccionId }: { seccionId: string }) {
     try {
       await api(`/actividades/secciones/${seccionId}`, 'POST', { titulo, instrucciones });
       setTitulo(''); setInstrucciones('');
-      setAviso('Actividad creada correctamente.');
+      setAviso('Actividad creada correctamente.'); setMostrarCrear(false);
       setVersion(v => v + 1);
     } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo crear la actividad'); }
     finally { setGuardando(false); }
@@ -177,7 +178,7 @@ export function ActividadesEntrega({ seccionId }: { seccionId: string }) {
         {verTodosInformes ? 'Ocultar informes de la sección' : 'Consultar informes de la sección'}
       </button>
     </div>}
-    {verTodosInformes && <div style={{ marginBottom: '1.5rem', background: '#f8fafc', padding: '1rem', borderRadius: '6px', border: '1px solid var(--borde)' }}>
+    {verTodosInformes && <div style={{ marginBottom: '1.5rem', background: 'var(--superficie-alt)', padding: '1rem', borderRadius: '6px', border: '1px solid var(--borde)' }}>
       <h4>Informes recibidos en la sección</h4>
       {cargandoTodos ? <p role="status">Cargando informes de la sección.</p> :
         errorTodos ? <p role="alert" className="alerta">{errorTodos}</p> :
@@ -214,7 +215,8 @@ export function ActividadesEntrega({ seccionId }: { seccionId: string }) {
           </table>
         </div>}
     </div>}
-    {datos?.puedeCrear && <form onSubmit={crear}>
+    {datos?.puedeCrear && <div className="ux-acciones"><button type="button" className="ux-boton-secundario" aria-expanded={mostrarCrear} onClick={()=>setMostrarCrear(v=>!v)}>{mostrarCrear?'Cancelar creación':'+ Nueva actividad'}</button></div>}
+    {datos?.puedeCrear && mostrarCrear && <form className="ux-formulario-desplegable" onSubmit={crear}>
       <label>Título de la actividad<input required maxLength={200} value={titulo} disabled={guardando}
         onChange={e => setTitulo(e.target.value)}/></label>
       <label>Instrucciones<textarea required maxLength={10000} rows={5} value={instrucciones}
@@ -261,7 +263,7 @@ export function ActividadesEntrega({ seccionId }: { seccionId: string }) {
         {(datos.puedeVerInformes || datos.puedeCrear) && <button type="button" className="boton-secundario" style={{ marginLeft: '0.5rem' }} onClick={() => void toggleInformes(a.id)}>
           {actividadVerInformes === a.id ? 'Ocultar informes' : 'Ver informes recibidos'}
         </button>}
-        {(datos.puedeVerInformes || datos.puedeCrear) && actividadVerInformes === a.id && <div style={{ marginTop: '0.75rem', background: '#f8fafc', padding: '1rem', borderRadius: '6px', border: '1px solid var(--borde)' }}>
+        {(datos.puedeVerInformes || datos.puedeCrear) && actividadVerInformes === a.id && <div style={{ marginTop: '0.75rem', background: 'var(--superficie-alt)', padding: '1rem', borderRadius: '6px', border: '1px solid var(--borde)' }}>
           <h4>Informes recibidos: {a.titulo}</h4>
           {cargandoInformes ? <p role="status">Cargando informes.</p> :
             errorInformes ? <p role="alert" className="alerta">{errorInformes}</p> :
