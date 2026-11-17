@@ -177,6 +177,16 @@ describe.skipIf(!url)('H22 · Corregir nota publicada (PostgreSQL con RLS)', () 
     expect(audit.body.some((x:{accion:string})=>x.accion==='PUBLICAR_EVALUACION')).toBe(true);
     const fila=await app.get(ContextoInstitucion).ejecutar(inst,db=>db.query('SELECT modificado_por FROM nota WHERE evaluacion_id=$1 AND usuario_id=$2',[evaluacion,alumno1]));
     expect(fila.rows[0].modificado_por).toBe(admin);
+    // H55: cada correccion confirmada debe dejar un aviso visible bajo RLS.
+    const avisos = await app.get(ContextoInstitucion).ejecutar(inst,db => db.query(
+      `SELECT a.destinatario_id, a.destinatario_email, a.estado, a.intentos
+       FROM aviso_correo a JOIN evento_academico e ON e.id = a.evento_id
+       WHERE e.recurso_id=$1 AND e.accion='CORREGIR_NOTA_PUBLICADA'`, [evaluacion]
+    ));
+    expect(avisos.rows).toHaveLength(1);
+    expect(avisos.rows[0].destinatario_id).toBe(alumno1);
+    expect(avisos.rows[0].destinatario_email).toBe(alumno1 + '@example.invalid');
+    expect(['FALLIDO', 'ENVIADO', 'PENDIENTE']).toContain(avisos.rows[0].estado);
   });
 
   it('CA3: alumno ve valor vigente en nota propia e historial por período',async()=>{
