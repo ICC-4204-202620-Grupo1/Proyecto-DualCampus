@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ContextoInstitucion } from '../../database/contexto-institucion.js';
 
-/** H55. Avisos transaccionales via Brevo API HTTPS.
- * El envio ocurre despues de confirmar la correccion; los fallos nunca revierten notas.
+/** H54/H55. Avisos transaccionales vía Brevo API HTTPS.
+ * El envío ocurre después de confirmar la publicación o corrección; los fallos nunca revierten notas.
  */
 @Injectable()
 export class AvisosCorreccionService {
@@ -12,8 +12,8 @@ export class AvisosCorreccionService {
   async despachar(institucion: string, avisoId: string): Promise<void> {
     try {
       const aviso = await this.contexto.ejecutar(institucion, async db => {
-        const r = await db.query<{ destinatario_email: string; estado: string }>(
-          `SELECT destinatario_email, estado FROM aviso_correo WHERE id=$1 FOR UPDATE`, [avisoId]);
+        const r = await db.query<{ destinatario_email: string; estado: string; tipo: string }>(
+          `SELECT destinatario_email, estado, tipo FROM aviso_correo WHERE id=$1 FOR UPDATE`, [avisoId]);
         return r.rows[0];
       });
       if (!aviso) {
@@ -41,8 +41,12 @@ export class AvisosCorreccionService {
             body: JSON.stringify({
               sender: { email: remitenteEmail, name: remitenteNombre },
               to: [{ email: aviso.destinatario_email }],
-              subject: 'DualCampus: se corrigio una calificacion',
-              textContent: `Se ha confirmado una correccion de calificacion en DualCampus.\nIngresa a ${process.env.APP_URL || 'http://localhost:5173'} e inicia sesion para revisar tu informacion academica.\nPor seguridad, este mensaje no incluye calificaciones.`,
+              subject: aviso.tipo === 'PUBLICACION_NOTA'
+                ? 'DualCampus: se publicaron tus notas'
+                : 'DualCampus: se corrigio una calificacion',
+              textContent: aviso.tipo === 'PUBLICACION_NOTA'
+                ? `Se publicaron notas de una evaluación en DualCampus.\nIngresa a ${process.env.APP_URL || 'http://localhost:5173'} e inicia sesión para consultar tus calificaciones.\nPor seguridad, este mensaje no incluye notas.`
+                : `Se ha confirmado una correccion de calificacion en DualCampus.\nIngresa a ${process.env.APP_URL || 'http://localhost:5173'} e inicia sesion para revisar tu informacion academica.\nPor seguridad, este mensaje no incluye calificaciones.`,
             }),
             signal: AbortSignal.timeout(5000),
           });
