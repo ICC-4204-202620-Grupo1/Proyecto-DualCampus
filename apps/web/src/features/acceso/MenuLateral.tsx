@@ -16,6 +16,7 @@ export type DestinoNavegacion =
   | 'modulo-entregas'
   | 'modulo-asistencia'
   | 'historial-academico'
+  | 'indicadores-institucionales'
   | 'mi-perfil';
 
 type Enlace = { id: DestinoNavegacion; etiqueta: string; sigla: string };
@@ -53,6 +54,8 @@ function enlacesPara(roles: Rol[], esSuperadministrador: boolean): Enlace[] {
     }
     if (esAlumno) enlaces.push({ id: 'historial-academico', etiqueta: 'Historial académico', sigla: 'HI' });
   }
+  // H48: reportería agregada de la institución, solo para el director.
+  if (roles.includes('DIRECTOR')) enlaces.push({ id: 'indicadores-institucionales', etiqueta: 'Indicadores institucionales', sigla: 'II' });
   // H43: la cuenta personal pertenece a la persona y se consulta desde su perfil.
   if (roles.includes('ALUMNO')) enlaces.push({ id: 'mi-perfil', etiqueta: 'Mi perfil', sigla: 'MP' });
   return enlaces;
