@@ -130,7 +130,7 @@ export function Academico({periodoId,roles,navegacionDestino}:{periodoId:string;
     {seleccion && secciones.some(s=>s.id===seleccion) && navegacionDestino === 'modulo-materiales' && <Materiales key={seleccion} seccionId={seleccion} />}
     {seleccion && secciones.some(s=>s.id===seleccion) && navegacionDestino === 'modulo-entregas' && <ActividadesEntrega key={seleccion} seccionId={seleccion} />}
     {seleccion && secciones.some(s=>s.id===seleccion) && navegacionDestino === 'modulo-asistencia' && (roles.every(r=>r==='ALUMNO') ? <MiAsistencia key={seleccion} seccionId={seleccion} /> : <Clases key={seleccion} seccionId={seleccion} roles={roles} />)}
-    {seleccion && secciones.some(s=>s.id===seleccion) && navegacionDestino === 'modulo-anuncios' && roles.includes('PROFESOR') && <AnunciosSeccion key={seleccion} seccionId={seleccion} />}
+    {seleccion && secciones.some(s=>s.id===seleccion) && navegacionDestino === 'modulo-anuncios' && (roles.includes('PROFESOR') || roles.includes('ALUMNO')) && <AnunciosSeccion key={seleccion} seccionId={seleccion} puedePublicar={roles.includes('PROFESOR')} />}
     {seleccion &&
         secciones.some(s => s.id === seleccion) &&
         navegacionDestino === 'asistencia-agregada' &&
