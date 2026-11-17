@@ -14,7 +14,8 @@ export type DestinoNavegacion =
   | 'modulo-materiales'
   | 'modulo-entregas'
   | 'modulo-asistencia'
-  | 'historial-academico';
+  | 'historial-academico'
+  | 'mi-perfil';
 
 type Enlace = { id: DestinoNavegacion; etiqueta: string; sigla: string };
 
@@ -38,6 +39,8 @@ function enlacesPara(roles: Rol[], esSuperadministrador: boolean): Enlace[] {
     if (roles.includes('PROFESOR')) enlaces.push({ id: 'distribucion-notas', etiqueta: 'Distribución de notas', sigla: 'DN' });
     if (esAlumno) enlaces.push({ id: 'historial-academico', etiqueta: 'Historial académico', sigla: 'HI' });
   }
+  // H43: la cuenta personal pertenece a la persona y se consulta desde su perfil.
+  if (roles.includes('ALUMNO')) enlaces.push({ id: 'mi-perfil', etiqueta: 'Mi perfil', sigla: 'MP' });
   return enlaces;
 }
 

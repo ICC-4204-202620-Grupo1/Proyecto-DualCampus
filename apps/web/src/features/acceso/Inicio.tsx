@@ -5,17 +5,23 @@ import { MenuLateral, type DestinoNavegacion } from './MenuLateral';
 import { SelectorInstitucion } from './SelectorInstitucion';
 import { Instituciones } from '../superadministracion/Instituciones';
 import { Usuarios } from '../superadministracion/Usuarios';
+import { leerResultadoVinculacion, MiPerfil } from '../perfil/MiPerfil';
 
 export function Inicio({usuario,onSalir,onCambio}:{usuario:UsuarioSesion;onSalir:()=>void;onCambio:(u:UsuarioSesion)=>void}) {
   const [contexto,setContexto]=useState<ContextoInstitucion|null>(null);
   const [error,setError]=useState('');
   const [cambiando,setCambiando]=useState(false);
   const [version,setVersion]=useState(0);
-  const [destino,setDestino]=useState<DestinoNavegacion>(usuario.esSuperadministrador && !usuario.institucionActivaId ? 'instituciones' : 'periodos-academicos');
+  const esAlumno=usuario.roles.some(r=>r.rol==='ALUMNO');
+  // H43: al volver de verificar la cuenta personal en Google se abre el perfil con el resultado.
+  const [resultadoVinculacion]=useState(leerResultadoVinculacion);
+  const destinoInicial=():DestinoNavegacion=>usuario.esSuperadministrador && !usuario.institucionActivaId ? 'instituciones' : 'periodos-academicos';
+  const [destino,setDestino]=useState<DestinoNavegacion>(()=>resultadoVinculacion && esAlumno ? 'mi-perfil' : destinoInicial());
+  useEffect(()=>{if(resultadoVinculacion) window.history.replaceState(null,'',window.location.pathname);},[resultadoVinculacion]);
   const [menuMovil,setMenuMovil]=useState(false);
   const cerrarMenuMovil = useCallback(() => setMenuMovil(false), []);
   useEffect(()=>{
-    let vigente=true;setContexto(null);setError('');setDestino(usuario.esSuperadministrador && !usuario.institucionActivaId ? 'instituciones' : 'periodos-academicos');setMenuMovil(false);
+    let vigente=true;setContexto(null);setError('');setDestino(d=>d==='mi-perfil' && esAlumno ? d : destinoInicial());setMenuMovil(false);
     if(usuario.institucionActivaId) obtenerContexto().then(c=>{if(vigente)setContexto(c);}).catch(()=>{if(vigente)setError('No se pudo verificar tu acceso. Reintenta o vuelve a iniciar sesión.');});
     return ()=>{vigente=false;};
   },[usuario.institucionActivaId,version]);
@@ -42,9 +48,10 @@ export function Inicio({usuario,onSalir,onCambio}:{usuario:UsuarioSesion;onSalir
         {!usuario.institucionActivaId && !usuario.esSuperadministrador && <section className="panel vacio">Selecciona una institución para comenzar.</section>}
         {usuario.esSuperadministrador && destino === 'instituciones' && <Instituciones />}
         {usuario.esSuperadministrador && destino === 'usuarios-globales' && <Usuarios />}
+        {esAlumno && destino === 'mi-perfil' && <MiPerfil usuario={usuario} resultado={resultadoVinculacion} />}
         {error && <p className="alerta" role="alert">{error} <button onClick={()=>setVersion(v=>v+1)}>Reintentar</button></p>}
         {usuario.institucionActivaId && (!visible || !contexto) && !error && <p role="status">Cargando institución…</p>}
-        {visible && contexto && destino !== 'instituciones' && destino !== 'usuarios-globales' && <><div className="contexto"><strong>{contexto.institucion}</strong><span>{contexto.roles.map(r=>r.toLowerCase()).join(' · ')}</span></div>
+        {visible && contexto && destino !== 'instituciones' && destino !== 'usuarios-globales' && destino !== 'mi-perfil' && <><div className="contexto"><strong>{contexto.institucion}</strong><span>{contexto.roles.map(r=>r.toLowerCase()).join(' · ')}</span></div>
           <Periodos key={contexto.institucionActivaId} roles={contexto.roles} navegacionDestino={destino}/></>}
       </main>
     </div>

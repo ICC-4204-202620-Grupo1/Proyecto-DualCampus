@@ -110,3 +110,7 @@ footer { text-align:center; padding:1rem 1rem 2rem; font-size:.78rem; color:var(
 .calendario-fecha strong { font-size:clamp(1rem,2vw,1.25rem); line-height:1.4; text-transform:capitalize; }
 .calendario-fecha time { color:var(--suave); font-size:.84rem; }
 @media (max-width:600px) { .calendario-fechas { grid-template-columns:1fr; } }
+/* H43 · Acciones del perfil sobre fondo claro (boton-secundario es para la barra oscura). */
+.perfil-acciones { display:flex; flex-wrap:wrap; gap:.6rem; margin-top:.5rem; }
+.perfil-acciones .boton { display:inline-block; }
+.boton-claro { background:white; color:var(--azul-boton); border:1px solid var(--borde); }

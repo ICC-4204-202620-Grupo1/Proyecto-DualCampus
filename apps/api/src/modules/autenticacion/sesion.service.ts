@@ -12,6 +12,17 @@ const AUD_OIDC = 'dualcampus:oidc';
 const OIDC_MINUTOS = 10;
 
 /**
+ * Datos temporales del flujo OIDC. Sin propósito es un inicio de sesión (H01); con
+ * propósito 'vincular' es la verificación de una cuenta personal (H43) iniciada por usuarioId.
+ */
+export interface DatosOidc {
+  state: string;
+  nonce: string;
+  proposito?: 'vincular';
+  usuarioId?: string;
+}
+
+/**
  * Sesión firmada (JWT HS256) en cookie httpOnly. No se guarda estado en el servidor,
  * lo que encaja con funciones serverless. El vencimiento va en el token y en la cookie.
  */
@@ -51,8 +62,8 @@ export class SesionService {
     }
   }
 
-  /** Datos temporales del inicio de sesión (state y nonce de OIDC). */
-  emitirOidc(datos: { state: string; nonce: string }): string {
+  /** Datos temporales del flujo OIDC (state, nonce y, si corresponde, su propósito). */
+  emitirOidc(datos: DatosOidc): string {
     return this.jwt.sign(datos, {
       secret: this.config.sessionSecret,
       audience: AUD_OIDC,
@@ -60,10 +71,15 @@ export class SesionService {
     });
   }
 
-  verificarOidc(token: string | undefined): { state: string; nonce: string } | null {
+  verificarOidc(token: string | undefined): DatosOidc | null {
     if (!token) return null;
     try {
       const p = this.jwt.verify(token, { secret: this.config.sessionSecret, audience: AUD_OIDC });
+      if (p.proposito === 'vincular') {
+        return typeof p.usuarioId === 'string'
+          ? { state: p.state, nonce: p.nonce, proposito: 'vincular', usuarioId: p.usuarioId }
+          : null;
+      }
       return { state: p.state, nonce: p.nonce };
     } catch {
       return null;

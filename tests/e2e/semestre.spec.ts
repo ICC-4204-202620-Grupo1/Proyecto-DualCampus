@@ -92,3 +92,25 @@ test('configuración persistente, validación y permisos de cuatro roles',async(
  await expect(page.getByRole('link',{name:/Google/})).toBeVisible();
  expect(errores).toEqual([]);
 });
+
+// H43: el alumno vincula una cuenta personal desde su perfil y la asociación persiste.
+// La verificación con Google se reemplaza por la vinculación local (no existe en producción).
+test('H43 · vincular una cuenta personal desde el perfil',async({page,context},testInfo)=>{
+ await ingresar(context,'prof');await page.goto('/');
+ await expect(page.getByRole('navigation',{name:'Secciones disponibles'})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Mi perfil',exact:true})).toHaveCount(0);
+ await ingresar(context,'alumno');await page.reload();
+ await irAlModulo(page,'Mi perfil');
+ await expect(page.getByText('Todavía no tienes una cuenta personal vinculada.',{exact:true})).toBeVisible();
+ await expect(page.getByRole('link',{name:'Vincular cuenta personal',exact:true})).toHaveAttribute('href','/api/cuenta-personal/vincular');
+ await page.getByRole('link',{name:/cuenta personal de prueba/}).click();
+ await expect(page.getByText('Cuenta personal verificada y vinculada.',{exact:true})).toBeVisible();
+ await expect(page.getByText('personal.demo@example.invalid',{exact:true})).toBeVisible();
+ expect(new URL(page.url()).search).toBe('');
+ await page.screenshot({path:testInfo.outputPath('04-alumno-perfil.png'),fullPage:true});
+ await page.reload();
+ await irAlModulo(page,'Mi perfil');
+ await expect(page.getByText('personal.demo@example.invalid',{exact:true})).toBeVisible();
+ await expect(page.getByText('Cuenta personal verificada y vinculada.',{exact:true})).toHaveCount(0);
+ await expect(page.getByRole('link',{name:'Cambiar cuenta personal',exact:true})).toBeVisible();
+});

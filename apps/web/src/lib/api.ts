@@ -206,3 +206,11 @@ export function asignarRolGlobal(id: string, institucionId: string, rol: Rol) {
 export function quitarRolGlobal(id: string, institucionId: string, rol: Rol) {
   return api(`/superadmin/usuarios/${encodeURIComponent(id)}/roles`,'DELETE',{institucionId,rol});
 }
+
+/** H43: cuenta personal verificada para consultar el historial después del egreso. */
+export interface CuentaPersonal { email: string; verificadoEn: string }
+export function consultarCuentaPersonal() {
+  return api<{ cuentaPersonal: CuentaPersonal | null }>('/cuenta-personal');
+}
+/** Navegación del navegador: la API redirige a Google y vuelve con ?vinculacion=. */
+export const URL_VINCULAR_CUENTA_PERSONAL = `${API_URL}/cuenta-personal/vincular`;
