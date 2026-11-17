@@ -5,10 +5,11 @@ import { PeriodosRepositorio, PostgresPeriodosRepositorio } from './periodos/per
 import { PeriodosService } from './periodos/periodos.service.js';
 import { AcademicoController } from './academico.controller.js';
 import { AcademicoService } from './academico.service.js';
+import { ClasesService } from './clases.service.js';
 
 @Module({
   imports: [AutorizacionModule],
   controllers: [PeriodosController, AcademicoController],
-  providers: [PeriodosService, AcademicoService, { provide: PeriodosRepositorio, useClass: PostgresPeriodosRepositorio }],
+  providers: [PeriodosService, AcademicoService, ClasesService, { provide: PeriodosRepositorio, useClass: PostgresPeriodosRepositorio }],
 })
 export class GestionAcademicaModule {}

@@ -1,5 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nestjs",
-  "installCommand": "npm ci --include=dev"
+  "installCommand": "npm ci --include=dev",
+  "crons": [{ "path": "/api/reporteria/reportes-programados/ejecutar", "schedule": "0 9 * * *" }]
 }

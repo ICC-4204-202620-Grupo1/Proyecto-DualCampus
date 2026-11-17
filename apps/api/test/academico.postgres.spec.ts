@@ -135,6 +135,26 @@ describe.skipIf(!url)('J1 · API y PostgreSQL real con RLS',()=>{
     expect((await get('academico/secciones',alumno).expect(200)).body).toHaveLength(1);
     await get('academico/secciones/'+seccion,alumno).expect(403);
   });
+  it('H12: retiro oficial exige datos, registra auditoria, conserva matricula y revoca acceso activo',async()=>{
+    const ruta='academico/secciones/'+seccion;
+    await post(ruta+'/nomina',{emails:[alumno+'@example.invalid']}).expect(201);
+    const retiro=ruta+'/nomina/'+alumno+'/retiro';
+    await post(retiro,{fecha:'2026-10-03',referencia:''}).expect(400);
+    await post(retiro,{fecha:'2026-02-30',referencia:'Oficio 19'}).expect(400);
+    await post(retiro,{fecha:'2026-10-03',referencia:'Oficio 19'},prof).expect(403);
+    await post(retiro,{fecha:'2026-10-03',referencia:'Oficio 19'},admin,otra).expect(404);
+    await post(retiro,{fecha:'2026-10-03',referencia:'Oficio 19'}).expect(201);
+    const detalle=(await get(ruta).expect(200)).body;
+    expect(detalle.nomina[0]).toMatchObject({id:alumno,estado:'RETIRADA',retiradoReferencia:'Oficio 19'});
+    expect(detalle.eventos.some((e:{accion:string})=>e.accion==='RETIRAR_ALUMNO')).toBe(true);
+    expect((await get('academico/secciones',admin).expect(200)).body[0].totalAlumnos).toBe(0);
+    expect((await get('academico/secciones',alumno).expect(200)).body).toHaveLength(0);
+    await post(retiro,{fecha:'2026-10-03',referencia:'Oficio 19'}).expect(409);
+    await post(ruta+'/nomina',{emails:[alumno+'@example.invalid']}).expect(409);
+    const conservada=await ctx(db=>db.query('SELECT creado_en,retirado_por FROM matricula WHERE seccion_id=$1 AND usuario_id=$2',[seccion,alumno]));
+    expect(conservada.rowCount).toBe(1);
+    expect(conservada.rows[0].retirado_por).toBe(admin);
+  });
   it('dos cargas concurrentes no duplican alumnos',async()=>{
     await put('academico/secciones/'+seccion+'/equipo',{profesorId:prof,ayudanteIds:[]}).expect(200);
     const ruta='academico/secciones/'+seccion+'/nomina',datos={emails:[alumno+'@example.invalid']};

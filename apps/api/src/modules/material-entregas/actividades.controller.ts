@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put, Res, StreamableFile, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Param, Post, Put, Res, StreamableFile, UploadedFile, UseInterceptors } from '@nestjs/common';
 import type { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UsuarioActual } from '../../common/decorators/usuario-actual.decorator.js';
@@ -24,8 +24,9 @@ export class ActividadesController {
   @UseInterceptors(FileInterceptor('archivo', { limits: { fileSize: 50 * 1024 * 1024, files: 1 } }))
   entregar(@UsuarioActual() u: UsuarioSesion, @InstitucionActiva() i: string,
     @Param('id') id: string, @Param('actividadId') actividadId: string,
+    @Headers('x-idempotency-key') claveIdempotencia: string | undefined,
     @UploadedFile() archivo: { originalname: string; mimetype: string; buffer: Buffer; size: number } | undefined) {
-    return this.servicio.entregar(u.usuarioId, i, id, actividadId, archivo);
+    return this.servicio.entregar(u.usuarioId, i, id, actividadId, archivo, claveIdempotencia);
   }
   @Put(':id/actividades/:actividadId/configuracion')
   configurar(@UsuarioActual() u: UsuarioSesion, @InstitucionActiva() i: string,

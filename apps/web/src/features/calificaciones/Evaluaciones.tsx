@@ -27,6 +27,7 @@ export function Evaluaciones({ seccionId, roles }: { seccionId: string; roles: R
   const [aviso, setAviso] = useState('');
   const [guardando, setGuardando] = useState(false);
   const [version, setVersion] = useState(0);
+  const [mostrarFormulario, setMostrarFormulario] = useState(false);
 
   const [form, setForm] = useState({
     nombre: '',
@@ -72,6 +73,7 @@ export function Evaluaciones({ seccionId, roles }: { seccionId: string; roles: R
       setEvaluaciones((prev) => [...prev, nueva]);
       setForm({ nombre: '', fecha: '', ponderacion: '20' });
       setAviso(`Evaluación "${nueva.nombre}" creada con éxito.`);
+      setMostrarFormulario(false);
       setVersion((v) => v + 1);
     } catch (err) {
       setError(mensaje(err));
@@ -81,7 +83,7 @@ export function Evaluaciones({ seccionId, roles }: { seccionId: string; roles: R
   }
 
   return (
-    <div className="evaluaciones-panel" style={{ marginTop: '2rem', borderTop: '1px solid var(--borde)', paddingTop: '1.5rem' }}>
+    <div id="modulo-notas" className="evaluaciones-panel" style={{ marginTop: '2rem', borderTop: '1px solid var(--borde)', paddingTop: '1.5rem' }}>
       <div className="encabezado-seccion" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <p className="etiqueta" style={{ fontSize: '0.8rem', color: 'var(--suave)', margin: 0 }}>H14 · Épica 3: Calificaciones</p>
@@ -93,13 +95,14 @@ export function Evaluaciones({ seccionId, roles }: { seccionId: string; roles: R
       {error && <p role="alert" className="alerta" style={{ marginBottom: '1rem' }}>{error}</p>}
       {aviso && <p role="status" className="exito" style={{ marginBottom: '1rem' }}>{aviso}</p>}
 
-      {puedeCrear && (
+      {puedeCrear && <div className="ux-acciones"><button type="button" className="ux-boton-secundario" aria-expanded={mostrarFormulario} onClick={() => setMostrarFormulario(v => !v)}>{mostrarFormulario ? "Cancelar creación" : "+ Nueva evaluación"}</button></div>}
+      {puedeCrear && mostrarFormulario && (
         <form
           onSubmit={crearEvaluacion}
           className="formulario-fila"
           style={{
             marginBottom: '1.5rem',
-            background: '#f8fafc',
+            background: 'var(--superficie-alt)',
             padding: '1rem',
             borderRadius: '8px',
             border: '1px solid var(--borde)',

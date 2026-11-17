@@ -14,6 +14,7 @@ export interface UsuarioSesion {
   nombre: string;
   institucionActivaId: string | null;
   roles: { institucionId: string; institucion: string; rol: Rol }[];
+  esSuperadministrador?: boolean;
 }
 
 /** Devuelve la sesión actual, o null si no hay sesión o venció (401). */
@@ -118,7 +119,11 @@ export async function crearPeriodo(datos: { nombre: string; fechaInicio: string;
 
 /** Operaciones del recorrido académico; todos los datos se validan nuevamente en la API. */
 export async function api<T>(ruta:string,method='GET',datos?:unknown):Promise<T> {
-  const res=await fetch(API_URL+ruta,{
+  const rutaFinal = ruta.replace(
+  /^\/academico\/secciones\/([^/]+)\/asistencia-agregada$/,
+  '/reporteria/secciones/$1/asistencia-agregada',
+  );
+  const res = await fetch(API_URL + rutaFinal, {
     method,credentials:'include',
     headers:{...contextoHeaders(),...(datos===undefined?{}:{'Content-Type':'application/json'})},
     ...(datos===undefined?{}:{body:JSON.stringify(datos)}),
@@ -173,4 +178,83 @@ export async function descargarEntrega(seccionId: string, actividadId: string, e
   } finally {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
+}
+
+/** H50: descarga los indicadores actuales con filtros y autorización revalidados por la API. */
+export async function descargarReporteAgregado(periodoId: string, facultad: string | null): Promise<void> {
+  const params = new URLSearchParams({ periodoId });
+  if (facultad) params.set('facultad', facultad);
+  const res = await fetch(`${API_URL}/reporteria/indicadores-institucionales/exportar?${params}`, {
+    credentials: 'include', headers: contextoHeaders(),
+  });
+  if (!res.ok) { await cuerpoOError(res); return; }
+  const archivo = await res.blob();
+  const url = URL.createObjectURL(archivo);
+  try {
+    const enlace = document.createElement('a');
+    enlace.href = url;
+    enlace.download = `reporte-agregado-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(enlace);
+    enlace.click();
+    enlace.remove();
+  } finally {
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+}
+
+/** H57: listado global y alta, solo para el superadministrador. */
+export interface InstitucionGlobal { id: string; nombre: string; activa: boolean; creadoEn: string }
+export function listarInstitucionesGlobales(): Promise<InstitucionGlobal[]> {
+  return api<InstitucionGlobal[]>('/superadmin/instituciones');
+}
+export function crearInstitucionGlobal(nombre: string): Promise<InstitucionGlobal> {
+  return api<InstitucionGlobal>('/superadmin/instituciones', 'POST', { nombre });
+}
+
+/** H59: obtiene un Blob desde API protegida y permite previsualizarlo sin exponer URL pública. */
+export async function obtenerVistaPreviaMaterial(seccionId:string,materialId:string):Promise<Blob> {
+  const ruta=`${API_URL}/materiales/secciones/${encodeURIComponent(seccionId)}/materiales/${encodeURIComponent(materialId)}/previsualizar`;
+  const res=await fetch(ruta,{credentials:'include',headers:contextoHeaders()});
+  if(!res.ok){await cuerpoOError(res);throw new Error('No se pudo abrir la vista previa');}
+  return res.blob();
+}
+
+/** H58: gestión global de usuarios y asignaciones por institución. */
+export interface RolGlobal { institucionId: string; institucion: string; rol: Rol }
+export interface UsuarioGlobal { id: string; email: string; nombre: string | null; activo: boolean; roles: RolGlobal[] }
+export function listarUsuariosGlobales() { return api<UsuarioGlobal[]>('/superadmin/usuarios'); }
+export function crearUsuarioGlobal(datos: { nombre: string; email: string; institucionId: string; rol: Rol }) {
+  return api<UsuarioGlobal>('/superadmin/usuarios','POST',datos);
+}
+export function asignarRolGlobal(id: string, institucionId: string, rol: Rol) {
+  return api(`/superadmin/usuarios/${encodeURIComponent(id)}/roles`,'POST',{institucionId,rol});
+}
+export function quitarRolGlobal(id: string, institucionId: string, rol: Rol) {
+  return api(`/superadmin/usuarios/${encodeURIComponent(id)}/roles`,'DELETE',{institucionId,rol});
+}
+
+/** H43: cuenta personal verificada para consultar el historial después del egreso. */
+export interface CuentaPersonal { email: string; verificadoEn: string }
+export function consultarCuentaPersonal() {
+  return api<{ cuentaPersonal: CuentaPersonal | null }>('/cuenta-personal');
+}
+/** Navegación del navegador: la API redirige a Google y vuelve con ?vinculacion=. */
+export const URL_VINCULAR_CUENTA_PERSONAL = `${API_URL}/cuenta-personal/vincular`;
+
+/** H44: ingreso del egresado con la cuenta personal vinculada; sesión de solo consulta. */
+export const URL_INGRESAR_EGRESADO = `${API_URL}/auth/egresado`;
+export interface SesionEgresado {
+  usuarioId: string;
+  nombre: string;
+  emailInstitucional: string;
+  emailPersonal: string;
+  cuentaInstitucionalActiva: boolean;
+  instituciones: { id: string; nombre: string }[];
+}
+/** Devuelve la sesión de egresado, o null si no hay una vigente (401). */
+export async function obtenerSesionEgresado(): Promise<SesionEgresado | null> {
+  const res = await fetch(`${API_URL}/egresado/sesion`, { credentials: 'include' });
+  if (res.status === 401) return null;
+  if (!res.ok) throw new Error(`Error ${res.status} al consultar la sesión`);
+  return res.json();
 }
