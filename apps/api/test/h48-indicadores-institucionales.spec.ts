@@ -114,7 +114,7 @@ describe('H48 · Reglas de anonimización', () => {
       chico.notas = chico.notas.map((n, i) => ({ ...n, alumno: `c${i}` }));
       const grupos = [grande, chico].map((datos) => ({ datos, publicos: indicadoresDeGrupo(datos) }));
       const total = indicadoresTotales(grupos);
-      expect(total.alumnos).toBe(21);
+      expect(total.alumnos).toBe(18);
       // El rango 1 del grupo chico y las celdas ocultas del grande no aparecen en el total.
       expect(total.distribucion.rangos.map((c) => c.cantidad)).toEqual([0, 0, 6, 0, 6, 0]);
       // El promedio total es el del grupo grande: las notas 1,0 del grupo chico no entran.
@@ -297,7 +297,7 @@ describe.skipIf(!url)('H48 · Indicadores institucionales en PostgreSQL', () => 
   it('CA2 · el total de la institución no permite deducir lo suprimido', async () => {
     const { body } = await indicadores().expect(200);
     expect(body.minimoAlumnos).toBe(5);
-    expect(body.institucion.alumnos).toBe(21);
+    expect(body.institucion.alumnos).toBe(18);
     // Solo entran los datos publicados del curso GRANDE.
     expect(body.institucion.promedioNotas.valor).toBe(4.6);
     expect(body.institucion.aprobacion.valor).toBe(68);

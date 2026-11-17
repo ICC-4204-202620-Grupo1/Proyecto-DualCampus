@@ -10,8 +10,9 @@ import { MiAsistencia } from './MiAsistencia';
 import type { DestinoNavegacion } from '../acceso/MenuLateral';
 import { AsistenciaAgregada } from './AsistenciaAgregada';
 import { AnunciosSeccion } from '../anuncios/AnunciosSeccion';
-import { leerPreferencia, guardarPreferencia } from '../acceso/preferencias';
-type Curso = {id:string;codigo:string;nombre:string};
+
+type Curso = {id:string;codigo:string;nombre:string;facultad:string};
+
 type Seccion = {id:string;codigo:string;periodo:string;curso:string;cursoCodigo:string;totalAlumnos:number};
 type Persona = {id:string;nombre:string|null;email:string;rol?:string};
 type Detalle = {equipo:Persona[];nomina:Persona[];eventos:{id:string;accion:string;fecha:string;autor:string}[]};
@@ -25,8 +26,9 @@ export function Academico({periodoId,roles,navegacionDestino,usuarioId,instituci
   const [cursos,setCursos]=useState<Curso[]>([]);
   const [secciones,setSecciones]=useState<Seccion[]>([]);
   const [docentes,setDocentes]=useState<Persona[]>([]);
-  const [seleccion,setSeleccion]=useState(()=>leerPreferencia(claveSeccion));
-  const [curso,setCurso]=useState({codigo:'',nombre:''});
+
+  const [seleccion,setSeleccion]=useState('');
+  const [curso,setCurso]=useState({codigo:'',nombre:'',facultad:''});
   const [seccion,setSeccion]=useState({cursoId:'',codigo:''});
   const [error,setError]=useState('');
   const [aviso,setAviso]=useState('');
@@ -58,7 +60,7 @@ export function Academico({periodoId,roles,navegacionDestino,usuarioId,instituci
     e.preventDefault();setOcupado(true);setError('');setAviso('');
     try {
       await api('/academico/'+tipo,'POST',tipo==='cursos'?{...curso,periodoId}:{...seccion,periodoId});
-      if(tipo==='cursos')setCurso({codigo:'',nombre:''});else setSeccion({cursoId:'',codigo:''});
+      if(tipo==='cursos')setCurso({codigo:'',nombre:'',facultad:''});else setSeccion({cursoId:'',codigo:''});
       setAviso(tipo==='cursos'?'Curso creado. Ahora puedes registrar su sección.':'Sección creada. Selecciónala para asignar docentes.');
       setVersion(v=>v+1);
     }catch(e){setError(mensaje(e));}finally{setOcupado(false);}
@@ -97,6 +99,7 @@ export function Academico({periodoId,roles,navegacionDestino,usuarioId,instituci
       <form onSubmit={e=>crear(e,'cursos')}><h3>Registrar curso</h3>
         <label>Código del curso<input required maxLength={30} placeholder="ICC-4204" value={curso.codigo} onChange={e=>setCurso({...curso,codigo:e.target.value})}/></label>
         <label>Nombre<input required maxLength={150} placeholder="Introducción al software" value={curso.nombre} onChange={e=>setCurso({...curso,nombre:e.target.value})}/></label>
+        <label>Facultad<input maxLength={150} placeholder="Ingeniería" value={curso.facultad} onChange={e=>setCurso({...curso,facultad:e.target.value})}/></label>
         <button disabled={ocupado}>Crear curso</button>
       </form>
       <form onSubmit={e=>crear(e,'secciones')}><h3>Abrir sección en este período</h3>
@@ -155,7 +158,7 @@ export function Academico({periodoId,roles,navegacionDestino,usuarioId,instituci
     {seleccion && secciones.some(s=>s.id===seleccion) && navegacionDestino === 'modulo-materiales' && <Materiales key={seleccion} seccionId={seleccion} />}
     {seleccion && secciones.some(s=>s.id===seleccion) && navegacionDestino === 'modulo-entregas' && <ActividadesEntrega key={seleccion} seccionId={seleccion} />}
     {seleccion && secciones.some(s=>s.id===seleccion) && navegacionDestino === 'modulo-asistencia' && (roles.every(r=>r==='ALUMNO') ? <MiAsistencia key={seleccion} seccionId={seleccion} /> : <Clases key={seleccion} seccionId={seleccion} roles={roles} />)}
-    {seleccion && secciones.some(s=>s.id===seleccion) && navegacionDestino === 'modulo-anuncios' && roles.includes('PROFESOR') && <AnunciosSeccion key={seleccion} seccionId={seleccion} />}
+    {seleccion && secciones.some(s=>s.id===seleccion) && navegacionDestino === 'modulo-anuncios' && (roles.includes('PROFESOR') || roles.includes('ALUMNO')) && <AnunciosSeccion key={seleccion} seccionId={seleccion} puedePublicar={roles.includes('PROFESOR')} />}
     {seleccion &&
         secciones.some(s => s.id === seleccion) &&
         navegacionDestino === 'asistencia-agregada' &&

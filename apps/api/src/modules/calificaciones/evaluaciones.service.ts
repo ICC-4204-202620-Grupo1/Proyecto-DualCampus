@@ -1,7 +1,8 @@
-import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import type { PoolClient } from 'pg';
 import { ContextoInstitucion } from '../../database/contexto-institucion.js';
 import { AutorizacionService } from '../autorizacion/autorizacion.service.js';
+import { AvisosCorreccionService } from './avisos-correccion.service.js';
 
 type Datos = Record<string, unknown>;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -29,9 +30,11 @@ function fechaValida(valor: unknown): string {
 
 @Injectable()
 export class EvaluacionesService {
+  private readonly logger = new Logger(EvaluacionesService.name);
   constructor(
     private readonly contexto: ContextoInstitucion,
     private readonly autorizacion: AutorizacionService,
+    private readonly avisosCorreo: AvisosCorreccionService,
   ) {}
 
   private async ejecutar<T>(institucion: string, fn: (db: PoolClient) => Promise<T>): Promise<T> {
@@ -309,7 +312,7 @@ export class EvaluacionesService {
   async publicar(actor: string, institucion: string, evaluacionId: string) {
     await this.autorizacion.exigirRol(actor, institucion, 'PROFESOR');
     const eid = id(evaluacionId);
-    return this.ejecutar(institucion, async (db) => {
+    const resultado = await this.ejecutar(institucion, async (db) => {
       const res = await db.query('SELECT id, seccion_id, estado FROM evaluacion WHERE id=$1 FOR UPDATE', [eid]);
       if (!res.rowCount) throw new NotFoundException('Evaluación no encontrada');
       const evaluacion = res.rows[0];
@@ -337,8 +340,45 @@ export class EvaluacionesService {
         [eid, actor],
       );
       await this.registrar(db, institucion, actor, eid, 'PUBLICAR_EVALUACION', { publicadoEn: rows[0].publicadoEn });
-      return rows[0];
+      const destinatarios = await db.query<{ usuario_id: string; email: string }>(
+        `SELECT m.usuario_id, u.email FROM matricula m
+         JOIN nota n ON n.evaluacion_id=$1 AND n.usuario_id=m.usuario_id
+         JOIN usuario u ON u.id=m.usuario_id
+         WHERE m.seccion_id=$2 AND m.estado='ACTIVA' AND u.activo
+         ORDER BY m.usuario_id`, [eid, evaluacion.seccion_id],
+      );
+      const avisos: string[] = [];
+      for (const destinatario of destinatarios.rows) {
+        // Cada aviso tiene su propio evento: el vínculo único evento_id no mezcla destinatarios.
+        const evento = await db.query<{ id: string }>(
+          `INSERT INTO evento_academico(institucion_id,actor_id,recurso_id,accion,datos)
+           VALUES ($1,$2,$3,'AVISAR_PUBLICACION_NOTA',$4) RETURNING id`,
+          [institucion, actor, eid, JSON.stringify({ alumnoId: destinatario.usuario_id })],
+        );
+        const aviso = await db.query<{ id: string }>(
+          `INSERT INTO aviso_correo(institucion_id,evento_id,destinatario_id,destinatario_email,tipo)
+           VALUES ($1,$2,$3,$4,'PUBLICACION_NOTA') RETURNING id`,
+          [institucion, evento.rows[0].id, destinatario.usuario_id, destinatario.email],
+        );
+        avisos.push(aviso.rows[0].id);
+      }
+      return { evaluacion: rows[0], avisos };
     });
+    // La transacción ya confirmó las notas. El correo se intenta en segundo plano para
+    // que un proveedor lento o caído no bloquee la publicación ni la consulta del alumno.
+    void this.despacharAvisos(institucion, resultado.avisos).catch(e =>
+      this.logger.error('H54: no fue posible despachar avisos de publicación', e instanceof Error ? e.stack : String(e)));
+    return resultado.evaluacion;
+  }
+
+  private async despacharAvisos(institucion: string, avisos: string[]) {
+    let siguiente = 0;
+    await Promise.all(Array.from({ length: Math.min(4, avisos.length) }, async () => {
+      while (siguiente < avisos.length) {
+        const avisoId = avisos[siguiente++];
+        await this.avisosCorreo.despachar(institucion, avisoId);
+      }
+    }));
   }
 
 

@@ -140,7 +140,9 @@ export function indicadoresTotales(grupos: { datos: DatosGrupo; publicos: Indica
     }
     return union;
   };
-  const todos = unir(() => true);
+  // El total de alumnos tampoco puede incluir grupos ocultos: restar los cursos
+  // visibles revelaría cuántas personas hay en un curso pequeño.
+  const todos = unir((p) => p.motivo === null);
   if (todos.alumnos.size < MINIMO_ALUMNOS) return indicadoresDeGrupo(todos);
   const conPromedio = unir((p) => p.promedioNotas.valor !== null).notas;
   const conAprobacion = unir((p) => p.aprobacion.valor !== null).notas;
