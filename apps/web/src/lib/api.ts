@@ -233,6 +233,17 @@ export function quitarRolGlobal(id: string, institucionId: string, rol: Rol) {
   return api(`/superadmin/usuarios/${encodeURIComponent(id)}/roles`,'DELETE',{institucionId,rol});
 }
 
+/** Carga masiva de usuarios desde CSV: vista previa sin escribir y confirmación transaccional. */
+export type ResultadoFilaCarga = 'CREAR' | 'ASIGNAR_ROL' | 'SIN_CAMBIOS' | 'RECHAZADA';
+export interface FilaCargaUsuarios { fila: number; email: string; nombre: string; universidad: string; rol: string; resultado: ResultadoFilaCarga; motivo?: string }
+export interface ResumenCargaUsuarios { total: number; crear: number; asignarRol: number; sinCambios: number; rechazadas: number }
+export function validarCargaUsuarios(csv: string, institucionId?: string) {
+  return api<{ filas: FilaCargaUsuarios[]; resumen: ResumenCargaUsuarios }>('/superadmin/usuarios/carga/validar','POST',{csv,institucionId:institucionId||undefined});
+}
+export function confirmarCargaUsuarios(csv: string, institucionId?: string) {
+  return api<ResumenCargaUsuarios>('/superadmin/usuarios/carga/confirmar','POST',{csv,institucionId:institucionId||undefined});
+}
+
 /** H43: cuenta personal verificada para consultar el historial después del egreso. */
 export interface CuentaPersonal { email: string; verificadoEn: string }
 export function consultarCuentaPersonal() {

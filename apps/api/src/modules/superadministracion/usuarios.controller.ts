@@ -1,8 +1,11 @@
 import { BadRequestException, Body, ConflictException, Controller, Delete, ForbiddenException, Get, Inject, Param, Post } from '@nestjs/common';
-import { Pool } from 'pg';
+import { Pool, type PoolClient } from 'pg';
 import { UsuarioActual } from '../../common/decorators/usuario-actual.decorator.js';
 import { PG_POOL } from '../../database/pg-pool.token.js';
 import type { UsuarioSesion, Rol } from '../autenticacion/usuario-sesion.js';
+import { filaPublica, leerCsv, validarCarga, type InstitucionCarga, type UsuarioExistente } from './carga-usuarios.js';
+
+type Consultable = Pool | PoolClient;
 
 const ROLES: Rol[] = ['ADMINISTRADOR', 'PROFESOR', 'AYUDANTE', 'ALUMNO', 'DIRECTOR'];
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -21,6 +24,67 @@ export class UsuariosGlobalesController {
     }
     if (!ROLES.includes(datos.rol as Rol)) throw new BadRequestException('Selecciona un rol válido');
     return { institucionId: datos.institucionId, rol: datos.rol as Rol };
+  }
+
+  /** Lee el CSV y lo valida contra las universidades activas y los usuarios ya registrados. */
+  private async revisarCarga(db: Consultable, datos: Record<string, unknown>) {
+    const csv = typeof datos?.csv === 'string' ? datos.csv : '';
+    if (!csv.trim()) throw new BadRequestException('Pega o sube un archivo CSV');
+    const porDefecto = typeof datos?.institucionId === 'string' && datos.institucionId ? datos.institucionId : undefined;
+    if (porDefecto && !UUID.test(porDefecto)) throw new BadRequestException('Selecciona una universidad válida');
+
+    const { rows: instituciones } = await db.query<InstitucionCarga>('SELECT id,nombre FROM institucion WHERE activa ORDER BY nombre');
+    const institucionPorDefecto = porDefecto ? instituciones.find((i) => i.id === porDefecto) : undefined;
+    if (porDefecto && !institucionPorDefecto) throw new BadRequestException('La universidad no existe o está inactiva');
+
+    const correos = [...new Set(leerCsv(csv).flat().map((v) => v.toLowerCase()).filter((v) => v.includes('@')))];
+    const { rows: usuarios } = await db.query<UsuarioExistente & { email: string }>(`
+      SELECT u.id,u.email,u.activo,
+        COALESCE(json_agg(json_build_object('institucionId',r.institucion_id,'rol',r.rol))
+          FILTER (WHERE r.usuario_id IS NOT NULL),'[]') AS roles
+      FROM usuario u LEFT JOIN rol_en_institucion r ON r.usuario_id=u.id
+      WHERE u.email = ANY($1::text[]) GROUP BY u.id`, [correos]);
+    const existentes = new Map(usuarios.map((u) => [u.email, u]));
+
+    const { filas, error } = validarCarga(csv, instituciones, existentes, institucionPorDefecto);
+    if (error) throw new BadRequestException(error);
+    return filas;
+  }
+
+  private resumen(filas: { resultado: string }[]) {
+    const contar = (r: string) => filas.filter((f) => f.resultado === r).length;
+    return { total: filas.length, crear: contar('CREAR'), asignarRol: contar('ASIGNAR_ROL'), sinCambios: contar('SIN_CAMBIOS'), rechazadas: contar('RECHAZADA') };
+  }
+
+  /** Vista previa de la carga masiva: no escribe nada. */
+  @Post('carga/validar')
+  async validarCargaMasiva(@UsuarioActual() actor: UsuarioSesion, @Body() datos: Record<string, unknown>) {
+    this.exigirGlobal(actor);
+    const filas = await this.revisarCarga(this.db, datos);
+    return { filas: filas.map(filaPublica), resumen: this.resumen(filas) };
+  }
+
+  /** Aplica la carga masiva completa en una transacción; si alguna fila es inválida no se guarda nada. */
+  @Post('carga/confirmar')
+  async confirmarCargaMasiva(@UsuarioActual() actor: UsuarioSesion, @Body() datos: Record<string, unknown>) {
+    this.exigirGlobal(actor);
+    const cliente = await this.db.connect();
+    try {
+      await cliente.query('BEGIN');
+      const filas = await this.revisarCarga(cliente, datos);
+      if (filas.some((f) => f.resultado === 'RECHAZADA')) {
+        throw new BadRequestException('Corrige las filas rechazadas antes de confirmar la carga');
+      }
+      for (const f of filas) {
+        if (f.resultado === 'SIN_CAMBIOS') continue;
+        await cliente.query('INSERT INTO usuario(email,nombre) VALUES($1,$2) ON CONFLICT(email) DO NOTHING', [f.email, f.nombre]);
+        await cliente.query(`INSERT INTO rol_en_institucion(usuario_id,institucion_id,rol)
+          SELECT id,$2,$3::rol FROM usuario WHERE email=$1 ON CONFLICT DO NOTHING`, [f.email, f.institucionId, f.rol]);
+      }
+      await cliente.query('COMMIT');
+      return this.resumen(filas);
+    } catch (e) { await cliente.query('ROLLBACK'); throw e; }
+    finally { cliente.release(); }
   }
 
   @Get()
