@@ -30,6 +30,9 @@ h2 { font-size: 1rem; margin: 1.5rem 0 0.5rem; }
 }
 .login-tarjeta .marca { margin-bottom: 1.5rem; }
 .login-tarjeta .marca-logo { background: var(--azul); color: #fff; }
+/* H44 · Ingreso del egresado con su cuenta personal vinculada */
+.login-egresado { margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--borde, #e2e8f0); }
+.login-egresado .texto-suave { margin: 0 0 .6rem; font-size: .9rem; }
 
 .boton {
   display: block; text-align: center; padding: 0.7rem 1rem; border-radius: 8px;
