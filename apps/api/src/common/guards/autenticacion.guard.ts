@@ -28,7 +28,7 @@ export class AutenticacionGuard implements CanActivate {
     if(esperada && esperada!==sesion.institucionActivaId) throw new ConflictException('La institución cambió en otra pestaña. Recarga antes de continuar.');
     // No confiar en roles embebidos en una cookie emitida antes de una revocación.
     const actual = await this.usuarios.buscarPorId(sesion.usuarioId);
-    if (!actual?.activo || (!actual.roles.length && !actual.esSuperadministrador)) throw new UnauthorizedException('La cuenta ya no está habilitada');
+    if (!actual?.activo || !actual.roles.length) throw new UnauthorizedException('La cuenta ya no está habilitada');
     if (sesion.institucionActivaId && !actual.roles.some(r=>r.institucionId===sesion.institucionActivaId)) {
       throw new ForbiddenException('El acceso a la institución ya no está habilitado');
     }
@@ -40,7 +40,7 @@ export class AutenticacionGuard implements CanActivate {
     if (escritura && !tipoPermitido) {
       throw new ForbiddenException('La operación requiere contenido JSON');
     }
-    req.usuario = { ...sesion, nombre:actual.nombre || sesion.nombre, email:actual.email, roles:actual.roles, esSuperadministrador:actual.esSuperadministrador };
+    req.usuario = { ...sesion, nombre:actual.nombre || sesion.nombre, email:actual.email, roles:actual.roles };
     return true;
   }
 }

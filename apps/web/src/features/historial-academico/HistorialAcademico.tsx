@@ -19,7 +19,7 @@ type Asignatura = {
   cursoNombre: string;
   notas: Nota[];
 };
-export type Periodo = {
+type Periodo = {
   id: string;
   nombre: string;
   fechaInicio: string;
@@ -46,7 +46,7 @@ export function HistorialAcademico() {
     return () => { vigente = false; };
   }, [version]);
 
-  return <section id="historial-academico" className="panel" aria-label="Mi historial académico">
+  return <section className="panel" aria-label="Mi historial académico">
     <div className="encabezado-seccion">
       <div><p className="etiqueta">03 · Historial académico</p><h2>Mi historial académico</h2></div>
       <button type="button" className="boton-secundario" disabled={cargando} onClick={() => setVersion(v => v + 1)}>
@@ -57,33 +57,28 @@ export function HistorialAcademico() {
     {cargando ? <p role="status">Cargando historial…</p> : error ?
       <p role="alert" className="alerta">{error}</p> : periodos.length === 0 ?
       <p className="vacio">Sin datos: todavía no hay períodos académicos en esta institución.</p> :
-      <ListaPeriodos periodos={periodos} />}
+      periodos.map(periodo => {
+        const tieneNotas = periodo.asignaturas.some(asignatura => asignatura.notas.length > 0);
+        return <div key={periodo.id} className="detalle-seccion">
+          <h3>{periodo.nombre}</h3>
+          <p className="texto-suave">{periodo.fechaInicio.slice(0, 10)} al {periodo.fechaFin.slice(0, 10)}</p>
+          {!tieneNotas ? <p className="vacio">Sin datos: no hay calificaciones publicadas en este período.</p> :
+            periodo.asignaturas.map(asignatura => <div key={asignatura.seccionId}>
+              <h4>{asignatura.cursoCodigo} · {asignatura.cursoNombre} (sección {asignatura.seccionCodigo})</h4>
+              {asignatura.notas.length === 0 ? <p className="vacio">Sin datos: no hay notas publicadas en esta asignatura.</p> :
+                <div className="tabla-contenedor"><table>
+                  <thead><tr><th>Evaluación</th><th>Fecha</th><th>Ponderación</th><th>Mi nota</th><th>Resultado</th><th>Publicación</th></tr></thead>
+                  <tbody>{asignatura.notas.map(nota => <tr key={nota.id}>
+                    <td>{nota.nombre}</td>
+                    <td>{nota.fecha.slice(0, 10)}</td>
+                    <td>{nota.ponderacion}%</td>
+                    <td>{nota.esAusente ? 'Ausente' : nota.valor === null ? 'Sin nota registrada' : nota.valor.toFixed(1)}</td>
+                    <td>{nota.esAusente ? 'Ausencia registrada' : nota.valor === null ? '—' : nota.valor >= nota.escalaAprobacion ? 'Aprobado' : 'Reprobado'}</td>
+                    <td>{nota.publicadoEn ? new Date(nota.publicadoEn).toLocaleString('es-CL') : '—'}</td>
+                  </tr>)}</tbody>
+                </table></div>}
+            </div>)}
+        </div>;
+      })}
   </section>;
-}
-
-/** Períodos, asignaturas y notas publicadas. Compartido por H39 y la consulta del egresado (H44). */
-export function ListaPeriodos({ periodos }: { periodos: Periodo[] }) {
-  return <>{periodos.map(periodo => {
-    const tieneNotas = periodo.asignaturas.some(asignatura => asignatura.notas.length > 0);
-    return <div key={periodo.id} className="detalle-seccion">
-      <h3>{periodo.nombre}</h3>
-      <p className="texto-suave">{periodo.fechaInicio.slice(0, 10)} al {periodo.fechaFin.slice(0, 10)}</p>
-      {!tieneNotas ? <p className="vacio">Sin datos: no hay calificaciones publicadas en este período.</p> :
-        periodo.asignaturas.map(asignatura => <div key={asignatura.seccionId}>
-          <h4>{asignatura.cursoCodigo} · {asignatura.cursoNombre} (sección {asignatura.seccionCodigo})</h4>
-          {asignatura.notas.length === 0 ? <p className="vacio">Sin datos: no hay notas publicadas en esta asignatura.</p> :
-            <div className="tabla-contenedor"><table>
-              <thead><tr><th>Evaluación</th><th>Fecha</th><th>Ponderación</th><th>Mi nota</th><th>Resultado</th><th>Publicación</th></tr></thead>
-              <tbody>{asignatura.notas.map(nota => <tr key={nota.id}>
-                <td>{nota.nombre}</td>
-                <td>{nota.fecha.slice(0, 10)}</td>
-                <td>{nota.ponderacion}%</td>
-                <td>{nota.esAusente ? 'Ausente' : nota.valor === null ? 'Sin nota registrada' : nota.valor.toFixed(1)}</td>
-                <td>{nota.esAusente ? 'Ausencia registrada' : nota.valor === null ? '—' : nota.valor >= nota.escalaAprobacion ? 'Aprobado' : 'Reprobado'}</td>
-                <td>{nota.publicadoEn ? new Date(nota.publicadoEn).toLocaleString('es-CL') : '—'}</td>
-              </tr>)}</tbody>
-            </table></div>}
-        </div>)}
-    </div>;
-  })}</>;
 }

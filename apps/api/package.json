@@ -8,9 +8,7 @@
     "start:dev": "nest start --watch",
     "test": "vitest run",
     "db:migrar": "node scripts/migrar.js",
-    "avisos:diagnostico": "node scripts/diagnosticar-avisos.js",
-    "usuario:habilitar": "node scripts/habilitar-usuario.js",
-    "superadmin:habilitar": "node scripts/habilitar-superadmin.js"
+    "usuario:habilitar": "node scripts/habilitar-usuario.js"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.0",

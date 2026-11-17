@@ -9,13 +9,6 @@ import request from 'supertest';
 import { AppModule } from '../src/app.module.js';
 import { configurarApp } from '../src/app.setup.js';
 import { CONFIG, cargarConfig } from '../src/config/config.js';
-import {
-  CuentaPersonal,
-  CuentasPersonalesRepositorio,
-  IdentidadPersonal,
-  ResultadoVinculacion,
-  TitularCuentaPersonal,
-} from '../src/modules/autenticacion/cuentas-personales.repositorio.js';
 import { GoogleOidcAdapter } from '../src/modules/autenticacion/google-oidc.adapter.js';
 import type { IdentidadGoogle, RolEnInstitucion } from '../src/modules/autenticacion/usuario-sesion.js';
 import {
@@ -137,38 +130,9 @@ export class PeriodosEnMemoria extends PeriodosRepositorio {
   }
 }
 
-/** H43 · Simula cuenta_personal con las mismas reglas de unicidad que la tabla. */
-export class CuentasPersonalesEnMemoria extends CuentasPersonalesRepositorio {
-  cuentas = new Map<string, IdentidadPersonal & { verificadoEn: string }>();
-  constructor(private readonly usuarios: UsuariosEnMemoria) {
-    super();
-  }
-  reiniciar() {
-    this.cuentas.clear();
-  }
-  async obtener(usuarioId: string): Promise<CuentaPersonal | null> {
-    const c = this.cuentas.get(usuarioId);
-    return c ? { email: c.email, verificadoEn: c.verificadoEn } : null;
-  }
-  async buscarPorSub(sub: string): Promise<TitularCuentaPersonal | null> {
-    for (const [usuarioId, c] of this.cuentas) if (c.sub === sub) return { usuarioId, email: c.email };
-    return null;
-  }
-  async vincular(usuarioId: string, identidad: IdentidadPersonal): Promise<ResultadoVinculacion> {
-    const institucionales = this.usuarios.usuarios.filter((u) => u.email === identidad.email || u.googleSub === identidad.sub);
-    if (institucionales.length) return institucionales.every((u) => u.id === usuarioId) ? 'INSTITUCIONAL' : 'OCUPADA';
-    for (const [dueno, c] of this.cuentas) {
-      if (dueno !== usuarioId && (c.sub === identidad.sub || c.email === identidad.email)) return 'OCUPADA';
-    }
-    this.cuentas.set(usuarioId, { ...identidad, verificadoEn: new Date().toISOString() });
-    return 'VINCULADA';
-  }
-}
-
 export async function crearApp(
   repo: UsuariosRepositorio,
   periodos: PeriodosRepositorio = new PeriodosEnMemoria(repo as UsuariosEnMemoria),
-  cuentasPersonales: CuentasPersonalesRepositorio = new CuentasPersonalesEnMemoria(repo as UsuariosEnMemoria),
 ): Promise<INestApplication> {
   const config = cargarConfig({
     SESSION_SECRET: SECRETO,
@@ -181,7 +145,6 @@ export async function crearApp(
     .overrideProvider(GoogleOidcAdapter).useClass(GoogleFalso)
     .overrideProvider(UsuariosRepositorio).useValue(repo)
     .overrideProvider(PeriodosRepositorio).useValue(periodos)
-    .overrideProvider(CuentasPersonalesRepositorio).useValue(cuentasPersonales)
     .compile();
   const app = configurarApp(modulo.createNestApplication<NestExpressApplication>());
   await app.init();

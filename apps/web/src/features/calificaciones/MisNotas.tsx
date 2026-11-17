@@ -21,7 +21,7 @@ export function MisNotas({ seccionId }: { seccionId: string }) {
       .finally(() => { if (vigente) setCargando(false); });
     return () => { vigente = false; };
   }, [seccionId, version]);
-  return <section id="modulo-notas" className="panel" aria-label="Mis notas publicadas">
+  return <section className="panel" aria-label="Mis notas publicadas">
     <h3>Mis notas publicadas</h3>
     <p className="texto-suave">Aquí aparecen únicamente tus resultados oficiales de esta sección.</p>
     <button type="button" className="boton-secundario" disabled={cargando} onClick={() => setVersion(v => v + 1)}>Actualizar notas</button>

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put, Res, StreamableFile } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Res, StreamableFile } from '@nestjs/common';
 import type { Response } from 'express';
 import { UsuarioActual } from '../../common/decorators/usuario-actual.decorator.js';
 import { InstitucionActiva } from '../../common/decorators/institucion-activa.decorator.js';
@@ -11,29 +11,6 @@ export class MaterialesController {
   listar(@UsuarioActual() u: UsuarioSesion, @InstitucionActiva() i: string, @Param('id') id: string) {
     return this.servicio.listar(u.usuarioId,i,id);
   }
-
-  @Get(':id/reutilizacion/opciones')
-  opciones(@UsuarioActual() u: UsuarioSesion, @InstitucionActiva() i: string, @Param('id') id: string) {
-    return this.servicio.opcionesReutilizacion(u.usuarioId, i, id);
-  }
-
-  @Post(':id/reutilizaciones')
-  reutilizar(@UsuarioActual() u: UsuarioSesion, @InstitucionActiva() i: string, @Param('id') id: string,
-    @Body() datos: Record<string,unknown>) {
-    return this.servicio.reutilizar(u.usuarioId, i, id, datos ?? {});
-  }
-
-  @Put(':id/borradores/:materialId')
-  editarBorrador(@UsuarioActual() u: UsuarioSesion, @InstitucionActiva() i: string, @Param('id') id: string,
-    @Param('materialId') materialId: string, @Body() datos: Record<string,unknown>) {
-    return this.servicio.editarBorrador(u.usuarioId, i, id, materialId, datos ?? {});
-  }
-
-  @Post(':id/borradores/:materialId/publicar')
-  publicarBorrador(@UsuarioActual() u: UsuarioSesion, @InstitucionActiva() i: string, @Param('id') id: string,
-    @Param('materialId') materialId: string) {
-    return this.servicio.publicarBorrador(u.usuarioId, i, id, materialId);
-  }
   @Get(':id/materiales/:materialId/descargar')
   async descargar(@UsuarioActual() u: UsuarioSesion, @InstitucionActiva() i: string,
     @Param('id') id: string, @Param('materialId') materialId: string,
@@ -44,23 +21,6 @@ export class MaterialesController {
     respuesta.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${nombre}`);
     respuesta.setHeader('Cache-Control', 'private, no-store');
     respuesta.setHeader('X-Content-Type-Options', 'nosniff');
-    return new StreamableFile(archivo.contenido, { type: archivo.tipo, length: archivo.contenido.length });
-  }
-
-  /** H59: misma comprobación institucional que la descarga; apertura integrada en navegador. */
-  @Get(':id/materiales/:materialId/previsualizar')
-  async previsualizar(@UsuarioActual() u: UsuarioSesion, @InstitucionActiva() i: string,
-    @Param('id') id: string, @Param('materialId') materialId: string,
-    @Res({ passthrough: true }) respuesta: Response) {
-    const archivo = await this.servicio.descargar(u.usuarioId, i, id, materialId);
-    if (!['application/pdf','text/plain'].includes(archivo.tipo)) {
-      respuesta.status(415);
-      return { message: 'Formato no compatible con vista previa. Descarga el archivo.' };
-    }
-    respuesta.setHeader('Content-Disposition','inline');
-    respuesta.setHeader('Cache-Control','private, no-store');
-    respuesta.setHeader('X-Content-Type-Options','nosniff');
-    respuesta.setHeader('Content-Security-Policy',"default-src 'none'; sandbox");
     return new StreamableFile(archivo.contenido, { type: archivo.tipo, length: archivo.contenido.length });
   }
 

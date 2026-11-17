@@ -14,7 +14,6 @@ export interface UsuarioSesion {
   /** Se define al seleccionar institución (H02). */
   institucionActivaId: string | null;
   roles: RolEnInstitucion[];
-  esSuperadministrador: boolean;
 }
 
 /** Lo que Google confirma de la persona tras validar el id_token. */
