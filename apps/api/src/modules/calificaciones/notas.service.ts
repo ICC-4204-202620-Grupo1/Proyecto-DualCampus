@@ -1,6 +1,7 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import type { PoolClient } from 'pg';
 import { ContextoInstitucion } from '../../database/contexto-institucion.js';
+import { COLUMNAS_CORRECCION, joinUltimaCorreccion, leerCorreccion } from './correccion-nota.js';
 import { AutorizacionService } from '../autorizacion/autorizacion.service.js';
 import { AvisosCorreccionService } from './avisos-correccion.service.js';
 
@@ -47,14 +48,19 @@ export class NotasService {
       const { rows } = await db.query(
         `SELECT e.id, e.nombre, e.fecha, e.ponderacion, e.publicado_en AS "publicadoEn",
            e.escala_minima AS "escalaMinima", e.escala_maxima AS "escalaMaxima",
-           e.escala_aprobacion AS "escalaAprobacion", n.valor, n.es_ausente AS "esAusente"
+           e.escala_aprobacion AS "escalaAprobacion", n.valor, n.es_ausente AS "esAusente",
+           ${COLUMNAS_CORRECCION}
          FROM evaluacion e JOIN nota n ON n.evaluacion_id=e.id AND n.usuario_id=$2
+         ${joinUltimaCorreccion('e.id', 'n.usuario_id')}
          WHERE e.seccion_id=$1 AND e.estado='PUBLICADA' ORDER BY e.fecha, e.creado_en`,
         [sid, actor],
       );
-      return rows.map(r => ({ ...r, valor: r.valor === null ? null : Number(r.valor),
+      return rows.map(({ correccionValorAnterior, correccionAusenteAnterior, correccionEn, ...r }) => ({
+        ...r, valor: r.valor === null ? null : Number(r.valor),
         ponderacion: Number(r.ponderacion), escalaMinima: Number(r.escalaMinima),
-        escalaMaxima: Number(r.escalaMaxima), escalaAprobacion: Number(r.escalaAprobacion) }));
+        escalaMaxima: Number(r.escalaMaxima), escalaAprobacion: Number(r.escalaAprobacion),
+        // Nota corregida: valor anterior junto al nuevo.
+        correccion: leerCorreccion({ correccionValorAnterior, correccionAusenteAnterior, correccionEn }) }));
     });
   }
 
@@ -113,10 +119,11 @@ export class NotasService {
       const { rows } = await db.query(
         `SELECT u.id AS "alumnoId", u.nombre, u.email,
                 n.id AS "notaId", n.valor, n.es_ausente AS "esAusente",
-                n.actualizado_en AS "actualizadoEn"
+                n.actualizado_en AS "actualizadoEn", ${COLUMNAS_CORRECCION}
          FROM matricula m
          JOIN usuario u ON u.id = m.usuario_id
          LEFT JOIN nota n ON n.evaluacion_id = $1 AND n.usuario_id = u.id
+         ${joinUltimaCorreccion('$1::uuid', 'u.id')}
          WHERE m.seccion_id = $2 AND m.estado='ACTIVA' AND ($3::uuid IS NULL OR u.id = $3)
          ORDER BY u.nombre ASC, u.email ASC`,
         [eid, evaluacion.seccionId, !esAdmin && !esDocente ? actor : null],
@@ -138,7 +145,8 @@ export class NotasService {
           escalaMinima: Number(evaluacion.escalaMinima),
           escalaMaxima: Number(evaluacion.escalaMaxima),
         },
-        filas: rows.map((r: { alumnoId: string; nombre: string; email: string; notaId: string | null; valor: string | null; esAusente: boolean | null; actualizadoEn: string | null }) => ({
+        filas: rows.map((r: { alumnoId: string; nombre: string; email: string; notaId: string | null; valor: string | null; esAusente: boolean | null; actualizadoEn: string | null;
+          correccionValorAnterior: number | null; correccionAusenteAnterior: boolean | null; correccionEn: string | null }) => ({
           alumnoId: r.alumnoId,
           nombre: r.nombre || r.email,
           email: r.email,
@@ -146,6 +154,7 @@ export class NotasService {
           valor: r.valor !== null ? Number(r.valor) : null,
           esAusente: r.esAusente ?? false,
           actualizadoEn: r.actualizadoEn,
+          correccion: leerCorreccion(r),
         })),
       };
     });

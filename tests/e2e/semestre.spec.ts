@@ -195,3 +195,36 @@ test('crear y probar usuarios desde el login',async({page,context},testInfo)=>{
  await page.getByRole('button',{name:'Ingresar',exact:true}).click();
  await expect(page.getByRole('navigation',{name:'Secciones disponibles'}).getByRole('button',{name:'Universidades',exact:true})).toBeVisible();
 });
+
+// Nota corregida: el alumno ve la nota anterior tachada junto a la nueva.
+test('nota corregida muestra la anterior y la nueva',async({page,context,request},testInfo)=>{
+ const token=async(rol:keyof typeof ids)=>{await ingresar(context,rol);return (await context.cookies()).find(c=>c.name==='dc_sesion')!.value;};
+ const api=async(rol:keyof typeof ids,metodo:'post'|'put'|'get',ruta:string,datos?:unknown)=>{
+   const res=await request[metodo]('/api/'+ruta,{headers:{Cookie:'dc_sesion='+await token(rol)},...(datos===undefined?{}:{data:datos})});
+   expect(res.ok(),ruta+' → '+res.status()+' '+await res.text()).toBe(true);
+   return res.json();
+ };
+ const periodo=(await api('admin','post','periodos',{nombre:'2027 · Corrección',fechaInicio:'2027-08-01',fechaFin:'2027-12-20'})).id;
+ const curso=(await api('admin','post','academico/cursos',{periodoId:periodo,codigo:'NOT-101',nombre:'Notas corregidas'})).id;
+ const seccion=(await api('admin','post','academico/secciones',{periodoId:periodo,cursoId:curso,codigo:'01'})).id;
+ await api('admin','put',`academico/secciones/${seccion}/equipo`,{profesorId:ids.prof,ayudanteIds:[]});
+ await api('admin','post',`academico/secciones/${seccion}/nomina`,{emails:['alumno@example.invalid']});
+ const evaluacion=(await api('prof','post',`calificaciones/secciones/${seccion}/evaluaciones`,{nombre:'Control corregido',fecha:'2027-09-01',ponderacion:30})).id;
+ await api('prof','put',`calificaciones/evaluaciones/${evaluacion}/notas`,{notas:[{alumnoId:ids.alumno,valor:4.5}]});
+ await api('prof','post',`calificaciones/evaluaciones/${evaluacion}/enviar-revision`,{});
+ await api('prof','post',`calificaciones/evaluaciones/${evaluacion}/publicar`,{});
+ const fila=(await api('admin','get',`calificaciones/evaluaciones/${evaluacion}/notas`)).filas[0];
+ await api('admin','post',`calificaciones/evaluaciones/${evaluacion}/notas/${ids.alumno}/correcciones`,
+   {valor:5.8,motivo:'Error de suma',referencia:'SOL-E2E',valorPrevio:fila.valor,ausentePrevio:fila.esAusente,actualizadoEn:fila.actualizadoEn});
+
+ await ingresar(context,'alumno');await page.goto('/');
+ await irAlModulo(page,'Mis secciones');
+ await page.getByRole('combobox',{name:'Período de trabajo',exact:true}).selectOption({label:'2027 · Corrección'});
+ await page.getByRole('button',{name:/NOT-101 · Sección 01/}).click();
+ await irAlModulo(page,'Mis calificaciones');
+ const celda=page.getByLabel('Nota corregida: antes 4.5, ahora 5.8');
+ await expect(celda).toBeVisible();
+ await expect(page.locator('.nota-anterior')).toHaveText('4.5');
+ await expect(page.getByText(/^Corregida el /)).toBeVisible();
+ await page.screenshot({path:testInfo.outputPath('08-nota-corregida.png'),fullPage:true});
+});
