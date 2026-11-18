@@ -247,3 +247,16 @@ button.login-opcion.activa { background:var(--superficie); color:var(--texto); b
 .ux-formulario-desplegable { border:1px solid var(--borde); background:var(--superficie-alt); border-radius:12px; padding:1.1rem; margin:1rem 0; }
 @media(max-width:800px) { .login-renovado { grid-template-columns:1fr; max-width:490px; padding:5rem 1rem 2rem; gap:0; }
   .login-presentacion { display:none; } .login-tarjeta-renovada .login-marca-movil { display:flex; margin-bottom:1.5rem; } }
+
+/* Crear y probar usuarios (cuentas @testing.com, solo para pruebas) */
+.login-accion-secundaria { width:100%; margin-top:.6rem; }
+.cuentas-prueba { margin-top:1.1rem; padding-top:1rem; border-top:1px dashed var(--borde); }
+.cuentas-prueba .login-opciones { margin:.8rem 0 1.1rem; }
+.cuentas-prueba-aviso { font-size:.8rem; color:var(--suave); margin:0; }
+.cuentas-prueba-form .login-accion { margin-top:.4rem; width:100%; }
+.cuentas-prueba-form .exito { margin-bottom:1rem; font-size:.9rem; line-height:1.5; }
+.cuentas-prueba-form .exito .login-accion { margin-top:.8rem; }
+.campo-con-sufijo { display:flex; align-items:stretch; }
+.campo-con-sufijo input { border-top-right-radius:0; border-bottom-right-radius:0; min-width:0; }
+.campo-con-sufijo .sufijo { display:flex; align-items:center; padding:0 .7rem; font-weight:500; color:var(--suave);
+  background:var(--superficie-alt); border:1px solid var(--borde-control); border-left:0; border-radius:0 7px 7px 0; white-space:nowrap; }

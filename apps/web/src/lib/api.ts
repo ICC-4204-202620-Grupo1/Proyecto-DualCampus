@@ -269,3 +269,22 @@ export async function obtenerSesionEgresado(): Promise<SesionEgresado | null> {
   if (!res.ok) throw new Error(`Error ${res.status} al consultar la sesión`);
   return res.json();
 }
+
+/** «Crear y probar usuarios»: cuentas @testing.com sin contraseña, solo para probar la plataforma. */
+export type RolPrueba = Rol | 'SUPERADMINISTRADOR';
+export interface OpcionesCuentasPrueba { dominio: string; roles: RolPrueba[] }
+export interface CuentaPruebaCreada { email: string; nombre: string; rol: RolPrueba; institucion: string | null }
+export async function consultarOpcionesCuentasPrueba(): Promise<OpcionesCuentasPrueba> {
+  const res = await fetch(`${API_URL}/cuentas-prueba/opciones`, { credentials: 'include' });
+  if (!res.ok) throw new Error(`Error ${res.status}`);
+  return res.json();
+}
+export function listarInstitucionesPrueba() {
+  return api<{ id: string; nombre: string }[]>('/cuentas-prueba/instituciones');
+}
+export function crearCuentaPrueba(datos: { usuario: string; nombre: string; rol: RolPrueba; institucionId?: string }) {
+  return api<CuentaPruebaCreada>('/cuentas-prueba', 'POST', datos);
+}
+export function ingresarCuentaPrueba(email: string) {
+  return api<UsuarioSesion>('/cuentas-prueba/ingresar', 'POST', { email });
+}
