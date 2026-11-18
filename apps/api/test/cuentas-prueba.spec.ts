@@ -114,11 +114,16 @@ describe.skipIf(!url)('Cuentas de prueba · crear e ingresar (PostgreSQL)', () =
     },
   );
 
-  it('crea un superadministrador sin institución, que accede a la administración global', async () => {
+  it('crea un superadministrador sin elegir institución, que accede a la administración global', async () => {
     const usuario = unico('super');
     expect((await crear({ usuario, rol: 'SUPERADMINISTRADOR' }).expect(201)).body.institucion).toBeNull();
     const { res, cookie } = await ingresar(usuario);
-    expect(res.body).toMatchObject({ esSuperadministrador: true, roles: [], institucionActivaId: null });
+    expect(res.body).toMatchObject({ esSuperadministrador: true, institucionActivaId: null });
+    // Migración 028: recibe administrador y director en cada institución activa, nunca en las inactivas.
+    const roles = res.body.roles as { institucionId: string; rol: string }[];
+    expect(roles.every(r => r.rol === 'ADMINISTRADOR' || r.rol === 'DIRECTOR')).toBe(true);
+    expect(roles.filter(r => r.institucionId === inst).map(r => r.rol).sort()).toEqual(['ADMINISTRADOR', 'DIRECTOR']);
+    expect(roles.some(r => r.institucionId === inactiva)).toBe(false);
     await http().get('/api/superadmin/instituciones').set('Cookie', cookie!).expect(200);
   });
 
