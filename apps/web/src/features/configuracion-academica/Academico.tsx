@@ -22,6 +22,7 @@ const mensaje = (e:unknown) => e instanceof Error ? e.message : 'No se pudo comp
 export function Academico({periodoId,roles,navegacionDestino,usuarioId,institucionId,onNavegar}:{periodoId:string;roles:Rol[];navegacionDestino:DestinoNavegacion;usuarioId:string;institucionId:string;onNavegar:(destino:DestinoNavegacion)=>void}) {
   const claveSeccion = usuarioId + ':' + institucionId + ':' + periodoId + ':seccion';
   const admin=roles.includes('ADMINISTRADOR');
+  const profesor=roles.includes('PROFESOR');
   const [cursos,setCursos]=useState<Curso[]>([]);
   const [secciones,setSecciones]=useState<Seccion[]>([]);
   const [docentes,setDocentes]=useState<Persona[]>([]);
@@ -41,11 +42,11 @@ export function Academico({periodoId,roles,navegacionDestino,usuarioId,instituci
     Promise.all([
       api<Seccion[]>('/academico/secciones?periodoId='+periodoId),
       admin ? api<Curso[]>('/academico/cursos?periodoId='+periodoId) : Promise.resolve([]),
-      admin ? api<Persona[]>('/academico/docentes') : Promise.resolve([]),
+      admin || profesor ? api<Persona[]>('/academico/docentes') : Promise.resolve([]),
     ]).then(([s,c,d])=>{if(vigente){setSecciones(s);setCursos(c);setDocentes(d);}})
       .catch(e=>{if(vigente)setError(mensaje(e));}).finally(()=>{if(vigente)setCargando(false);});
     return ()=>{vigente=false;};
-  },[periodoId,admin,version]);
+  },[periodoId,admin,profesor,version]);
   useEffect(()=>{ if(seleccion) guardarPreferencia(claveSeccion,seleccion); },[seleccion,claveSeccion]);
   useEffect(()=>{ if(secciones.length && seleccion && !secciones.some(s=>s.id===seleccion)) setSeleccion(''); },[secciones,seleccion]);
   useEffect(() => {
@@ -143,7 +144,7 @@ export function Academico({periodoId,roles,navegacionDestino,usuarioId,instituci
           ['modulo-materiales','Materiales'],
           ['modulo-entregas','Actividades'],
           ['modulo-asistencia','Asistencia'],
-          ...(admin ? [['detalle-seccion','Nómina']] : []),
+          ...(admin ? [['detalle-seccion','Nómina']] : profesor ? [['detalle-seccion','Equipo']] : []),
           ...(roles.includes('PROFESOR') ? [['distribucion-notas','Distribución'], ['asistencia-agregada','Asistencia agregada']] : []),
           ...((roles.includes('PROFESOR') || roles.includes('ALUMNO')) ? [['modulo-anuncios','Anuncios']] : []),
         ] as [DestinoNavegacion,string][]).map(([id,etiqueta])=><button key={id} type="button" className={'ux-pestana'+(navegacionDestino===id?' ux-pestana-activa':'')} aria-current={navegacionDestino===id?'page':undefined} onClick={()=>onNavegar(id)}>{etiqueta}</button>)}
@@ -155,7 +156,7 @@ export function Academico({periodoId,roles,navegacionDestino,usuarioId,instituci
       <div className="ux-acciones"><button type="button" onClick={()=>onNavegar('modulo-notas')}>Ver calificaciones</button><button type="button" className="ux-boton-secundario" onClick={()=>onNavegar('modulo-materiales')}>Consultar materiales</button></div>
     </div>}
     {seleccion && !secciones.some(s=>s.id===seleccion) && <p className="alerta">Esta sección ya no está disponible en el período seleccionado.</p>}
-    {seleccion && secciones.some(s=>s.id===seleccion) && navegacionDestino === 'detalle-seccion' && admin && <GestionSeccion key={seleccion} id={seleccion} nombre={secciones.find(s=>s.id===seleccion)?.curso+' · Sección '+secciones.find(s=>s.id===seleccion)?.codigo} admin={admin} docentes={docentes} actualizar={()=>setVersion(v=>v+1)}/>}
+    {seleccion && secciones.some(s=>s.id===seleccion) && navegacionDestino === 'detalle-seccion' && (admin || profesor) && <GestionSeccion key={seleccion} id={seleccion} nombre={secciones.find(s=>s.id===seleccion)?.curso+' · Sección '+secciones.find(s=>s.id===seleccion)?.codigo} admin={admin} usuarioId={usuarioId} docentes={docentes} actualizar={()=>setVersion(v=>v+1)}/>}
     {seleccion && secciones.some(s=>s.id===seleccion) && navegacionDestino === 'modulo-notas' && (roles.every(r=>r==='ALUMNO') ? <MisNotas key={seleccion} seccionId={seleccion} /> : <Evaluaciones key={seleccion} seccionId={seleccion} roles={roles} />)}
     {seleccion && secciones.some(s=>s.id===seleccion) && navegacionDestino === 'distribucion-notas' && roles.includes('PROFESOR') && <DistribucionNotas key={seleccion} seccionId={seleccion} />}
     {seleccion && secciones.some(s=>s.id===seleccion) && navegacionDestino === 'modulo-materiales' && <Materiales key={seleccion} seccionId={seleccion} />}
@@ -185,7 +186,7 @@ export function Academico({periodoId,roles,navegacionDestino,usuarioId,instituci
   </section>;
 }
 
-function GestionSeccion({id,nombre,admin,docentes,actualizar}:{id:string;nombre:string;admin:boolean;docentes:Persona[];actualizar:()=>void}) {
+function GestionSeccion({id,nombre,admin,usuarioId,docentes,actualizar}:{id:string;nombre:string;admin:boolean;usuarioId:string;docentes:Persona[];actualizar:()=>void}) {
   const [detalle,setDetalle]=useState<Detalle|null>(null);
   const [profesor,setProfesor]=useState('');
   const [ayudantes,setAyudantes]=useState<string[]>([]);
@@ -202,13 +203,16 @@ function GestionSeccion({id,nombre,admin,docentes,actualizar}:{id:string;nombre:
       .catch(e=>{if(vigente)setError(mensaje(e));});
     return ()=>{vigente=false;};
   },[url,version]);
-  async function operar(accion:'equipo'|'validar'|'confirmar',e?:FormEvent) {
+  async function operar(accion:'equipo'|'ayudantes'|'validar'|'confirmar',e?:FormEvent) {
     e?.preventDefault();setOcupado(true);setError('');setAviso('');
     try {
       const emails=entrada.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
       if(accion==='equipo') {
         await api(url+'/equipo','PUT',{profesorId:profesor,ayudanteIds:ayudantes});
         setAviso('Equipo docente guardado.');setVersion(v=>v+1);
+      } else if(accion==='ayudantes') {
+        await api(url+'/ayudantes','PUT',{ayudanteIds:ayudantes});
+        setAviso('Ayudantes guardados.');setVersion(v=>v+1);
       } else if(accion==='validar') {
         setPrevia(await api<VistaPrevia>(url+'/nomina/validar','POST',{emails}));
       } else {
@@ -219,6 +223,7 @@ function GestionSeccion({id,nombre,admin,docentes,actualizar}:{id:string;nombre:
     }catch(e){setError(mensaje(e));if(accion!=='equipo')setPrevia(null);}
     finally{setOcupado(false);}
   }
+  const esProfesorDeSeccion = !!detalle?.equipo.some(d=>d.rol==='PROFESOR' && d.id===usuarioId);
   return <div id="detalle-seccion" className="detalle-seccion">
     <p className="etiqueta">03 · Equipo y nómina</p><h2>{nombre}</h2>
     {error && <p role="alert" className="alerta">{error}</p>}
@@ -238,7 +243,14 @@ function GestionSeccion({id,nombre,admin,docentes,actualizar}:{id:string;nombre:
           <label>Correos de alumnos<textarea required rows={5} value={entrada} onChange={e=>{setEntrada(e.target.value);setPrevia(null);}} placeholder={'alumno1@institucion.cl\nalumno2@institucion.cl'}/></label>
           <button disabled={ocupado}>Validar nómina</button>
         </form>
-      </div>:<p>Equipo: {detalle.equipo.map(d=>(d.nombre || d.email)+' ('+(d.rol || '').toLowerCase()+')').join(', ') || 'Sin asignar'}</p>}
+      </div>: esProfesorDeSeccion ? <form onSubmit={e=>operar('ayudantes',e)}><h3>Ayudantes de la sección</h3>
+          <p className="texto-suave">Profesor: {detalle.equipo.filter(d=>d.rol==='PROFESOR').map(d=>d.nombre || d.email).join(', ')}. Marca los ayudantes que trabajarán contigo en esta sección.</p>
+          <fieldset><legend>Ayudantes</legend>{docentes.filter(d=>d.rol==='AYUDANTE').map(d=><label className="check" key={d.id}>
+            <input type="checkbox" checked={ayudantes.includes(d.id)} onChange={e=>setAyudantes(e.target.checked?[...ayudantes,d.id]:ayudantes.filter(x=>x!==d.id))}/>{d.nombre || d.email}
+          </label>)}{!docentes.some(d=>d.rol==='AYUDANTE') && <p>No hay ayudantes habilitados en la institución. Pide a un administrador que registre al ayudante.</p>}</fieldset>
+          <button disabled={ocupado}>Guardar ayudantes</button>
+        </form>
+      :<p>Equipo: {detalle.equipo.map(d=>(d.nombre || d.email)+' ('+(d.rol || '').toLowerCase()+')').join(', ') || 'Sin asignar'}</p>}
       {previa && <div className="preview"><h3>Vista previa de la carga</h3><p>{nombre} · {previa.filas.length} filas</p><div className="tabla-contenedor"><table><thead><tr><th>Fila</th><th>Correo</th><th>Resultado</th></tr></thead><tbody>
         {previa.filas.map(f=><tr key={f.fila}><td>{f.fila}</td><td>{f.email}</td><td>{f.motivo || 'Válido'}</td></tr>)}
       </tbody></table></div><button type="button" disabled={!previa.valida || ocupado} onClick={()=>operar('confirmar')}>Confirmar carga</button></div>}

@@ -8,7 +8,7 @@ Rama `feature/usuarios-prueba`, creada desde `origin/develop`. No requiere migra
 
 En el login, pestaña **Institucional**, bajo «Continuar con Google» aparece **Crear y probar usuarios**:
 
-- **Crear cuenta**: usuario (se completa con `@testing.com`), nombre visible opcional, rol (Alumno, Ayudante, Profesor, Director, Administrador o Superadministrador) e institución. El superadministrador no pide institución. Tras crearla se puede ingresar directamente.
+- **Crear cuenta**: usuario (se completa con `@testing.com`), nombre visible opcional, rol (Alumno, Ayudante, Profesor, Director, Administrador o Superadministrador) e institución. El superadministrador no pide institución: recibe automáticamente los roles de administrador y director en todas las instituciones activas. Tras crearla se puede ingresar directamente.
 - **Iniciar sesión**: se escribe el correo (o solo el usuario) de una cuenta `@testing.com`, sin contraseña.
 
 Si no hay instituciones activas, se crea primero un superadministrador y se registra una institución desde «Universidades».

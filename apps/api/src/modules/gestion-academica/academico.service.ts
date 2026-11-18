@@ -105,12 +105,49 @@ export class AcademicoService {
     if (!permisos.rowCount) throw new ForbiddenException('No tienes permiso sobre esta sección');
   }
 
+  /** El administrador ve profesores y ayudantes; el profesor solo los ayudantes que puede sumar a su sección. */
   async candidatos(actor: string, institucion: string) {
-    await this.autorizacion.exigirRol(actor,institucion,'ADMINISTRADOR');
+    await this.autorizacion.exigirRol(actor,institucion,'ADMINISTRADOR','PROFESOR');
     return this.ejecutar(institucion, async db => (await db.query(`
       SELECT u.id,u.nombre,u.email,r.rol FROM usuario u JOIN rol_en_institucion r ON r.usuario_id=u.id
        WHERE u.activo AND r.institucion_id=$1 AND r.rol IN ('PROFESOR','AYUDANTE')
-       ORDER BY u.nombre,u.email`,[institucion])).rows);
+         AND (r.rol='AYUDANTE' OR EXISTS (SELECT 1 FROM rol_en_institucion a
+           WHERE a.usuario_id=$2 AND a.institucion_id=$1 AND a.rol='ADMINISTRADOR'))
+       ORDER BY u.nombre,u.email`,[institucion,actor])).rows);
+  }
+
+  /**
+   * El administrador o el profesor asignado a la sección definen sus ayudantes.
+   * El profesor de la sección no cambia; solo el administrador puede reasignarlo.
+   */
+  async asignarAyudantes(actor: string, institucion: string, seccion: string, dto: Datos) {
+    await this.autorizacion.exigirRol(actor,institucion,'ADMINISTRADOR','PROFESOR');
+    id(seccion);
+    if (!Array.isArray(dto.ayudanteIds) || dto.ayudanteIds.length > 30) throw new BadRequestException('Indica hasta 30 ayudantes');
+    const ayudantes = [...new Set(dto.ayudanteIds.map(id))];
+    return this.ejecutar(institucion, async db => {
+      const recurso = await db.query('SELECT id FROM seccion WHERE id=$1 FOR UPDATE', [seccion]);
+      if (!recurso.rowCount) throw new NotFoundException('Sección no encontrada');
+      const permiso = await db.query(`
+        SELECT 1 FROM rol_en_institucion r JOIN usuario u ON u.id=r.usuario_id AND u.activo
+         WHERE r.usuario_id=$1 AND r.institucion_id=$2
+           AND (r.rol='ADMINISTRADOR' OR (r.rol='PROFESOR' AND EXISTS (SELECT 1 FROM equipo_docente e
+             WHERE e.seccion_id=$3 AND e.usuario_id=$1 AND e.rol='PROFESOR')))`, [actor,institucion,seccion]);
+      if (!permiso.rowCount) throw new ForbiddenException('Solo el profesor asignado o un administrador puede cambiar los ayudantes de esta sección');
+      const profesor = await db.query(`SELECT usuario_id FROM equipo_docente WHERE seccion_id=$1 AND rol='PROFESOR'`, [seccion]);
+      if (profesor.rows.some(p => ayudantes.includes(p.usuario_id))) throw new BadRequestException('El profesor no puede ser su propio ayudante');
+      for (const ayudante of ayudantes) {
+        const habilitado = await db.query(`SELECT 1 FROM rol_en_institucion r JOIN usuario u ON u.id=r.usuario_id
+          WHERE r.usuario_id=$1 AND r.institucion_id=$2 AND r.rol='AYUDANTE' AND u.activo`,[ayudante,institucion]);
+        if (!habilitado.rowCount) throw new BadRequestException('Todos los ayudantes deben estar habilitados con el rol AYUDANTE en esta institución');
+      }
+      const anterior = (await db.query(`SELECT usuario_id FROM equipo_docente WHERE seccion_id=$1 AND rol='AYUDANTE'`,[seccion])).rows.map(r => r.usuario_id);
+      await db.query(`DELETE FROM equipo_docente WHERE seccion_id=$1 AND rol='AYUDANTE'`,[seccion]);
+      for (const ayudante of ayudantes) await db.query(`INSERT INTO equipo_docente(institucion_id,seccion_id,usuario_id,rol) VALUES ($1,$2,$3,'AYUDANTE')`,
+        [institucion,seccion,ayudante]);
+      await this.registrar(db,institucion,actor,seccion,'ASIGNAR_AYUDANTES',{anterior,nuevo:ayudantes});
+      return { mensaje:'Ayudantes guardados' };
+    });
   }
 
   async detalle(actor: string, institucion: string, seccion: string) {

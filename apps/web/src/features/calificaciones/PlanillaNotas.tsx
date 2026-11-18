@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { CorreccionNota } from './CorreccionNota';
 import { AuditoriaEvaluacion } from './AuditoriaEvaluacion';
+import { NotaConCorreccion, type CorreccionNota as CorreccionRegistrada } from './NotaCorregida';
 import { api, type Rol } from '../../lib/api';
 
 interface FilaAlumno {
@@ -11,6 +12,7 @@ interface FilaAlumno {
   valor: number | null;
   esAusente: boolean;
   actualizadoEn: string | null;
+  correccion?: CorreccionRegistrada | null;
 }
 
 interface RespuestaNotas {
@@ -399,6 +401,9 @@ export function PlanillaNotas({
                         ) : (
                           <span style={{ color: 'var(--suave)', fontSize: '0.85rem' }}>Sin calificar</span>
                         )}
+                        {f.correccion && <div className="planilla-correccion">
+                          <NotaConCorreccion valor={f.valor} esAusente={f.esAusente} correccion={f.correccion} />
+                        </div>}
                       </td>
                       {estado === 'PUBLICADA' && roles.includes('ADMINISTRADOR') && <td>
                         <button type="button" className="boton-secundario" onClick={() => setCorreccion(f)}>Corregir nota de {f.nombre}</button>

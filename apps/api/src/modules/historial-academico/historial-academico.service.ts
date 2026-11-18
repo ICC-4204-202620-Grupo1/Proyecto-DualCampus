@@ -3,6 +3,7 @@ import type { PoolClient } from 'pg';
 import { ContextoInstitucion } from '../../database/contexto-institucion.js';
 import type { EgresadoActual } from '../autenticacion/acceso-egresado.service.js';
 import { AutorizacionService } from '../autorizacion/autorizacion.service.js';
+import { COLUMNAS_CORRECCION, CorreccionNota, joinUltimaCorreccion, leerCorreccion } from '../calificaciones/correccion-nota.js';
 
 interface NotaPublicada {
   id: string;
@@ -13,6 +14,8 @@ interface NotaPublicada {
   esAusente: boolean;
   escalaAprobacion: number;
   publicadoEn: string;
+  /** Nota corregida: valor anterior y fecha de la última corrección. */
+  correccion: CorreccionNota | null;
 }
 
 interface AsignaturaHistorial {
@@ -104,11 +107,13 @@ export class HistorialAcademicoService {
       seccionId: string; id: string; nombre: string; fecha: string;
       ponderacion: string; valor: string | null; esAusente: boolean;
       escalaAprobacion: string; publicadoEn: string;
+      correccionValorAnterior: number | null; correccionAusenteAnterior: boolean | null; correccionEn: string | null;
     }>(`
       SELECT s.id AS "seccionId", e.id, e.nombre, e.fecha, e.ponderacion,
              n.valor, n.es_ausente AS "esAusente",
              e.escala_aprobacion AS "escalaAprobacion",
-             e.publicado_en AS "publicadoEn"
+             e.publicado_en AS "publicadoEn",
+             ${COLUMNAS_CORRECCION}
         FROM nota n
         JOIN evaluacion e ON e.id = n.evaluacion_id
                          AND e.institucion_id = n.institucion_id
@@ -117,6 +122,7 @@ export class HistorialAcademicoService {
         JOIN matricula m ON m.seccion_id = s.id
                         AND m.institucion_id = s.institucion_id
                         AND m.usuario_id = n.usuario_id
+        ${joinUltimaCorreccion('e.id', 'n.usuario_id')}
        WHERE n.usuario_id = $1 AND n.institucion_id = $2
          AND e.estado = 'PUBLICADA'
        ORDER BY e.fecha, e.creado_en, e.id
@@ -152,6 +158,7 @@ export class HistorialAcademicoService {
         esAusente: n.esAusente,
         escalaAprobacion: Number(n.escalaAprobacion),
         publicadoEn: n.publicadoEn,
+        correccion: leerCorreccion(n),
       });
     }
     return historial;

@@ -22,6 +22,8 @@ export class AcademicoController {
   detalle(@UsuarioActual() u: UsuarioSesion,@InstitucionActiva() i: string,@Param('id') s: string) { return this.servicio.detalle(u.usuarioId,i,s); }
   @Put('secciones/:id/equipo')
   equipo(@UsuarioActual() u: UsuarioSesion,@InstitucionActiva() i: string,@Param('id') s: string,@Body() d: Record<string,unknown>) { return this.servicio.asignar(u.usuarioId,i,s,d ?? {}); }
+  @Put('secciones/:id/ayudantes')
+  ayudantes(@UsuarioActual() u: UsuarioSesion,@InstitucionActiva() i: string,@Param('id') s: string,@Body() d: Record<string,unknown>) { return this.servicio.asignarAyudantes(u.usuarioId,i,s,d ?? {}); }
   @Post('secciones/:id/nomina/validar')
   validar(@UsuarioActual() u: UsuarioSesion,@InstitucionActiva() i: string,@Param('id') s: string,@Body() d: Record<string,unknown>) { return this.servicio.nomina(u.usuarioId,i,s,d ?? {},false); }
   @Post('secciones/:id/nomina/:alumnoId/retiro')

@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
+import { NotaConCorreccion, type CorreccionNota } from './NotaCorregida';
 
 type Resultado = {
   id: string; nombre: string; fecha: string; ponderacion: number;
   publicadoEn: string; valor: number | null; esAusente: boolean;
   escalaMinima: number; escalaMaxima: number; escalaAprobacion: number;
+  correccion: CorreccionNota | null;
 };
 
 export function MisNotas({ seccionId }: { seccionId: string }) {
@@ -31,7 +33,7 @@ export function MisNotas({ seccionId }: { seccionId: string }) {
         <th>Evaluación</th><th>Fecha</th><th>Ponderación</th><th>Mi nota</th><th>Resultado</th><th>Publicación</th>
       </tr></thead><tbody>{notas.map(n => <tr key={n.id}>
         <td>{n.nombre}</td><td>{n.fecha.slice(0, 10)}</td><td>{n.ponderacion}%</td>
-        <td>{n.esAusente ? 'Ausente' : n.valor === null ? 'Sin nota registrada' : n.valor.toFixed(1)}</td>
+        <td><NotaConCorreccion valor={n.valor} esAusente={n.esAusente} correccion={n.correccion} /></td>
         <td>{n.esAusente ? 'Ausencia registrada' : n.valor === null ? '—' : n.valor >= n.escalaAprobacion ? 'Aprobado' : 'Reprobado'}</td>
         <td>{new Date(n.publicadoEn).toLocaleString()}</td>
       </tr>)}</tbody></table></div>}
