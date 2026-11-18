@@ -233,6 +233,17 @@ export function quitarRolGlobal(id: string, institucionId: string, rol: Rol) {
   return api(`/superadmin/usuarios/${encodeURIComponent(id)}/roles`,'DELETE',{institucionId,rol});
 }
 
+/** Carga masiva de usuarios desde CSV: vista previa sin escribir y confirmación transaccional. */
+export type ResultadoFilaCarga = 'CREAR' | 'ASIGNAR_ROL' | 'SIN_CAMBIOS' | 'RECHAZADA';
+export interface FilaCargaUsuarios { fila: number; email: string; nombre: string; universidad: string; rol: string; resultado: ResultadoFilaCarga; motivo?: string }
+export interface ResumenCargaUsuarios { total: number; crear: number; asignarRol: number; sinCambios: number; rechazadas: number }
+export function validarCargaUsuarios(csv: string, institucionId?: string) {
+  return api<{ filas: FilaCargaUsuarios[]; resumen: ResumenCargaUsuarios }>('/superadmin/usuarios/carga/validar','POST',{csv,institucionId:institucionId||undefined});
+}
+export function confirmarCargaUsuarios(csv: string, institucionId?: string) {
+  return api<ResumenCargaUsuarios>('/superadmin/usuarios/carga/confirmar','POST',{csv,institucionId:institucionId||undefined});
+}
+
 /** H43: cuenta personal verificada para consultar el historial después del egreso. */
 export interface CuentaPersonal { email: string; verificadoEn: string }
 export function consultarCuentaPersonal() {
@@ -257,4 +268,23 @@ export async function obtenerSesionEgresado(): Promise<SesionEgresado | null> {
   if (res.status === 401) return null;
   if (!res.ok) throw new Error(`Error ${res.status} al consultar la sesión`);
   return res.json();
+}
+
+/** «Crear y probar usuarios»: cuentas @testing.com sin contraseña, solo para probar la plataforma. */
+export type RolPrueba = Rol | 'SUPERADMINISTRADOR';
+export interface OpcionesCuentasPrueba { dominio: string; roles: RolPrueba[] }
+export interface CuentaPruebaCreada { email: string; nombre: string; rol: RolPrueba; institucion: string | null }
+export async function consultarOpcionesCuentasPrueba(): Promise<OpcionesCuentasPrueba> {
+  const res = await fetch(`${API_URL}/cuentas-prueba/opciones`, { credentials: 'include' });
+  if (!res.ok) throw new Error(`Error ${res.status}`);
+  return res.json();
+}
+export function listarInstitucionesPrueba() {
+  return api<{ id: string; nombre: string }[]>('/cuentas-prueba/instituciones');
+}
+export function crearCuentaPrueba(datos: { usuario: string; nombre: string; rol: RolPrueba; institucionId?: string }) {
+  return api<CuentaPruebaCreada>('/cuentas-prueba', 'POST', datos);
+}
+export function ingresarCuentaPrueba(email: string) {
+  return api<UsuarioSesion>('/cuentas-prueba/ingresar', 'POST', { email });
 }

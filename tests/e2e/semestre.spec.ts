@@ -32,7 +32,12 @@ test('configuración persistente, validación y permisos de cuatro roles',async(
  await expect(page.getByLabel('Código del curso')).toBeVisible();
  await page.getByLabel('Código del curso').fill('ICC-4204');
  await page.getByLabel('Nombre',{exact:true}).fill('Introducción al software');
+ // Facultad es opcional: dejarla vacía debe usar el valor predeterminado de la API.
+ const creacionCurso=page.waitForResponse(r=>r.request().method()==='POST' && new URL(r.url()).pathname==='/api/academico/cursos');
  await page.getByRole('button',{name:'Crear curso',exact:true}).click();
+ const respuestaCurso=await creacionCurso;
+ expect(respuestaCurso.status(),await respuestaCurso.text()).toBe(201);
+ expect(await respuestaCurso.json()).toMatchObject({codigo:'ICC-4204',facultad:'General'});
  await expect(page.getByText('Curso creado. Ahora puedes registrar su sección.',{exact:true})).toBeVisible();
  await page.getByRole('combobox',{name:'Curso',exact:true}).selectOption({label:'ICC-4204 · Introducción al software'});
  await page.getByLabel('Código de sección').fill('01');
@@ -93,6 +98,40 @@ test('configuración persistente, validación y permisos de cuatro roles',async(
  expect(errores).toEqual([]);
 });
 
+for (const caso of [
+ {nombre:'solo espacios',entrada:'   ',esperada:'General'},
+ {nombre:'facultad indicada',entrada:'  Ingeniería  ',esperada:'Ingeniería'},
+]) {
+ test('crear curso con facultad: '+caso.nombre,async({page,context})=>{
+  await ingresar(context,'admin');await page.goto('/');
+  await irAlModulo(page,'Períodos académicos');
+  await page.getByLabel('Nombre',{exact:true}).fill('Facultad · '+caso.nombre);
+  await page.getByLabel('Inicio',{exact:true}).fill('2026-08-01');
+  await page.getByLabel('Término',{exact:true}).fill('2026-12-20');
+  await page.getByRole('button',{name:'Crear período',exact:true}).click();
+  await expect(page.getByText(/Del 2026-08-01 al 2026-12-20/)).toBeVisible();
+  await irAlModulo(page,'Cursos y secciones');
+  await page.getByLabel('Código del curso').fill('FAC-01');
+  await page.getByLabel('Nombre',{exact:true}).fill('Curso de prueba');
+  await page.getByLabel('Facultad',{exact:true}).fill(caso.entrada);
+  const creacion=page.waitForResponse(r=>r.request().method()==='POST' && new URL(r.url()).pathname==='/api/academico/cursos');
+  await page.getByRole('button',{name:'Crear curso',exact:true}).click();
+  const respuesta=await creacion;
+  expect(respuesta.status(),await respuesta.text()).toBe(201);
+  const curso=await respuesta.json();
+  expect(curso).toMatchObject({codigo:'FAC-01',facultad:caso.esperada});
+  await expect(page.getByText('Curso creado. Ahora puedes registrar su sección.',{exact:true})).toBeVisible();
+  // Esperar la actualización posterior al POST antes de observar la recarga.
+  await expect(page.getByRole('combobox',{name:'Curso',exact:true})).toContainText('FAC-01 · Curso de prueba');
+  await page.reload();
+  const listado=page.waitForResponse(r=>r.request().method()==='GET' && new URL(r.url()).pathname==='/api/academico/cursos');
+  await irAlModulo(page,'Cursos y secciones');
+  const consulta=await listado;
+  expect(consulta.status()).toBe(200);
+  expect(await consulta.json()).toContainEqual(expect.objectContaining({id:curso.id,facultad:caso.esperada}));
+ });
+}
+
 // H43: el alumno vincula una cuenta personal desde su perfil y la asociación persiste.
 // La verificación con Google se reemplaza por la vinculación local (no existe en producción).
 test('H43 · vincular una cuenta personal desde el perfil',async({page,context},testInfo)=>{
@@ -113,4 +152,46 @@ test('H43 · vincular una cuenta personal desde el perfil',async({page,context},
  await expect(page.getByText('personal.demo@example.invalid',{exact:true})).toBeVisible();
  await expect(page.getByText('Cuenta personal verificada y vinculada.',{exact:true})).toHaveCount(0);
  await expect(page.getByRole('link',{name:'Cambiar cuenta personal',exact:true})).toBeVisible();
+});
+
+// Cuentas de prueba @testing.com: se crean sin administrador y se ingresa sin Google ni contraseña.
+test('crear y probar usuarios desde el login',async({page,context},testInfo)=>{
+ await context.clearCookies();
+ await page.emulateMedia({colorScheme:'dark'});
+ await page.goto('/');
+ await page.getByRole('button',{name:'Crear y probar usuarios',exact:true}).click();
+ await expect(page.getByRole('button',{name:'Crear cuenta',exact:true})).toBeVisible();
+ await page.getByRole('textbox',{name:'Usuario @testing.com'}).fill('ana.e2e');
+ await page.getByLabel('Nombre visible (opcional)').fill('Ana Prueba');
+ await page.getByRole('combobox',{name:'Rol',exact:true}).selectOption({label:'Profesor'});
+ await page.getByRole('combobox',{name:'Institución',exact:true}).selectOption({label:'Universidad grande'});
+ await page.getByRole('button',{name:'Crear cuenta de prueba',exact:true}).click();
+ await expect(page.getByRole('status')).toContainText('ana.e2e@testing.com creada como Profesor en Universidad grande');
+ await page.screenshot({path:testInfo.outputPath('05-crear-cuenta-prueba.png'),fullPage:true});
+ await page.getByRole('button',{name:'Ingresar con esta cuenta',exact:true}).click();
+ await expect(page.locator('.barra-usuario')).toContainText('Ana Prueba');
+ await page.getByRole('button',{name:'Cerrar sesión'}).click();
+
+ // Una cuenta que ya existe no se vuelve a crear.
+ await page.getByRole('button',{name:'Crear y probar usuarios',exact:true}).click();
+ await page.getByRole('textbox',{name:'Usuario @testing.com'}).fill('ana.e2e');
+ await page.getByRole('button',{name:'Crear cuenta de prueba',exact:true}).click();
+ await expect(page.getByRole('alert')).toContainText('Ya existe una cuenta ana.e2e@testing.com');
+
+ // Superadministrador: no pide institución.
+ await page.getByRole('combobox',{name:'Rol',exact:true}).selectOption({label:'Superadministrador'});
+ await expect(page.getByRole('combobox',{name:'Institución',exact:true})).toHaveCount(0);
+ await page.getByRole('textbox',{name:'Usuario @testing.com'}).fill('super.e2e');
+ await page.getByRole('button',{name:'Crear cuenta de prueba',exact:true}).click();
+ await expect(page.getByRole('status')).toContainText('super.e2e@testing.com creada como Superadministrador.');
+
+ // Iniciar sesión escribiendo el correo, sin contraseña.
+ await page.getByRole('button',{name:'Iniciar sesión',exact:true}).click();
+ await page.getByLabel('Correo de la cuenta de prueba').fill('no.existe@testing.com');
+ await page.getByRole('button',{name:'Ingresar',exact:true}).click();
+ await expect(page.getByRole('alert')).toContainText('No hay una cuenta de prueba habilitada');
+ await page.getByLabel('Correo de la cuenta de prueba').fill('super.e2e');
+ await page.screenshot({path:testInfo.outputPath('06-ingresar-cuenta-prueba.png'),fullPage:true});
+ await page.getByRole('button',{name:'Ingresar',exact:true}).click();
+ await expect(page.getByRole('navigation',{name:'Secciones disponibles'}).getByRole('button',{name:'Universidades',exact:true})).toBeVisible();
 });

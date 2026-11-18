@@ -3,6 +3,9 @@ import { CONFIG, Config } from '../../config/config.js';
 import type { IdentidadGoogle, UsuarioSesion } from './usuario-sesion.js';
 import { UsuarioRegistrado, UsuariosRepositorio } from './usuarios.repositorio.js';
 
+/** Dominio reservado a las cuentas de prueba sin contraseña. */
+export const DOMINIO_PRUEBA = '@testing.com';
+
 export interface InstitucionAutorizada {
   id: string;
   nombre: string;
@@ -38,6 +41,19 @@ export class AutenticacionService {
     const instituciones = institucionesDe(usuario);
     const activa = instituciones.length === 1 ? instituciones[0].id : null;
     return construirSesion(usuario, activa, identidad.nombre);
+  }
+
+  /**
+   * Sesión de una cuenta de prueba (@testing.com) sin pasar por Google. Solo la usa
+   * CuentasPruebaController («Crear y probar usuarios»). Exige las mismas
+   * condiciones que una cuenta institucional: activa y con un rol o superadministración.
+   */
+  async autorizarCuentaPrueba(email: string): Promise<UsuarioSesion | null> {
+    if (!email.endsWith(DOMINIO_PRUEBA)) return null;
+    const usuario = await this.usuarios.buscarPorEmail(email);
+    if (!usuario || !usuario.activo || (usuario.roles.length === 0 && !usuario.esSuperadministrador)) return null;
+    const instituciones = institucionesDe(usuario);
+    return construirSesion(usuario, instituciones.length === 1 ? instituciones[0].id : null);
   }
 
   /** Instituciones activas en que el usuario tiene al menos un rol, leídas de la base. */

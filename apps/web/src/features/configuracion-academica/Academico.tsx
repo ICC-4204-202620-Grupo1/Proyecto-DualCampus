@@ -57,7 +57,11 @@ export function Academico({periodoId,roles,navegacionDestino,usuarioId,instituci
   async function crear(e:FormEvent,tipo:'cursos'|'secciones') {
     e.preventDefault();setOcupado(true);setError('');setAviso('');
     try {
-      await api('/academico/'+tipo,'POST',tipo==='cursos'?{...curso,periodoId}:{...seccion,periodoId});
+      // Omitir la facultad vacía permite que la API aplique su valor predeterminado.
+      const datos = tipo==='cursos'
+        ? {...curso,facultad:curso.facultad.trim() || undefined,periodoId}
+        : {...seccion,periodoId};
+      await api('/academico/'+tipo,'POST',datos);
       if(tipo==='cursos')setCurso({codigo:'',nombre:'',facultad:''});else setSeccion({cursoId:'',codigo:''});
       setAviso(tipo==='cursos'?'Curso creado. Ahora puedes registrar su sección.':'Sección creada. Selecciónala para asignar docentes.');
       setVersion(v=>v+1);
