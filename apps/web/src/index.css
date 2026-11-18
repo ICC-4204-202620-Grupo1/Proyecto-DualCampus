@@ -260,3 +260,10 @@ button.login-opcion.activa { background:var(--superficie); color:var(--texto); b
 .campo-con-sufijo input { border-top-right-radius:0; border-bottom-right-radius:0; min-width:0; }
 .campo-con-sufijo .sufijo { display:flex; align-items:center; padding:0 .7rem; font-weight:500; color:var(--suave);
   background:var(--superficie-alt); border:1px solid var(--borde-control); border-left:0; border-radius:0 7px 7px 0; white-space:nowrap; }
+
+/* Nota corregida: la nota anterior tachada junto a la nueva y la fecha de corrección. */
+.nota-corregida { display:inline-flex; flex-direction:column; gap:.15rem; }
+.nota-cambio { white-space:nowrap; }
+.nota-anterior { color:var(--suave); }
+.nota-corregida small { font-size:.75rem; color:var(--suave); }
+.planilla-correccion { margin-top:.35rem; font-size:.85rem; }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
+import { NotaConCorreccion, type CorreccionNota } from '../calificaciones/NotaCorregida';
 
 type Nota = {
   id: string;
@@ -10,6 +11,7 @@ type Nota = {
   esAusente: boolean;
   escalaAprobacion: number;
   publicadoEn: string;
+  correccion?: CorreccionNota | null;
 };
 type Asignatura = {
   seccionId: string;
@@ -78,7 +80,7 @@ export function ListaPeriodos({ periodos }: { periodos: Periodo[] }) {
                 <td>{nota.nombre}</td>
                 <td>{nota.fecha.slice(0, 10)}</td>
                 <td>{nota.ponderacion}%</td>
-                <td>{nota.esAusente ? 'Ausente' : nota.valor === null ? 'Sin nota registrada' : nota.valor.toFixed(1)}</td>
+                <td><NotaConCorreccion valor={nota.valor} esAusente={nota.esAusente} correccion={nota.correccion} /></td>
                 <td>{nota.esAusente ? 'Ausencia registrada' : nota.valor === null ? '—' : nota.valor >= nota.escalaAprobacion ? 'Aprobado' : 'Reprobado'}</td>
                 <td>{nota.publicadoEn ? new Date(nota.publicadoEn).toLocaleString('es-CL') : '—'}</td>
               </tr>)}</tbody>

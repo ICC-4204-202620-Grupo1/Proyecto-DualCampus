@@ -248,4 +248,49 @@ describe.skipIf(!url)('H22 · Corregir nota publicada (PostgreSQL con RLS)', () 
     } finally { await pool.query('ALTER TABLE evento_academico DROP CONSTRAINT fallo_correccion'); }
   });
 
+  // Nota corregida: el alumno y el equipo ven la nota anterior junto a la nueva.
+  describe('Nota corregida: anterior y nueva', () => {
+    const misNotas = async (u: string) => (await get('calificaciones/secciones/' + seccion + '/mis-notas', u).expect(200)).body[0];
+    const enHistorial = async (u: string) => (await get('historial-academico/propio', u).expect(200)).body
+      .flatMap((p: { asignaturas: { notas: { id: string }[] }[] }) => p.asignaturas.flatMap(a => a.notas))
+      .find((n: { id: string }) => n.id === evaluacion);
+    const enPlanilla = async (alumnoId: string) => (await get('calificaciones/evaluaciones/' + evaluacion + '/notas', admin).expect(200)).body
+      .filas.find((f: { alumnoId: string }) => f.alumnoId === alumnoId);
+
+    it('sin corrección no informa nota anterior', async () => {
+      await preparar();
+      expect((await misNotas(alumno1)).correccion).toBeNull();
+      expect((await enHistorial(alumno1)).correccion).toBeNull();
+      expect((await enPlanilla(alumno1)).correccion).toBeNull();
+    });
+
+    it('mis notas, historial y planilla muestran la nota anterior, la nueva y la fecha', async () => {
+      await preparar();
+      await corregir(await datos()).expect(201);
+      for (const nota of [await misNotas(alumno1), await enHistorial(alumno1), await enPlanilla(alumno1)]) {
+        expect(nota.valor).toBe(6.2);
+        expect(nota.correccion).toMatchObject({ valorAnterior: 5.5, ausenteAnterior: false });
+        expect(Date.parse(nota.correccion.corregidoEn)).not.toBeNaN();
+      }
+      // La corrección de un alumno no aparece en la nota de otro.
+      expect((await enPlanilla(alumno2)).correccion).toBeNull();
+      expect((await misNotas(alumno2)).correccion).toBeNull();
+    });
+
+    it('con varias correcciones muestra la anterior a la última', async () => {
+      await preparar();
+      await corregir(await datos()).expect(201);
+      await corregir({ ...(await datos()), valor: 6.8 }).expect(201);
+      const nota = await misNotas(alumno1);
+      expect(nota.valor).toBe(6.8);
+      expect(nota.correccion.valorAnterior).toBe(6.2);
+    });
+
+    it('una ausencia corregida a nota muestra «ausente» como valor anterior', async () => {
+      await preparar();
+      await corregir(await datos(alumno2), admin, alumno2).expect(201);
+      expect((await misNotas(alumno2)).correccion).toMatchObject({ valorAnterior: null, ausenteAnterior: true });
+    });
+  });
+
 });

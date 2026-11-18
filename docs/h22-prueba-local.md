@@ -28,3 +28,9 @@ La base local debe tener las migraciones del equipo hasta 013 si se actualiza de
 ## Reversión
 
 Revertir la aplicación conserva notas corregidas e historial. No revertir valores ni borrar eventos automáticamente; cualquier corrección posterior requiere su propia solicitud formal.
+
+## Nota anterior y nueva
+
+Cuando una nota publicada se corrige, **Mis calificaciones**, el **Historial académico** (también en la vista de egresado) y la planilla del equipo docente muestran la nota anterior tachada junto a la nueva y la fecha de la corrección, por ejemplo ~~4.5~~ → **5.8** · «Corregida el 17-11-2026». Con varias correcciones se muestra el valor anterior a la última; el detalle completo sigue en **Historial de la evaluación**.
+
+El valor anterior se lee del evento `CORREGIR_NOTA_PUBLICADA` que ya registra cada corrección, por lo que también aparece en correcciones hechas antes de este cambio. La migración `029_indice_correcciones_nota.sql` solo agrega un índice para esa consulta.
