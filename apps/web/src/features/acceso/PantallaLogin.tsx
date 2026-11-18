@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { URL_INGRESAR_EGRESADO, URL_INICIAR_SESION } from '../../lib/api';
+import { useEffect, useState } from 'react';
+import { consultarOpcionesCuentasPrueba, URL_INGRESAR_EGRESADO, URL_INICIAR_SESION, type OpcionesCuentasPrueba } from '../../lib/api';
+import { CuentasPrueba } from './CuentasPrueba';
 
 /** H44 · CA3: canal al que se deriva a quien no puede ingresar con su cuenta personal. */
 const CANAL_ASISTENCIA = 'Registro Curricular de tu institución';
@@ -34,6 +35,14 @@ const ACCESOS_DEMO = [
 export function PantallaLogin({ errorServidor }: { errorServidor?: boolean }) {
   const [error] = useState(leerError);
   const [tipoAcceso, setTipoAcceso] = useState<'institucional' | 'egresado'>('institucional');
+  // Cuentas de prueba @testing.com: el botón aparece cuando la API entrega sus opciones.
+  const [cuentasPrueba, setCuentasPrueba] = useState<OpcionesCuentasPrueba | null>(null);
+  const [pruebasAbiertas, setPruebasAbiertas] = useState(false);
+  useEffect(() => {
+    let vigente = true;
+    consultarOpcionesCuentasPrueba().then((o) => { if (vigente) setCuentasPrueba(o); }).catch(() => {});
+    return () => { vigente = false; };
+  }, []);
 
   return (
     <main className="login login-renovado">
@@ -69,6 +78,13 @@ export function PantallaLogin({ errorServidor }: { errorServidor?: boolean }) {
           <h2>Cuenta de la universidad</h2>
           <p className="texto-suave">Para alumnos, profesores, ayudantes y administradores con acceso institucional.</p>
           <a className="boton login-accion" href={URL_INICIAR_SESION}>Continuar con Google</a>
+          {cuentasPrueba && <>
+            <button type="button" className="boton boton-claro login-accion-secundaria" aria-expanded={pruebasAbiertas}
+              onClick={() => setPruebasAbiertas((v) => !v)}>
+              Crear y probar usuarios
+            </button>
+            {pruebasAbiertas && <CuentasPrueba dominio={cuentasPrueba.dominio} roles={cuentasPrueba.roles} />}
+          </>}
         </section> : <section className="login-metodo" aria-label="Ingreso de egresados">
           <h2>Cuenta personal vinculada</h2>
           <p className="texto-suave">Para egresados que vincularon previamente su correo personal y desean consultar su historial.</p>

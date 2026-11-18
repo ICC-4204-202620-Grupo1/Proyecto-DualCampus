@@ -153,3 +153,45 @@ test('H43 · vincular una cuenta personal desde el perfil',async({page,context},
  await expect(page.getByText('Cuenta personal verificada y vinculada.',{exact:true})).toHaveCount(0);
  await expect(page.getByRole('link',{name:'Cambiar cuenta personal',exact:true})).toBeVisible();
 });
+
+// Cuentas de prueba @testing.com: se crean sin administrador y se ingresa sin Google ni contraseña.
+test('crear y probar usuarios desde el login',async({page,context},testInfo)=>{
+ await context.clearCookies();
+ await page.emulateMedia({colorScheme:'dark'});
+ await page.goto('/');
+ await page.getByRole('button',{name:'Crear y probar usuarios',exact:true}).click();
+ await expect(page.getByRole('button',{name:'Crear cuenta',exact:true})).toBeVisible();
+ await page.getByRole('textbox',{name:'Usuario @testing.com'}).fill('ana.e2e');
+ await page.getByLabel('Nombre visible (opcional)').fill('Ana Prueba');
+ await page.getByRole('combobox',{name:'Rol',exact:true}).selectOption({label:'Profesor'});
+ await page.getByRole('combobox',{name:'Institución',exact:true}).selectOption({label:'Universidad grande'});
+ await page.getByRole('button',{name:'Crear cuenta de prueba',exact:true}).click();
+ await expect(page.getByRole('status')).toContainText('ana.e2e@testing.com creada como Profesor en Universidad grande');
+ await page.screenshot({path:testInfo.outputPath('05-crear-cuenta-prueba.png'),fullPage:true});
+ await page.getByRole('button',{name:'Ingresar con esta cuenta',exact:true}).click();
+ await expect(page.locator('.barra-usuario')).toContainText('Ana Prueba');
+ await page.getByRole('button',{name:'Cerrar sesión'}).click();
+
+ // Una cuenta que ya existe no se vuelve a crear.
+ await page.getByRole('button',{name:'Crear y probar usuarios',exact:true}).click();
+ await page.getByRole('textbox',{name:'Usuario @testing.com'}).fill('ana.e2e');
+ await page.getByRole('button',{name:'Crear cuenta de prueba',exact:true}).click();
+ await expect(page.getByRole('alert')).toContainText('Ya existe una cuenta ana.e2e@testing.com');
+
+ // Superadministrador: no pide institución.
+ await page.getByRole('combobox',{name:'Rol',exact:true}).selectOption({label:'Superadministrador'});
+ await expect(page.getByRole('combobox',{name:'Institución',exact:true})).toHaveCount(0);
+ await page.getByRole('textbox',{name:'Usuario @testing.com'}).fill('super.e2e');
+ await page.getByRole('button',{name:'Crear cuenta de prueba',exact:true}).click();
+ await expect(page.getByRole('status')).toContainText('super.e2e@testing.com creada como Superadministrador.');
+
+ // Iniciar sesión escribiendo el correo, sin contraseña.
+ await page.getByRole('button',{name:'Iniciar sesión',exact:true}).click();
+ await page.getByLabel('Correo de la cuenta de prueba').fill('no.existe@testing.com');
+ await page.getByRole('button',{name:'Ingresar',exact:true}).click();
+ await expect(page.getByRole('alert')).toContainText('No hay una cuenta de prueba habilitada');
+ await page.getByLabel('Correo de la cuenta de prueba').fill('super.e2e');
+ await page.screenshot({path:testInfo.outputPath('06-ingresar-cuenta-prueba.png'),fullPage:true});
+ await page.getByRole('button',{name:'Ingresar',exact:true}).click();
+ await expect(page.getByRole('navigation',{name:'Secciones disponibles'}).getByRole('button',{name:'Universidades',exact:true})).toBeVisible();
+});
