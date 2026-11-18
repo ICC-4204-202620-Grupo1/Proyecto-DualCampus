@@ -28,7 +28,7 @@ export function Instituciones() {
   return <section className="panel" id="instituciones" aria-label="Administracion global de universidades">
     <p className="etiqueta">Administración global · H57</p>
     <h2>Universidades</h2>
-    <p className="texto-suave">Registra nuevas instituciones. Su creación no otorga automáticamente acceso a sus datos académicos.</p>
+    <p className="texto-suave">Registra nuevas instituciones. Los superadministradores reciben automáticamente los roles de administrador y director en cada universidad activa.</p>
     <form className="formulario-fila" onSubmit={crear}>
       <label>Nombre de la universidad
         <input required minLength={3} maxLength={120} value={nombre} onChange={e => setNombre(e.target.value)} placeholder="Nombre de la universidad" />
