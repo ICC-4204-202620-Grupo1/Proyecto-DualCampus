@@ -2,17 +2,39 @@
 
 **Versión:** 17 de noviembre de 2026 · **Dirigido a:** personal de la universidad, docentes, ayudantes, estudiantes y egresados.
 
-Este manual describe la aplicación web para usuarios reales. Acceda a **https://proyecto-dualcampus.vercel.app/** y guarde esa dirección entre sus favoritos. No use `localhost`, accesos de prueba ni cuentas de demostración para operar datos reales. Necesita un navegador actualizado, conexión a Internet y una cuenta Google autorizada por la universidad.
+Este manual describe la aplicación web. Acceda a **https://proyecto-dualcampus.vercel.app/** y guarde esa dirección entre sus favoritos. Necesita un navegador actualizado y conexión a Internet. Para la evaluación del curso no necesita una cuenta autorizada previamente: el apartado 1 explica cómo crear sus propias cuentas de prueba.
 
 ## 1. Primer ingreso y navegación
 
-1. Abra **https://proyecto-dualcampus.vercel.app/**. En **Iniciar sesión**, elija **Institucional** y pulse **Continuar con Google**. Seleccione el correo institucional que fue habilitado. La aplicación no le pide crear una contraseña propia.
-2. Si tiene acceso a más de una universidad, use **Institución activa**, en la parte superior de la pantalla, para escoger dónde trabajará. Los datos y permisos cambian con esa selección.
-3. Use el menú lateral para ir a cada módulo. En un teléfono, ábralo con **☰**; puede cerrarlo con **Cerrar** o tocando fuera. En escritorio puede contraerlo y expandirlo.
-4. Antes de trabajar con una sección, seleccione el **Período de trabajo**. Puede hacerlo en **Inicio** o **Períodos académicos**. Después entre a **Mis secciones** o **Cursos y secciones**, abra la tarjeta del curso y elija la **Sección de trabajo**. En cada módulo verifique el período y la sección mostrados: las acciones se aplican a esa selección.
-5. Puede recorrer las pestañas de la sección (**Resumen**, **Notas**, **Materiales**, **Actividades**, **Asistencia** y las que permita su rol) o usar los mismos destinos en el menú lateral. En **Apariencia** puede elegir **Automático**, **Claro** u **Oscuro**. **Cerrar sesión** está arriba a la derecha.
+> **Solo para la evaluación.** Para que puedan revisar la aplicación sin depender de cuentas preparadas por el equipo, esta versión incluye la opción **Crear y probar usuarios**, que crea cuentas de prueba sin contraseña. **Una versión final de DualCampus no tendría esta opción:** las cuentas las registra la administración y se ingresa solo con Google.
 
-Si aparece **Tu cuenta no está habilitada**, solicite a la administración que registre su correo y rol en la universidad correspondiente. Si no ve una opción de este manual, compruebe primero institución, período, sección y rol. Un período sin secciones o una sección sin nómina mostrará pantallas vacías hasta que la administración cargue esos datos.
+### Crear su primera cuenta
+
+1. Abra **https://proyecto-dualcampus.vercel.app/**. En **Iniciar sesión**, elija **Institucional** y pulse **Crear y probar usuarios**, debajo de **Continuar con Google**.
+2. Elija **Crear cuenta**. Escriba un **Usuario** (la cuenta termina automáticamente en **@testing.com**), si quiere un **Nombre visible**, y en **Rol** elija **Superadministrador**. Pulse **Crear cuenta de prueba**.
+3. Pulse **Ingresar con esta cuenta**. No se pide contraseña.
+4. Como superadministrador, entre a **Universidades** y cree la universidad con la que trabajará (apartado 2). Si ya existe una, puede usarla.
+
+### Crear cuentas para cada rol
+
+1. Pulse **Cerrar sesión** y vuelva a **Crear y probar usuarios → Crear cuenta**.
+2. Cree una cuenta por cada rol que quiera probar: **Administrador**, **Profesor**, **Ayudante**, **Alumno** o **Director**. Para estos roles elija también la **Institución**.
+3. Para cambiar de cuenta, cierre sesión y use **Crear y probar usuarios → Iniciar sesión**: escriba el correo de la cuenta (o solo el usuario, sin @testing.com) y pulse **Ingresar**.
+
+Estas cuentas solo sirven en esta opción: no permiten entrar a una cuenta real sin Google.
+
+### Probar el ingreso con Google
+
+También puede comprobar el ingreso real. Con su cuenta de superadministrador, entre a **Usuarios y roles → Registrar usuario**, escriba su nombre y su correo de Google, elija universidad y rol y pulse **Crear usuario** (apartado 2). Luego cierre sesión y, en **Institucional**, pulse **Continuar con Google** y elija ese correo. La aplicación no le pide crear una contraseña propia.
+
+### Navegación
+
+1. Si su cuenta tiene acceso a más de una universidad, use **Institución activa**, en la parte superior de la pantalla, para escoger dónde trabajará. Los datos y permisos cambian con esa selección.
+2. Use el menú lateral para ir a cada módulo. En un teléfono, ábralo con **☰**; puede cerrarlo con **Cerrar** o tocando fuera. En escritorio puede contraerlo y expandirlo.
+3. Antes de trabajar con una sección, seleccione el **Período de trabajo**. Puede hacerlo en **Inicio** o **Períodos académicos**. Después entre a **Mis secciones** o **Cursos y secciones**, abra la tarjeta del curso y elija la **Sección de trabajo**. En cada módulo verifique el período y la sección mostrados: las acciones se aplican a esa selección.
+4. Puede recorrer las pestañas de la sección (**Resumen**, **Notas**, **Materiales**, **Actividades**, **Asistencia** y las que permita su rol) o usar los mismos destinos en el menú lateral. En **Apariencia** puede elegir **Automático**, **Claro** u **Oscuro**. **Cerrar sesión** está arriba a la derecha.
+
+Si aparece **Tu cuenta no está habilitada** al usar Google, registre ese correo desde **Usuarios y roles** con una cuenta de superadministrador. Si no ve una opción de este manual, compruebe primero institución, período, sección y rol. Un período sin secciones o una sección sin nómina mostrará pantallas vacías hasta que un administrador cargue esos datos (apartado 3).
 
 ## 2. Administración global: universidades y usuarios
 
