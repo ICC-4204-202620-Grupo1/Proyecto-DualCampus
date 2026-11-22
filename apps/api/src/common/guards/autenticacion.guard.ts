@@ -17,7 +17,7 @@ export class AutenticacionGuard implements CanActivate {
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
     const req = ctx.switchToHttp().getRequest<Request & { usuario?: unknown }>();
     const escritura = !['GET','HEAD','OPTIONS'].includes(req.method);
-    if (escritura && req.headers.origin && req.headers.origin !== this.config.appUrl) {
+    if (escritura && req.headers.origin && !this.config.origenesPermitidos.includes(req.headers.origin)) {
       throw new ForbiddenException('Origen de la solicitud no permitido');
     }
     const publico = this.reflector.getAllAndOverride<boolean>(ES_PUBLICO,[ctx.getHandler(),ctx.getClass()]);

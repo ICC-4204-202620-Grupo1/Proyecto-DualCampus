@@ -15,4 +15,16 @@ describe('Configuración de despliegue',()=>{
    expect(cargarConfig({...base,NODE_ENV:'production',APP_URL:'https://campus.example.invalid/',DATABASE_URL:'postgres://ejemplo',
     GOOGLE_CLIENT_ID:'id',GOOGLE_CLIENT_SECRET:'secreto',DOMINIOS_PERMITIDOS:' UG.CL , ICS.CL '}).dominiosPermitidos).toEqual(['ug.cl','ics.cl']);
  });
+ it('acepta APP_URL y los orígenes adicionales, sin barra final ni duplicados',()=>{
+   expect(cargarConfig({...base,APP_URL:'https://campus.example.invalid'}).origenesPermitidos).toEqual(['https://campus.example.invalid']);
+   expect(cargarConfig({...base,APP_URL:'https://campus.example.invalid',
+     ORIGENES_PERMITIDOS:' https://publico.example.invalid/ , https://campus.example.invalid '}).origenesPermitidos)
+     .toEqual(['https://campus.example.invalid','https://publico.example.invalid']);
+ });
+ it('rechaza orígenes adicionales con ruta, inválidos o sin HTTPS en producción',()=>{
+   expect(()=>cargarConfig({...base,ORIGENES_PERMITIDOS:'https://publico.example.invalid/ruta'})).toThrow('ORIGENES_PERMITIDOS');
+   expect(()=>cargarConfig({...base,ORIGENES_PERMITIDOS:'no-es-url'})).toThrow('ORIGENES_PERMITIDOS');
+   expect(()=>cargarConfig({...base,NODE_ENV:'production',APP_URL:'https://campus.example.invalid',DATABASE_URL:'postgres://ejemplo',
+     GOOGLE_CLIENT_ID:'id',GOOGLE_CLIENT_SECRET:'secreto',DOMINIOS_PERMITIDOS:'ug.cl',ORIGENES_PERMITIDOS:'http://publico.example.invalid'})).toThrow('HTTPS');
+ });
 });
