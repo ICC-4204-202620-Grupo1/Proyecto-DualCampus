@@ -2,7 +2,7 @@
 
 **Versión:** 17 de noviembre de 2026 · **Dirigido a:** personal de la universidad, docentes, ayudantes, estudiantes y egresados.
 
-Este manual describe la aplicación web. Acceda a **https://proyecto-dualcampus.vercel.app/** y guarde esa dirección entre sus favoritos. Necesita un navegador actualizado y conexión a Internet. Para la evaluación del curso no necesita una cuenta autorizada previamente: el apartado 1 explica cómo crear sus propias cuentas de prueba.
+Este manual describe la aplicación web. Acceda a **https://proyecto-dualcampus-woad.vercel.app/** y guarde esa dirección entre sus favoritos. Necesita un navegador actualizado y conexión a Internet. Para la evaluación del curso no necesita una cuenta autorizada previamente: el apartado 1 explica cómo crear sus propias cuentas de prueba.
 
 ## 1. Primer ingreso y navegación
 
@@ -10,7 +10,7 @@ Este manual describe la aplicación web. Acceda a **https://proyecto-dualcampus.
 
 ### Crear su primera cuenta
 
-1. Abra **https://proyecto-dualcampus.vercel.app/**. En **Iniciar sesión**, elija **Institucional** y pulse **Crear y probar usuarios**, debajo de **Continuar con Google**.
+1. Abra **https://proyecto-dualcampus-woad.vercel.app/**. En **Iniciar sesión**, elija **Institucional** y pulse **Crear y probar usuarios**, debajo de **Continuar con Google**.
 2. Elija **Crear cuenta**. Escriba un **Usuario** (la cuenta termina automáticamente en **@testing.com**), si quiere un **Nombre visible**, y en **Rol** elija **Superadministrador**. Pulse **Crear cuenta de prueba**.
 3. Pulse **Ingresar con esta cuenta**. No se pide contraseña.
 4. Como superadministrador, entre a **Universidades** y cree la universidad con la que trabajará (apartado 2). Si ya existe una, puede usarla.
