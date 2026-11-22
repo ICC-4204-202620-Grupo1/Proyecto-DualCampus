@@ -2,7 +2,7 @@
 
 Aplicación web de gestión académica: períodos, cursos y secciones, equipo docente, nóminas, materiales, actividades, evaluaciones, notas, asistencia, anuncios e indicadores. El acceso usa cuentas Google habilitadas y los permisos dependen del rol y de la institución activa.
 
-**Para el cliente:** [abrir DualCampus](https://proyecto-dualcampus.vercel.app/) · [manual de inicio y operación](docs/manual-inicio-cliente.md). El manual explica el ingreso y los flujos por rol. Use la aplicación publicada y cuentas autorizadas para trabajar con datos reales; `localhost` y las semillas de demostración son solo para desarrollo.
+**Para el cliente:** [abrir DualCampus](https://proyecto-dualcampus-woad.vercel.app/) · [manual de inicio y operación](docs/manual-inicio-cliente.md). El manual explica el ingreso y los flujos por rol. Use la aplicación publicada y cuentas autorizadas para trabajar con datos reales; `localhost` y las semillas de demostración son solo para desarrollo.
 
 - [Repositorio](https://github.com/ICC-4204-202620-Grupo1/Proyecto-DualCampus)
 - [Tablero](https://trello.com/b/V2a6wZ1z/dualcampus)
