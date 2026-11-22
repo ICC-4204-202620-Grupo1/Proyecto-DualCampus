@@ -6,7 +6,9 @@ Este manual describe la aplicación web. Acceda a **https://proyecto-dualcampus-
 
 ## 1. Primer ingreso y navegación
 
-> **Solo para la evaluación.** Para que puedan revisar la aplicación sin depender de cuentas preparadas por el equipo, esta versión incluye la opción **Crear y probar usuarios**, que crea cuentas de prueba sin contraseña. **Una versión final de DualCampus no tendría esta opción:** las cuentas las registra la administración y se ingresa solo con Google.
+> **Solo para la evaluación.** Para que puedan revisar la aplicación sin depender de cuentas preparadas por el equipo, esta versión incluye la opción **Crear y probar usuarios**, que crea cuentas de prueba sin contraseña.
+
+> **Una versión final de DualCampus no tendría esta opción:** las cuentas las registra la administración y se ingresa solo con Google. Por seguridad, el superadministrador será asignado mediante base de datos a un correo electrónico proporcionado por el cliente.
 
 ### Crear su primera cuenta
 
